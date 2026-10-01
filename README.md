@@ -1,4 +1,4 @@
-Tracer
+#**Tracer**
 Tracer is a desktop AI assistant designed to let me interact with an AI using a single global hotkey and a saved prompt.
 The goal is to make screen-based tasks quick and accessible: press the hotkey, capture the current screen or window, send the screenshot together with the saved prompt to the AI, and display the response.
 Current Status
