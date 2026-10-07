@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { app, BrowserWindow, globalShortcut, desktopCapturer } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 
@@ -47,11 +47,24 @@ app.whenReady().then(() => {
   });
 
   // register ctrl+shift+space to shortcut listener
-  const registered = globalShortcut.register('Ctrl+Shift+Space', () => {
+  const registered = globalShortcut.register('Ctrl+Shift+Space', async () => {
     console.log('Hotkey Detected');
 
     mainWindow.webContents.send('hotkey-pressed');
+
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: {
+        width: 0,
+        height: 0,
+      },
+    });
+
+    sources.forEach((source) => {
+      console.log(source.name, source.id);
+    });
   });
+
   // check whether the shortcut is registered
   if (!registered) {
     console.log('registration failed')
