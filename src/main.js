@@ -1,4 +1,10 @@
-import { app, BrowserWindow, globalShortcut, desktopCapturer } from "electron";
+import {
+  app,
+  BrowserWindow,
+  globalShortcut,
+  desktopCapturer,
+  session,
+} from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 
@@ -11,7 +17,7 @@ let mainWindow;
 
 const createWindow = () => {
   // Create the browser window.
-    mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -36,6 +42,20 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+    desktopCapturer
+      .getSources({
+        types: ["screen"],
+        thumbnailSize: {
+          width: 0,
+          height: 0,
+        },
+      })
+      .then((sources) => {
+        callback({ video: sources[0] });
+      });
+  });
+
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the
@@ -47,30 +67,18 @@ app.whenReady().then(() => {
   });
 
   // register ctrl+shift+space to shortcut listener
-  const registered = globalShortcut.register('Ctrl+Shift+Space', async () => {
-    console.log('Hotkey Detected');
+  const registered = globalShortcut.register("Ctrl+Shift+Space", () => {
+    console.log("Hotkey Detected");
 
-    mainWindow.webContents.send('hotkey-pressed');
-
-    const sources = await desktopCapturer.getSources({
-      types: ['screen'],
-      thumbnailSize: {
-        width: 0,
-        height: 0,
-      },
-    });
-
-    sources.forEach((source) => {
-      console.log(source.name, source.id);
-    });
+    mainWindow.webContents.send("hotkey-pressed");
   });
 
   // check whether the shortcut is registered
   if (!registered) {
-    console.log('registration failed')
-  };
+    console.log("registration failed");
+  }
 
-  console.log(globalShortcut.isRegistered('Ctrl+Shift+Space'));
+  console.log(globalShortcut.isRegistered("Ctrl+Shift+Space"));
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
