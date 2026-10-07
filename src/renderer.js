@@ -28,7 +28,31 @@ window.tracer.onHotkeyPressed(async () => {
     });
 
     console.log("Screen capture started");
-    console.log(stream);
+
+    const video = document.getElementById("screenPreview");
+
+    video.srcObject = stream;
+
+    video.onloadeddata = () => {
+      const canvas = document.getElementById("screenCapture");
+      const context = canvas.getContext("2d");
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+
+      const screenshot = canvas.toDataURL("image/png");
+
+      console.log("Screenshot captured");
+      console.log(screenshot);
+    }
   } catch (error) {
     console.error("Screen capture failed", error);
   }
