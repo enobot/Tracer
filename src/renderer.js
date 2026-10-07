@@ -18,6 +18,18 @@ console.log(
   '👋 This message is being logged by the renderer process, included via Vite',
 );
 
-window.tracer.onHotkeyPressed(() => {
+window.tracer.onHotkeyPressed(async () => {
   console.log('Hotkey receieved by renderer.');
+
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+    });
+
+    console.log("Screen capture started");
+    console.log(stream);
+  } catch (error) {
+    console.error("Screen capture failed", error);
+  }
 });
