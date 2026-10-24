@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld('tracer', {
       callback();
     });
   },
+
+  ping: () => ipcRenderer.invoke("tracer:ping"),
  });

@@ -4,6 +4,7 @@ import {
   globalShortcut,
   desktopCapturer,
   session,
+  ipcMain,
 } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
@@ -54,6 +55,16 @@ app.whenReady().then(() => {
       .then((sources) => {
         callback({ video: sources[0] });
       });
+  });
+
+  ipcMain.handle("tracer:ping", (event) => {
+    if (!mainWindow ||
+      event.sender !== mainWindow.webContents ||
+      event.senderFrame !== mainWindow.webContents.mainFrame
+    ) {
+      throw new Error("Unauthorized IPC sender");
+    }
+    return "pong from main";
   });
 
   createWindow();

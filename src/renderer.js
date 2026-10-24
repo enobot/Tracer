@@ -15,6 +15,15 @@
 import './index.css';
 let latestScreenshot = null;
 
+window.tracer
+  .ping()
+  .then((reply) => {
+    console.log("IPC test: ", reply);
+  })
+  .catch((error) => {
+    console.log("IPC test failed", error);
+  });
+
 console.log(
   '👋 This message is being logged by the renderer process, included via Vite',
 );
