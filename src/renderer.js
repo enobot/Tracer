@@ -13,6 +13,7 @@
  */
 
 import './index.css';
+let latestScreenshot = null;
 
 console.log(
   '👋 This message is being logged by the renderer process, included via Vite',
@@ -48,10 +49,14 @@ window.tracer.onHotkeyPressed(async () => {
         canvas.height,
       );
 
-      const screenshot = canvas.toDataURL("image/png");
+      latestScreenshot = canvas.toDataURL("image/png");
 
       console.log("Screenshot captured");
-      console.log(screenshot);
+      console.log("Screenshot size: ", latestScreenshot.length);
+
+      stream.getTracks().forEach((track) => {
+        track.stop();
+      });
     }
   } catch (error) {
     console.error("Screen capture failed", error);
