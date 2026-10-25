@@ -28,6 +28,52 @@ console.log(
   "👋 This message is being logged by the renderer process, included via Vite",
 );
 
+const analyzeButton = document.getElementById("analyze-button");
+const promptInput = document.getElementById("tracer-prompt");
+
+const savedPrompt = localStorage.getItem("tracer:prompt");
+
+if (savedPrompt !== null) {
+  promptInput.value = savedPrompt;
+}
+
+promptInput.addEventListener("input", () => {
+  localStorage.setItem("tracer:prompt", promptInput.value);
+});
+
+const resultDisplay = document.getElementById("analysis-result");
+
+analyzeButton.addEventListener("click", async () => {
+  if (!latestScreenshot) {
+    resultDisplay.textContent = "Please capture a screenshot first.";
+    return;
+  }
+
+  const prompt = promptInput.value.trim();
+
+  if (!prompt) {
+    resultDisplay.textContent = "Please enter a prompt.";
+    return;
+  }
+
+  analyzeButton.disabled = true;
+  resultDisplay.textContent = "Processing screenshot...";
+
+  try {
+    const result = await window.tracer.inspectScreenshot(
+      latestScreenshot,
+      prompt,
+    );
+
+    resultDisplay.textContent = `${result.message} (${result.screenshotSize} characters)`;
+  } catch (error) {
+    console.error("Screenshot analysis failed:", error);
+    resultDisplay.textContent = "Analysis failed. Check DevTools.";
+  } finally {
+    analyzeButton.disabled = false;
+  }
+});
+
 window.tracer.onHotkeyPressed(async () => {
   console.log("Hotkey receieved by renderer.");
 
@@ -58,15 +104,6 @@ window.tracer.onHotkeyPressed(async () => {
       console.log("Screenshot size: ", latestScreenshot.length);
 
       const testPrompt = "Explain what is visible in this screenshot.";
-
-      window.tracer
-        .inspectScreenshot(latestScreenshot, testPrompt)
-        .then((result) => {
-          console.log("Screenshot IPC:", result);
-        })
-        .catch((error) => {
-          console.error("Screenshot IPC failed:", error);
-        });
 
       stream.getTracks().forEach((track) => {
         track.stop();
