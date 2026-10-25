@@ -1,15 +1,17 @@
-// oxlint-disable eslint-plugin-unicorn/no-empty-file
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+import { contextBridge, ipcRenderer } from "electron";
 
-import { contextBridge, ipcRenderer } from 'electron';
-
-contextBridge.exposeInMainWorld('tracer', {
+contextBridge.exposeInMainWorld("tracer", {
   onHotkeyPressed: (callback) => {
-    ipcRenderer.on('hotkey-pressed', () => {
+    ipcRenderer.on("hotkey-pressed", () => {
       callback();
     });
   },
 
   ping: () => ipcRenderer.invoke("tracer:ping"),
- });
+
+  inspectScreenshot: (screenshot, prompt) =>
+    ipcRenderer.invoke("tracer:inspect-screenshot", {
+      screenshot,
+      prompt,
+    }),
+});

@@ -12,7 +12,7 @@
  * https://electronjs.org/docs/tutorial/security
  */
 
-import './index.css';
+import "./index.css";
 let latestScreenshot = null;
 
 window.tracer
@@ -25,11 +25,11 @@ window.tracer
   });
 
 console.log(
-  '👋 This message is being logged by the renderer process, included via Vite',
+  "👋 This message is being logged by the renderer process, included via Vite",
 );
 
 window.tracer.onHotkeyPressed(async () => {
-  console.log('Hotkey receieved by renderer.');
+  console.log("Hotkey receieved by renderer.");
 
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -50,23 +50,28 @@ window.tracer.onHotkeyPressed(async () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      context.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       latestScreenshot = canvas.toDataURL("image/png");
 
       console.log("Screenshot captured");
       console.log("Screenshot size: ", latestScreenshot.length);
 
+      const testPrompt = "Explain what is visible in this screenshot.";
+
+      window.tracer
+        .inspectScreenshot(latestScreenshot, testPrompt)
+        .then((result) => {
+          console.log("Screenshot IPC:", result);
+        })
+        .catch((error) => {
+          console.error("Screenshot IPC failed:", error);
+        });
+
       stream.getTracks().forEach((track) => {
         track.stop();
       });
-    }
+    };
   } catch (error) {
     console.error("Screen capture failed", error);
   }

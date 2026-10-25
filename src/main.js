@@ -58,7 +58,8 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("tracer:ping", (event) => {
-    if (!mainWindow ||
+    if (
+      !mainWindow ||
       event.sender !== mainWindow.webContents ||
       event.senderFrame !== mainWindow.webContents.mainFrame
     ) {
@@ -66,7 +67,36 @@ app.whenReady().then(() => {
     }
     return "pong from main";
   });
+  ipcMain.handle("tracer:inspect-screenshot", (event, payload) => {
+    if (
+      !mainWindow ||
+      event.sender !== mainWindow.webContents ||
+      event.senderFrame !== mainWindow.webContents.mainFrame
+    ) {
+      throw new Error("Unauthorized IPC sender");
+    }
 
+    const { screenshot, prompt } = payload ?? {};
+
+    if (
+      typeof screenshot !== "string" ||
+      !screenshot.startsWith("data:image/png;base64,") ||
+      screenshot.length > 20_000_000
+    ) {
+      throw new Error("Invalid screenshot");
+    }
+
+    if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 2000) {
+      throw new Error("Invalid prompt");
+    }
+
+    return {
+      success: true,
+      message: "Screenshot received by main process",
+      screenshotSize: screenshot.length,
+      prompt,
+    };
+  });
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the
