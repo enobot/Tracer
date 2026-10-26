@@ -70,6 +70,11 @@ web_modules/
 .env.*
 !.env.example
 
+# Local secrets and signing material
+*.pem
+*.p12
+*.pfx
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

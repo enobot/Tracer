@@ -3,7 +3,7 @@
   "productName": "tracer",
   "version": "1.0.0",
   "private": true,
-  "description": "My Electron application description",
+  "description": "Desktop app that captures a screenshot and sends it to the signed-in ChatGPT plan, or copies it into Gemini or Claude.",
   "keywords": [],
   "license": "MIT",
   "author": {
@@ -17,7 +17,8 @@
     "make": "electron-forge make",
     "release": "electron-forge release",
     "lint": "oxlint && oxfmt --check",
-    "lint:fix": "oxlint --fix && oxfmt --write"
+    "lint:fix": "oxlint --fix && oxfmt --write",
+    "test": "node --test"
   },
   "devDependencies": {
     "@electron-forge/cli": "^8.0.1",
@@ -29,12 +30,13 @@
     "@electron-forge/plugin-fuses": "^8.0.1",
     "@electron-forge/plugin-vite": "^8.0.1",
     "@electron/fuses": "^2.1.3",
-    "electron": "44.5.1",
+    "electron": "44.9.3",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.86.0",
     "vite": "^8.3.1"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "jose": "^6.2.13"
   }
 }

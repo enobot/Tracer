@@ -5,10 +5,13 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { shouldIgnorePackagePath } from './src/security-policy.mjs';
 
 const config = {
   packagerConfig: {
     asar: true,
+    // Ship the Vite build only, and drop maps or secrets if they land under .vite.
+    ignore: shouldIgnorePackagePath,
   },
   rebuildConfig: {},
   makers: [
@@ -51,6 +54,7 @@ const config = {
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
+      [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
     }),
   ],
 };

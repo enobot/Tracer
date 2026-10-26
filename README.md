@@ -1,278 +1,58 @@
 # Tracer
 
-Tracer is a desktop AI assistant designed to let me interact with an AI using a single global hotkey and a saved prompt.
+Tracer is a free Windows desktop app that captures a screen and asks ChatGPT about it. The request uses the person's own ChatGPT Plus or Pro plan. Tracer does not charge for the model and does not ask for an API key.
 
-The goal is to make screen-based tasks quick and accessible:
+Gemini and Claude stay manual. Tracer can open the official site and copy the screenshot and prompt. It does not sign in to those accounts.
 
-**Press the hotkey → capture the current screen or window → send the screenshot with the saved prompt to the AI → display the response.**
+## What happens
 
----
+1. Press `Ctrl+Shift+Space`, or the shortcut you set. Tracer hides its window and freezes each monitor.
+2. Drag with the left button to capture that area, or right-click to capture the monitor under the pointer. Escape cancels and keeps the previous preview.
+3. The window then shows a preview. Nothing is uploaded yet.
+4. Edit the prompt, or pick one from Past Prompts, Favorites, or Saved Prompts. Ctrl+Enter submits it. The File menu has the same command.
+5. For ChatGPT, open the account chip and choose **Continue with ChatGPT** if you are not already connected.
+6. The answer appears in Tracer. A follow-up sends the screenshot again with the conversation, so it uses more of the plan allowance.
+7. **Remove preview** drops the screenshot and the conversation. **Disconnect** revokes the ChatGPT refresh token and deletes the local credential.
 
-## Current Status
+## ChatGPT
 
-🚧 **In development**
+Sign-in follows OpenAI's Sign in with ChatGPT flow for a local open-source app:
 
-The initial Electron + Vite project is set up and connected to GitHub. The first global hotkey is working successfully, including when another application is focused.
+- The system browser opens `https://auth.openai.com`. Tracer never sees the password.
+- The callback is `http://127.0.0.1:<port>/auth/callback` with PKCE. The page does not echo the code.
+- Plan use requires the `chatgpt.tokens.use.direct` permission. Sign-in alone is not enough. A free ChatGPT account is not described as eligible.
+- Analysis calls `POST https://api.openai.com/v1/responses` with `store: false` and `stream: true`. The model is the first one the account lists, not a key baked into Tracer.
+- The screenshot is sent as an `input_image` data URL. OpenAI's plan-usage preview says text, images, and files are supported when the selected model accepts them. The DevKit's text helper does not accept images, so Tracer uses that documented Responses image input directly.
+- Tokens stay in the main process and are encrypted with the operating system's credential store. The window only receives status, the email label, and the answer.
+- **Manage usage** opens `https://chatgpt.com/settings/usage`.
 
-### Completed
+Plus plan limits are shared with other apps. If ChatGPT reports that the allowance is used up, wait for it to reset or manage usage there. A refresh can also fail and ask for sign-in again.
 
-- [x] Electron Forge + Vite project created
-- [x] JavaScript + Node.js environment configured
-- [x] Git repository initialized
-- [x] GitHub repository connected
-- [x] Initial commit pushed to `main`
-- [x] Electron desktop window launches successfully
-- [x] Global `Ctrl + Shift + Space` hotkey registered
-- [x] Hotkey tested while another application is focused
-- [x] Hotkey registration and failure checks added
+## Gemini and Claude
 
-### Next
+These are labeled **Open in browser**. There is no Connect button. Tracer copies the screenshot and the prompt, then opens `https://gemini.google.com/app` or `https://claude.ai/new`. Paste them yourself. That is not an automatic connection. No official third-party subscription API for those consumer plans was confirmed for this app.
 
-- [ ] Capture the user's screen/window
-- [ ] Verify and display the captured image
-- [ ] Send the screenshot + saved prompt to the OpenAI API
-- [ ] Display the AI response
-- [ ] Add saved/customizable prompt support
-- [ ] Add optional text-to-speech
-- [ ] Package Tracer as an installable desktop application
+## Privacy and limits
 
----
+- The screenshot is not written to disk.
+- The saved prompt is local. The conversation is kept only until Clear or a new capture.
+- There is no analytics.
+- Capture is the dragged area, or one whole monitor on right-click. The selection overlay is drawn after the snapshot, so it is not part of the picture.
+- The production window cannot reach the network. Only the main process talks to ChatGPT.
+- The packaged app is unsigned, so Windows SmartScreen can warn on first launch.
+- macOS and Linux builds exist in the Forge config and have not been run here.
 
-## How Tracer Will Work
+## Develop
 
-```text
-Global Hotkey
-      ↓
-Electron Main Process
-      ↓
-IPC / Preload Bridge
-      ↓
-Renderer
-      ↓
-Screen Capture
-      ↓
-Screenshot + Saved Prompt
-      ↓
-OpenAI API
-      ↓
-AI Response
-      ↓
-Tracer Overlay
-```
-
-The long-term goal is to keep the core interaction simple:
-
-> **One hotkey + one saved prompt.**
-
-The prompt will determine what Tracer does. Instead of creating separate hard-coded modes for translation, explanation, summarization, or question answering, the saved prompt will define the behavior.
-
----
-
-## Tech Stack
-
-| Technology | Purpose |
-|---|---|
-| **JavaScript** | Primary programming language |
-| **Electron** | Desktop application framework and OS-level functionality |
-| **Node.js + npm** | Runtime and package management |
-| **Electron Forge** | Electron project scaffolding and development/build tooling |
-| **Vite** | Renderer development server and bundler |
-| **React** | Planned UI technology |
-| **HTML + CSS** | Renderer structure and styling |
-| **OpenAI API** | Planned AI service for screenshot + prompt processing |
-| **Git + GitHub** | Version control and remote repository |
-| **Visual Studio Code** | Development environment |
-
-### Why These Tools?
-
-**Electron**  
-Electron was chosen because Tracer needs desktop functionality such as global hotkeys, application windows, screen access, and operating-system integration while still allowing development with JavaScript and web technologies.
-
-**Vite**  
-Vite provides a fast development workflow for the renderer. It is a development server and bundler, not the UI framework.
-
-**React**  
-React is planned for the UI because it is already familiar and will make Tracer's interface easier to organize into reusable components.
-
-**Git + GitHub**  
-Git + GitHub provide version control, checkpoints, and a remote copy of the project.
-
----
-
-## Getting Started
-
-### Requirements
-
-- Windows
-- Node.js
-- npm
-- Git
-- Visual Studio Code
-
-### Run Tracer
-
-From the project directory:
+Requirements: Windows, Node.js, and npm.
 
 ```bash
+npm install
 npm start
+npm test
+npm run package
 ```
 
-Electron Forge should start the development application and open the Tracer window.
+`npm start` opens the app and registers `Ctrl+Shift+Space`. `npm test` uses mocked ChatGPT responses and does not contact OpenAI. A live region capture was run on this Windows PC. An authenticated ChatGPT reply, a second monitor, and pasting into Gemini or Claude still need a person.
 
----
-
-## Current Hotkey
-
-### `Ctrl + Shift + Space`
-
-This is currently a test shortcut.
-
-When the shortcut is pressed, the Electron main-process terminal should print:
-
-```text
-Hotkey Detected
-```
-
-The shortcut is global, so it can be triggered while another application is focused.
-
-### Hotkey Registration
-
-Tracer currently uses Electron's `globalShortcut` API:
-
-```javascript
-const registered = globalShortcut.register('Ctrl+Shift+Space', () => {
-  console.log('Hotkey Detected');
-});
-
-if (!registered) {
-  console.log('registration failed');
-}
-
-console.log(globalShortcut.isRegistered('Ctrl+Shift+Space'));
-```
-
-- `globalShortcut.register()` returns a boolean indicating whether Electron successfully registered the shortcut.
-- `globalShortcut.isRegistered()` checks whether the shortcut is currently registered.
-- The callback runs when the shortcut is actually pressed.
-
----
-
-## Electron Architecture
-
-Tracer uses Electron's process model.
-
-### Main Process
-
-`src/main.js`
-
-Responsible for application-level and desktop functionality, including:
-
-- Creating the Electron window
-- Managing the application lifecycle
-- Registering the global hotkey
-- Eventually handling screenshot and AI-related desktop operations
-
-### Renderer Process
-
-`src/renderer.js`
-
-Responsible for the interface displayed inside the Electron window.
-
-### Preload Script
-
-`src/preload.js`
-
-Acts as a controlled bridge between the renderer and privileged Electron functionality.
-
-Tracer will use this layer when the renderer needs to communicate with the main process.
-
----
-
-## Project Structure
-
-```text
-Tracer/
-├── src/
-│   ├── main.js
-│   ├── preload.js
-│   ├── renderer.js
-│   └── index.css
-├── index.html
-├── package.json
-├── package-lock.json
-├── forge.config.mjs
-├── vite.main.config.mjs
-├── vite.preload.config.mjs
-├── vite.renderer.config.mjs
-└── README.md
-```
-
----
-
-## Development Workflow
-
-1. Make a change.
-2. Save with `Ctrl + S`.
-3. Run/restart Tracer with `npm start`.
-4. Test the feature.
-5. Check `git status`.
-6. Stage changes with `git add .`.
-7. Commit the changes.
-8. Push with `git push`.
-
-### Useful Commands
-
-```bash
-npm start
-git status
-git add .
-git commit -m "Describe the change"
-git push
-git pull
-code .
-```
-
----
-
-## Roadmap
-
-- [x] Electron app launches
-- [x] Global hotkey works
-- [ ] Capture the screen/window
-- [ ] Verify/display the captured image
-- [ ] Send screenshot + prompt to the AI
-- [ ] Display the AI response
-- [ ] Save/customize the prompt
-- [ ] Add optional text-to-speech
-- [ ] Allow a custom hotkey
-- [ ] Package Tracer as an installable desktop app
-
----
-
-## Performance Metrics
-
-As development progresses, I plan to track:
-
-- End-to-end latency
-- Screenshot-capture latency
-- AI request latency
-- Request success rate
-- Workflow-time reduction
-- Text-to-speech startup latency
-
----
-
-## References
-
-- [Electron `globalShortcut` API](https://www.electronjs.org/docs/latest/api/global-shortcut)
-- [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
-- [Electron Forge](https://js.electronforge.io/)
-- [React Documentation](https://react.dev/)
-- [Vite Documentation](https://vite.dev/guide/)
-- [Node.js Documentation](https://nodejs.org/docs/latest/api/)
-
----
-
-## Repository
-
-[GitHub — enobot/Tracer](https://github.com/enobot/Tracer)
+The local `backend/` folder is an unused loopback stub. The desktop app does not start it.

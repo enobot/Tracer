@@ -1,12 +1,154 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
+    <title>Tracer</title>
   </head>
   <body>
+    <div id="workspace" class="app">
+      <main class="workspace">
+        <header>
+          <h1>Tracer</h1>
+          <p id="capture-hint">
+            Press the hotkey, drag to select an area, or right-click a monitor
+            to capture it. Escape cancels. Nothing is sent until you submit it.
+          </p>
+        </header>
+
+        <label for="tracer-prompt">Prompt</label>
+        <textarea
+          id="tracer-prompt"
+          rows="6"
+          maxlength="2000"
+          autocomplete="off"
+        >
+Explain what is visible in this screenshot.</textarea
+        >
+
+        <div class="actions">
+          <button id="save-prompt" type="button">Save Prompt</button>
+          <button id="set-hotkey" type="button">Set Hotkey</button>
+        </div>
+        <p id="save-note" aria-live="polite"></p>
+
+        <button
+          id="provider-chip"
+          type="button"
+          aria-expanded="false"
+          aria-controls="provider-panel"
+        >
+          ChatGPT
+        </button>
+        <div id="provider-panel" hidden>
+          <fieldset>
+            <legend>Provider</legend>
+            <label>
+              <input
+                id="provider-chatgpt"
+                type="radio"
+                name="provider"
+                value="chatgpt"
+                checked
+              />
+              ChatGPT
+            </label>
+            <label>
+              <input
+                id="provider-gemini"
+                type="radio"
+                name="provider"
+                value="gemini"
+              />
+              Gemini
+            </label>
+            <label>
+              <input
+                id="provider-claude"
+                type="radio"
+                name="provider"
+                value="claude"
+              />
+              Claude
+            </label>
+          </fieldset>
+          <p id="provider-status">Connection available</p>
+          <p id="provider-note"></p>
+          <p class="panel-actions">
+            <button id="chatgpt-sign-in" type="button">
+              Continue with ChatGPT
+            </button>
+            <button id="chatgpt-disconnect" type="button" hidden>
+              Disconnect
+            </button>
+            <button id="manage-usage" type="button" hidden>Manage usage</button>
+          </p>
+        </div>
+
+        <img id="shot-preview" alt="Captured screenshot preview" hidden />
+        <p>
+          <button
+            id="dismiss-preview"
+            type="button"
+            class="text-command"
+            hidden
+          >
+            Remove preview
+          </button>
+        </p>
+
+        <p class="submit-row">
+          <button id="analyze-command" type="button" class="text-command">
+            Analyze screenshot
+          </button>
+          <button id="cancel-button" type="button" hidden>Cancel</button>
+        </p>
+        <p id="submit-hint">
+          Ctrl+Enter submits the screenshot. The File menu has the same command.
+        </p>
+        <div id="analysis-result"></div>
+      </main>
+
+      <aside class="library" aria-label="Prompt library">
+        <div class="tabs" role="tablist">
+          <button id="tab-past" type="button" role="tab" aria-selected="true">
+            Past Prompts
+          </button>
+          <button
+            id="tab-favorites"
+            type="button"
+            role="tab"
+            aria-selected="false"
+          >
+            Favorites
+          </button>
+          <button id="tab-saved" type="button" role="tab" aria-selected="false">
+            Saved Prompts
+          </button>
+        </div>
+        <div id="library-tools"></div>
+        <div id="library-list"></div>
+      </aside>
+    </div>
+
+    <dialog id="hotkey-dialog">
+      <h2>Set Hotkey</h2>
+      <p id="hotkey-current"></p>
+      <p id="hotkey-capture">Press a shortcut with at least one modifier.</p>
+      <p id="hotkey-error"></p>
+      <form method="dialog">
+        <button id="hotkey-cancel" type="submit" value="cancel">Cancel</button>
+      </form>
+    </dialog>
+
+    <div id="snip" hidden>
+      <img id="snip-image" alt="" draggable="false" />
+      <div id="snip-shade"></div>
+      <div id="snip-rect" hidden></div>
+      <p id="snip-help">
+        Drag to select an area. Right-click to capture this monitor. Escape
+        cancels.
+      </p>
+    </div>
     <script type="module" src="/src/renderer.js"></script>
-    <video id="screenPreview" autoplay> </video>
-    <canvas id="screenCapture"> </canvas>
   </body>
 </html>
