@@ -73,7 +73,7 @@ The boundary that matters is between **Main** and **Renderers**. Everything that
 ## Screenshot capture
 
 1. `onHotkey` ([main.js:421](src/main.js:421)) enters a capture gate so repeated presses are ignored.
-2. `beginRegionSelect` hides the main window, waits 150 ms, then calls `desktopCapturer.getSources` with a thumbnail size equal to the largest monitor in physical pixels (capped at 8192). On the test PC this took about 0.6–1.0 s.
+2. `beginRegionSelect` hides the main window, waits 150 ms if it was on screen (not when it was in the tray or minimized), then calls `desktopCapturer.getSources` with a thumbnail size equal to the largest monitor in physical pixels (capped at 8192). On the test PC this took about 0.6–1.0 s.
 3. Each source is paired to a display by `display_id`, then by physical size ([region-select.mjs:80](src/region-select.mjs:80)). The NativeImages stay in the `frozen` map in main.
 4. One frameless, always-on-top overlay window per monitor loads `index.html?overlay=1`. It asks for its own frame (`tracer:frozen-frame`, 1600px JPEG q60) and shows it full-screen.
 5. The overlay reports a left-drag rectangle (clamped to its own edges), a right-click, or Escape. Main converts DIP coordinates to thumbnail pixels with `selectionToCrop`, crops, downsizes to at most 1600px, and encodes JPEG q85.

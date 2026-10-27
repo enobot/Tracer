@@ -156,15 +156,16 @@ ChatGPT usage counts against your plan's limits. OpenAI's documentation describe
 
 ## Testing and validation
 
-| Command                                             | What it covers                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                          | 98 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, the tray and quit rules, the icon files, region math, the overlay gestures, answer formatting, the prompt library, the language list and every translation file (including a check that every message the main process can show is translated), and the ChatGPT sign-in, streaming, and request flow against a fake OpenAI server (real signed tokens, a real loopback listener) |
-| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                                                                                                                                                                                                              |
-| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                                                                                                                                                                                                     |
+| Command                                             | What it covers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm test`                                          | 100 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, the tray and quit rules, the icon files, region math, the overlay gestures, answer formatting, the prompt library, the language list and every translation file (including a check that every message the main process can show is translated), and the ChatGPT sign-in, streaming, request, and lost-connection handling against a fake OpenAI server (real signed tokens, a real loopback listener) |
+| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                                                                                                                                                                                                                                    |
+| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                                                                                                                                                                                                                           |
 
 Results:
 
-- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 98 tests, 98 passed, 0 failed. `npm run lint` passes and also runs on GitHub Actions.
+- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 100 tests, 100 passed, 0 failed. `npm run lint` passes and also runs on GitHub Actions.
+- Capture speed, measured on the packaged code over 25 captures: from the tray, the shortcut brings up the selection overlay in a median of 599 ms (p95 646 ms), down from 711 ms after removing an unneeded wait. About 400 ms of that is Windows capturing the screen. Memory stayed flat over 50 captures, and the packaged app uses no measurable CPU and no network while idle. Details: [TEST_REPORT.md](TEST_REPORT.md).
 - The packaged app (`out/Tracer-win32-x64/Tracer.exe`) started on its own on 26 October 2026, with no Node.js, wrote only to the profile it was given, and made no network connections while idle.
 - The built main process was run in Electron with a fresh profile on 26 October 2026 to check the tray. Closing hid the window and kept the shortcut registered. The notice appeared on the first close only. A capture started from the tray and cancelled with Esc left the window hidden. Opening Tracer again showed the window. Switching to Vietnamese translated the tray menu. Quit Tracer and a simulated Windows sign-out both exited.
 - The built window was driven with a stand-in main process and no network on 26 October 2026. The first-launch language picker could not be skipped, choosing Vietnamese translated the window and the default prompt, the request carried the chosen language, streamed text appeared before the answer finished, Arabic switched the layout to right to left, a language without translations kept English buttons, and Hide prompts stayed hidden after a reload.
@@ -177,6 +178,16 @@ The language picker, streamed answers, and Hide prompts were tried in the runnin
 Running in the tray after the window is closed was confirmed in the running app on 26 October 2026.
 
 Not yet tested live: how much faster answers arrive, the first-close notice and how the tray icon looks, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
+
+## Keyboard shortcuts
+
+| Keys                       | Action                                                                      |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `Ctrl+Shift+Space`         | Capture (change it with **Set Hotkey**)                                     |
+| Drag / right-click / `Esc` | In the capture overlay: select an area / capture the whole monitor / cancel |
+| `Ctrl+Enter`               | Analyze the current screenshot                                              |
+| `Enter`                    | Send a follow-up question (`Shift+Enter` for a new line)                    |
+| `Tab`, arrow keys          | Move between controls; arrows move between the prompt library tabs          |
 
 ## Security and privacy
 
@@ -214,6 +225,10 @@ Reviews: [SECURITY_AUDIT.md](SECURITY_AUDIT.md) and [PRIVACY_REVIEW.md](PRIVACY_
 - One ChatGPT account is stored at a time.
 - Only tested on Windows with one monitor at 100% scaling.
 - Ideas I have not built: reading answers aloud, and other ways to trigger a capture (for example camera or eye-blink input).
+
+## Contributing
+
+Bug reports are welcome as [GitHub issues](https://github.com/enobot/Tracer/issues): say what you did, what you expected, and what happened, and leave out screenshots that show private information. For code changes, open a pull request; `npm test` and `npm run lint` must pass, and the same checks run on GitHub Actions. User-facing text goes in `src/i18n-messages.mjs` with a translation in each file under `src/locales/`; the tests point out anything missing.
 
 ## Development transparency
 
