@@ -757,6 +757,7 @@ function initWorkspace() {
       writeStorage(DRAFT_KEY, promptInput.value);
     }
     if (remember) writeStorage(LANGUAGE_KEY, code);
+    void window.tracer?.setLanguage?.(code)?.catch(() => {});
     setLibraryHidden(app?.classList.contains('library-hidden') ?? false);
     renderConnection();
     renderLibrary();

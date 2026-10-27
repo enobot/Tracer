@@ -175,4 +175,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'Виділіть область мишею. Правий клік знімає цей екран. Esc скасовує.',
+
+  // Tray
+  'Open Tracer': 'Відкрити Tracer',
+  'Quit Tracer': 'Вийти з Tracer',
+  'Tracer is still running': 'Tracer продовжує працювати',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Натисніть {hotkey}, щоб зробити знімок. Щоб вийти, клацніть правою кнопкою миші значок Tracer біля годинника (він може бути під стрілкою ^) і виберіть «Вийти з Tracer».',
 };

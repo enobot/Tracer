@@ -14,13 +14,16 @@ const config = {
     ignore: shouldIgnorePackagePath,
     // Without these, tracer.exe reports Electron's "Copyright (C) 2015 GitHub, Inc.".
     appCopyright: 'Copyright © 2026 Tracy Tran',
+    // assets/icon.ico on Windows, assets/icon.png on Linux. Rebuild both with
+    // npx electron scripts/build-icons.mjs after editing assets/icon.svg.
+    icon: 'assets/icon',
     win32metadata: {
       FileDescription: 'Tracer',
     },
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({ setupIcon: 'assets/icon.ico' }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
     new MakerDeb({}),

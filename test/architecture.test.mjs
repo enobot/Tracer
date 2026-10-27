@@ -55,6 +55,42 @@ describe('Electron source boundaries', () => {
     );
   });
 
+  it('keeps running in the tray until the user quits, without blocking sign-out', () => {
+    assert.match(main, /new Tray\(appIcon\(\)\)/);
+    // Closing hides the window, unless Tracer is quitting or has no tray icon.
+    assert.match(
+      main,
+      /on\('close', \(event\) => \{\s*if \(quitting \|\| !tray\) return;\s*event\.preventDefault\(\);\s*mainWindow\.hide\(\);/,
+    );
+    assert.match(main, /app\.on\('before-quit', \(\) => \{\s*quitting = true;/);
+    for (const event of ['query-session-end', 'session-end']) {
+      assert.match(
+        main,
+        new RegExp(`on\\('${event}', \\(\\) => \\{\\s*quitting = true;`),
+      );
+    }
+    assert.match(
+      main,
+      /label: t\('Quit Tracer'\), click: \(\) => app\.quit\(\)/,
+    );
+    assert.match(main, /will-quit[^]*tray\?\.destroy\(\)/);
+    // A capture started from the tray and cancelled leaves Tracer in the tray.
+    assert.match(
+      main,
+      /returnToTray = Boolean\(tray\) && !mainWindow\.isVisible\(\);/,
+    );
+    assert.match(
+      main,
+      /if \(outcome !== 'cancel' \|\| !returnToTray\) restoreMain\(\);/,
+    );
+    assert.match(
+      main,
+      /'tracer:set-language', \(event, code\) => \{\s*requireSender\(event\);\s*if \(!isLanguageCode\(code\)\) return/,
+    );
+    assert.match(forge, /icon: 'assets\/icon'/);
+    assert.match(forge, /setupIcon: 'assets\/icon\.ico'/);
+  });
+
   it('awaits the Electron 44 clipboard API for Gemini and Claude handoffs', () => {
     // clipboard.write({ text, image }) is the pre-44 form. On 44 it returns a
     // rejected promise, so nothing is copied while Tracer reports success.

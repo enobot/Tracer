@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('tracer', {
   onCommand: (callback) => commands.add(callback),
   onAnswerText: (callback) => answerText.add(callback),
   getSession: () => ipcRenderer.invoke('tracer:get-session'),
+  setLanguage: (code) => ipcRenderer.invoke('tracer:set-language', code),
   signIn: (options) =>
     ipcRenderer.invoke('tracer:sign-in', {
       reconsent: options?.reconsent === true,

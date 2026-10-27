@@ -13,11 +13,13 @@ import {
   screen,
   session,
   shell,
+  Tray,
 } from 'electron';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
+import { ICON_PNGS } from './app-icon.mjs';
 import { createChatGPTRuntime } from './chatgpt-runtime.mjs';
 import {
   USAGE_URL,
@@ -25,7 +27,8 @@ import {
   buildConversation,
   handoffUrl,
 } from './chatgpt-plan.mjs';
-import { isLanguageCode } from './languages.mjs';
+import { translator } from './i18n.mjs';
+import { isLanguageCode, matchLanguage } from './languages.mjs';
 import {
   pairDisplaySources,
   selectionForRequest,
@@ -72,6 +75,14 @@ let sessionCounter = 0;
 let activeSession = 0;
 let regionLocked = false;
 let overlays = [];
+let tray = null;
+// Closing the window only hides it until the user quits from the tray, the
+// File menu, or Windows ends the session.
+let quitting = false;
+let trayNoticeShown = false;
+// A capture started from the tray goes back there if it is cancelled.
+let returnToTray = false;
+let interfaceLanguage = 'en';
 const frozen = new Map();
 const captureGate = createCaptureGate();
 const devServerUrl =
@@ -248,7 +259,8 @@ function finishActive(request) {
   destroyOverlays();
   captureGate.leave();
   regionLocked = false;
-  restoreMain();
+  if (outcome !== 'cancel' || !returnToTray) restoreMain();
+  returnToTray = false;
   if (outcome === 'capture') {
     emitTracer({
       type: 'capture',
@@ -346,6 +358,7 @@ async function beginRegionSelect() {
   activeSession = id;
   try {
     if (!activeWebContents()) throw new Error('missing');
+    returnToTray = Boolean(tray) && !mainWindow.isVisible();
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide();
     await delay(150);
     if (activeSession !== id) {
@@ -479,6 +492,74 @@ async function registerHotkey() {
   }
 }
 
+let iconImage = null;
+
+// One image with every size, so Windows picks the sharp one for each scaling.
+function appIcon() {
+  if (iconImage) return iconImage;
+  iconImage = nativeImage.createEmpty();
+  for (const { scaleFactor, base64 } of ICON_PNGS) {
+    iconImage.addRepresentation({
+      scaleFactor,
+      buffer: Buffer.from(base64, 'base64'),
+    });
+  }
+  return iconImage;
+}
+
+function trayNoticeFile() {
+  return path.join(app.getPath('userData'), 'tray-notice.json');
+}
+
+async function loadTrayNotice() {
+  try {
+    const parsed = JSON.parse(await readFile(trayNoticeFile(), 'utf8'));
+    trayNoticeShown = parsed?.shown === true;
+  } catch {
+    trayNoticeShown = false;
+  }
+}
+
+function updateTrayMenu() {
+  if (!tray || tray.isDestroyed()) return;
+  const t = translator(interfaceLanguage);
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: t('Open Tracer'), click: () => restoreMain() },
+      { type: 'separator' },
+      { label: t('Quit Tracer'), click: () => app.quit() },
+    ]),
+  );
+}
+
+function installTray() {
+  try {
+    tray = new Tray(appIcon());
+  } catch {
+    // Without a tray icon, closing the window quits as before.
+    tray = null;
+    return;
+  }
+  tray.setToolTip('Tracer');
+  tray.on('click', () => restoreMain());
+  updateTrayMenu();
+}
+
+// The first time the window is closed, say where Tracer went and how to exit.
+function noteRunningInTray() {
+  if (trayNoticeShown || !tray || process.platform !== 'win32') return;
+  trayNoticeShown = true;
+  const t = translator(interfaceLanguage);
+  tray.displayBalloon({
+    title: t('Tracer is still running'),
+    content: t(
+      'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.',
+      { hotkey: activeShortcut },
+    ),
+  });
+  void writeFile(trayNoticeFile(), '{"shown":true}\n').catch(() => {});
+}
+
 function installMenu() {
   const viewMenu = [
     { role: 'resetZoom' },
@@ -523,6 +604,7 @@ const createWindow = () => {
     minWidth: 720,
     minHeight: 560,
     title: 'Tracer',
+    icon: appIcon(),
     webPreferences: {
       ...secureWebPreferences,
       preload: path.join(__dirname, 'preload.cjs'),
@@ -530,6 +612,19 @@ const createWindow = () => {
   });
 
   hardenWindow(mainWindow);
+  mainWindow.on('close', (event) => {
+    if (quitting || !tray) return;
+    event.preventDefault();
+    mainWindow.hide();
+    noteRunningInTray();
+  });
+  // Signing out or shutting down must not be blocked by the hide above.
+  mainWindow.on('query-session-end', () => {
+    quitting = true;
+  });
+  mainWindow.on('session-end', () => {
+    quitting = true;
+  });
   mainWindow.on('closed', () => {
     activeSession = 0;
     frozen.clear();
@@ -813,6 +908,15 @@ app.whenReady().then(async () => {
     return { accelerator: activeShortcut };
   });
 
+  // The tray menu and notice follow the window's language.
+  ipcMain.handle('tracer:set-language', (event, code) => {
+    requireSender(event);
+    if (!isLanguageCode(code)) return { ok: false };
+    interfaceLanguage = code;
+    updateTrayMenu();
+    return { ok: true };
+  });
+
   ipcMain.handle('tracer:set-hotkey', async (event, accelerator) => {
     requireSender(event);
     if (typeof accelerator !== 'string' || !isValidAccelerator(accelerator)) {
@@ -849,6 +953,9 @@ app.whenReady().then(async () => {
     return { ok: true, accelerator: activeShortcut };
   });
 
+  interfaceLanguage = matchLanguage(app.getLocale());
+  await loadTrayNotice();
+  installTray();
   createWindow();
 
   app.on('activate', () => {
@@ -866,7 +973,13 @@ app.on('window-all-closed', () => {
   }
 });
 
+app.on('before-quit', () => {
+  quitting = true;
+});
+
 app.on('will-quit', () => {
+  tray?.destroy();
+  tray = null;
   activeSession = 0;
   frozen.clear();
   destroyOverlays();

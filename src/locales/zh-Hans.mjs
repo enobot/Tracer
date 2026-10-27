@@ -165,4 +165,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     '拖动以选择区域。右键截取此屏幕。按 Esc 取消。',
+
+  // Tray
+  'Open Tracer': '打开 Tracer',
+  'Quit Tracer': '退出 Tracer',
+  'Tracer is still running': 'Tracer 仍在运行',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    '按 {hotkey} 截图。要退出，请右键点击时钟旁边的 Tracer 图标（它可能在 ^ 箭头里），然后选择“退出 Tracer”。',
 };

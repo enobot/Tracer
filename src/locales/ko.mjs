@@ -172,4 +172,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     '드래그해서 영역을 선택하세요. 오른쪽 클릭은 이 화면을 캡처하고, Esc는 취소합니다.',
+
+  // Tray
+  'Open Tracer': 'Tracer 열기',
+  'Quit Tracer': 'Tracer 종료',
+  'Tracer is still running': 'Tracer가 계속 실행 중입니다',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    '{hotkey}를 누르면 캡처할 수 있습니다. 종료하려면 시계 근처의 Tracer 아이콘을 마우스 오른쪽 버튼으로 클릭하고(^ 화살표 안에 있을 수 있습니다) Tracer 종료를 선택하세요.',
 };

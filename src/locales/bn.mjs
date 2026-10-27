@@ -171,4 +171,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'একটি অংশ বেছে নিতে টেনে নিন। এই স্ক্রিন ক্যাপচার করতে রাইট-ক্লিক করুন। Esc বাতিল করে।',
+
+  // Tray
+  'Open Tracer': 'Tracer খুলুন',
+  'Quit Tracer': 'Tracer বন্ধ করুন',
+  'Tracer is still running': 'Tracer এখনও চলছে',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'ক্যাপচার করতে {hotkey} চাপুন। বের হতে ঘড়ির কাছে Tracer আইকনে ডান-ক্লিক করুন (এটি ^ তীরের নিচে থাকতে পারে) এবং Tracer বন্ধ করুন বেছে নিন।',
 };

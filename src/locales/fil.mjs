@@ -176,4 +176,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'I-drag para pumili ng bahagi. Mag-right-click para kunin ang screen na ito. Kinakansela ng Esc.',
+
+  // Tray
+  'Open Tracer': 'Buksan ang Tracer',
+  'Quit Tracer': 'Lumabas sa Tracer',
+  'Tracer is still running': 'Tumatakbo pa rin ang Tracer',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Pindutin ang {hotkey} para kumuha ng screenshot. Para lumabas, i-right-click ang icon ng Tracer malapit sa orasan (baka nasa ilalim ng arrow na ^) at piliin ang Lumabas sa Tracer.',
 };

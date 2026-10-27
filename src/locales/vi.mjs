@@ -172,4 +172,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'Kéo chuột để chọn vùng. Nhấp chuột phải để chụp màn hình này. Nhấn Esc để hủy.',
+
+  // Tray
+  'Open Tracer': 'Mở Tracer',
+  'Quit Tracer': 'Thoát Tracer',
+  'Tracer is still running': 'Tracer vẫn đang chạy',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Nhấn {hotkey} để chụp. Để thoát, nhấp chuột phải vào biểu tượng Tracer gần đồng hồ (có thể nằm dưới mũi tên ^) rồi chọn Thoát Tracer.',
 };

@@ -140,4 +140,10 @@ export const MESSAGES = [
 
   // Capture overlay
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.',
+
+  // Tray icon menu and the notice after the window is first closed
+  'Open Tracer',
+  'Quit Tracer',
+  'Tracer is still running',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.',
 ];

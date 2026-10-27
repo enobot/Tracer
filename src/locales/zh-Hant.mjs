@@ -165,4 +165,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     '拖曳以選取區域。按右鍵擷取此螢幕。按 Esc 取消。',
+
+  // Tray
+  'Open Tracer': '開啟 Tracer',
+  'Quit Tracer': '結束 Tracer',
+  'Tracer is still running': 'Tracer 仍在執行',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    '按 {hotkey} 擷取畫面。要結束，請在時鐘旁的 Tracer 圖示上按右鍵（它可能在 ^ 箭頭裡），然後選擇「結束 Tracer」。',
 };

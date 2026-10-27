@@ -167,4 +167,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'ลากเพื่อเลือกพื้นที่ คลิกขวาเพื่อจับภาพหน้าจอนี้ กด Esc เพื่อยกเลิก',
+
+  // Tray
+  'Open Tracer': 'เปิด Tracer',
+  'Quit Tracer': 'ออกจาก Tracer',
+  'Tracer is still running': 'Tracer ยังทำงานอยู่',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'กด {hotkey} เพื่อจับภาพ หากต้องการออก ให้คลิกขวาที่ไอคอน Tracer ใกล้นาฬิกา (อาจอยู่ใต้ลูกศร ^) แล้วเลือก ออกจาก Tracer',
 };

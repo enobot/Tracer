@@ -174,4 +174,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'Bir alan seçmek için sürükleyin. Bu ekranı yakalamak için sağ tıklayın. Esc iptal eder.',
+
+  // Tray
+  'Open Tracer': 'Tracer’ı aç',
+  'Quit Tracer': 'Tracer’dan çık',
+  'Tracer is still running': 'Tracer çalışmaya devam ediyor',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Yakalamak için {hotkey} tuşlarına basın. Çıkmak için saatin yanındaki Tracer simgesine sağ tıklayın (^ okunun altında olabilir) ve “Tracer’dan çık” seçeneğini seçin.',
 };

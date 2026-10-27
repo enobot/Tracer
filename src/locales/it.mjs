@@ -175,4 +175,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'Trascina per selezionare un’area. Clic destro per catturare questo schermo. Esc per annullare.',
+
+  // Tray
+  'Open Tracer': 'Apri Tracer',
+  'Quit Tracer': 'Esci da Tracer',
+  'Tracer is still running': 'Tracer è ancora attivo',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Premi {hotkey} per catturare. Per uscire, fai clic destro sull’icona di Tracer vicino all’orologio (può trovarsi sotto la freccia ^) e scegli Esci da Tracer.',
 };

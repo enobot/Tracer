@@ -173,4 +173,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'Выделите область мышью. Правый щелчок снимает этот экран. Esc отменяет.',
+
+  // Tray
+  'Open Tracer': 'Открыть Tracer',
+  'Quit Tracer': 'Выйти из Tracer',
+  'Tracer is still running': 'Tracer продолжает работать',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Нажмите {hotkey}, чтобы сделать снимок. Чтобы выйти, щёлкните правой кнопкой мыши по значку Tracer рядом с часами (он может быть скрыт под стрелкой ^) и выберите «Выйти из Tracer».',
 };

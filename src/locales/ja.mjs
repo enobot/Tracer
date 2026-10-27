@@ -176,4 +176,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'ドラッグで範囲を選択します。右クリックでこの画面をキャプチャ、Esc でキャンセルします。',
+
+  // Tray
+  'Open Tracer': 'Tracer を開く',
+  'Quit Tracer': 'Tracer を終了',
+  'Tracer is still running': 'Tracer は実行中です',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    '{hotkey} を押すとキャプチャできます。終了するには、時計の近くにある Tracer のアイコンを右クリックし（^ の矢印の中にある場合があります）、「Tracer を終了」を選びます。',
 };

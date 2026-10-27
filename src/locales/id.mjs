@@ -176,4 +176,11 @@ export default {
 
   'Drag to select an area. Right-click to capture this monitor. Escape cancels.':
     'Seret untuk memilih area. Klik kanan untuk menangkap layar ini. Esc membatalkan.',
+
+  // Tray
+  'Open Tracer': 'Buka Tracer',
+  'Quit Tracer': 'Keluar dari Tracer',
+  'Tracer is still running': 'Tracer masih berjalan',
+  'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
+    'Tekan {hotkey} untuk menangkap layar. Untuk keluar, klik kanan ikon Tracer di dekat jam (mungkin ada di bawah panah ^) lalu pilih Keluar dari Tracer.',
 };
