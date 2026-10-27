@@ -270,7 +270,9 @@ window.__ready = true;
       sandbox: true,
     },
   });
-  await win.loadURL('data:text/html,<title>gesture</title><body style="margin:0"></body>');
+  await win.loadURL(
+    'data:text/html,<title>gesture</title><body style="margin:0"></body>',
+  );
   await win.webContents.executeJavaScript(install);
   win.show();
   win.focus();
@@ -336,8 +338,12 @@ app
         displays: capture.displays,
         scales: capture.report.map((entry) => entry.scaleFactor),
         matched: capture.report.map((entry) => entry.colorMatched),
-        overlayStable: capture.report.map((entry) => entry.unchangedAfterOverlay),
-        freshSawOverlay: capture.report.map((entry) => entry.freshCaptureSawOverlay),
+        overlayStable: capture.report.map(
+          (entry) => entry.unchangedAfterOverlay,
+        ),
+        freshSawOverlay: capture.report.map(
+          (entry) => entry.freshCaptureSawOverlay,
+        ),
         drag: mouse.drag,
         right: mouse.right,
         escape: mouse.escape,
@@ -346,7 +352,8 @@ app
     app.exit(captureOk && mouseOk ? 0 : 1);
   })
   .catch((error) => {
-    const message = error instanceof Error ? error.stack || error.message : 'verify failed';
+    const message =
+      error instanceof Error ? error.stack || error.message : 'verify failed';
     try {
       writeFileSync(
         fileURLToPath(new URL('../out/region-verify.json', import.meta.url)),

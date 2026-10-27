@@ -28,3 +28,4 @@ jobs:
       # backend.test.mjs loads the local Express stub.
       - run: npm ci --prefix backend
       - run: npm test
+      - run: npm run lint

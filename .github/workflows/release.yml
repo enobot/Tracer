@@ -1,0 +1,54 @@
+name: Release
+
+# Pushing a tag such as v1.0.0 builds the Windows installer from that commit on
+# a clean machine and creates a draft GitHub Release. Nothing is published until
+# you review the draft and press Publish.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix backend
+      - name: Check that the tag matches package.json
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$TAG" ]; then
+            echo "Tag $TAG does not match package.json version $version."
+            exit 1
+          fi
+          test -f "docs/releases/$TAG.md" || { echo "Missing docs/releases/$TAG.md"; exit 1; }
+      - run: npm test
+      - run: npm run lint
+      - run: npm run make
+      - name: Write SHA-256 checksums
+        shell: bash
+        working-directory: out/make/squirrel.windows/x64
+        run: sha256sum Tracer-Setup-*.exe *.nupkg RELEASES > SHA256SUMS.txt
+      - name: Create a draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out/make/squirrel.windows/x64
+          gh release create "$TAG" --draft --verify-tag \
+            --title "Tracer $TAG" \
+            --notes-file "$GITHUB_WORKSPACE/docs/releases/$TAG.md" \
+            Tracer-Setup-*.exe *.nupkg RELEASES SHA256SUMS.txt

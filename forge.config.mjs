@@ -17,13 +17,30 @@ const config = {
     // assets/icon.ico on Windows, assets/icon.png on Linux. Rebuild both with
     // npx electron scripts/build-icons.mjs after editing assets/icon.svg.
     icon: 'assets/icon',
+    // Copied to resources/, outside the app archive, for anyone who looks.
+    extraResource: ['LICENSE', 'THIRD_PARTY_NOTICES.md'],
     win32metadata: {
       FileDescription: 'Tracer',
     },
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({ setupIcon: 'assets/icon.ico' }),
+    // Per-user installer: no administrator rights, installs to
+    // %LocalAppData%\tracer, and adds Start menu and desktop shortcuts.
+    new MakerSquirrel((arch) => ({
+      name: 'tracer',
+      authors: 'Tracy Tran',
+      title: 'Tracer',
+      description: 'Tracer',
+      // A stable name keeps .../releases/latest/download/... links working;
+      // "-win32" lets update.electronjs.org find it if auto-update is added.
+      setupExe: `Tracer-Setup-win32-${arch}.exe`,
+      setupIcon: 'assets/icon.ico',
+      // Shown in Settings → Apps; Squirrel reads it from this public URL.
+      iconUrl:
+        'https://raw.githubusercontent.com/enobot/Tracer/main/assets/icon.ico',
+      noMsi: true,
+    })),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
     new MakerDeb({}),

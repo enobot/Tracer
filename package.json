@@ -1,6 +1,6 @@
 {
   "name": "tracer",
-  "productName": "tracer",
+  "productName": "Tracer",
   "version": "1.0.0",
   "private": true,
   "description": "Desktop app that captures a screenshot and sends it to the signed-in ChatGPT plan, or copies it into Gemini or Claude.",
