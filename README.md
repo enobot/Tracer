@@ -2,11 +2,11 @@
 
 Tracer is a Windows desktop app for asking questions about whatever is on your screen. You press a shortcut, drag over part of the screen, and Tracer sends that picture with your question to ChatGPT using your own ChatGPT plan. The answer appears in the Tracer window, and you can keep asking follow-up questions about the same screenshot.
 
-**Status:** preparing the first public release (1.0.0) for Windows 10 and 11. The Windows installer builds and passes local checks; a clean-PC install test and the GitHub release are still to come. The app is not code-signed yet.
+**Status:** version 1.0.0 is released for Windows 10 and 11 (27 October 2026). It is not code-signed yet.
 
 ## Download
 
-Get `Tracer-Setup-win32-x64.exe` from the [latest release](https://github.com/enobot/Tracer/releases/latest) once 1.0.0 is published. It installs for your Windows account without administrator rights and needs no other software. Because it is not code-signed yet, Windows may show "Windows protected your PC"; choose **More info**, then **Run anyway**.
+Get `Tracer-Setup-win32-x64.exe` from the [latest release](https://github.com/enobot/Tracer/releases/latest), or [download it directly](https://github.com/enobot/Tracer/releases/latest/download/Tracer-Setup-win32-x64.exe). It installs for your Windows account without administrator rights and needs no other software. Because it is not code-signed yet, Windows may show "Windows protected your PC"; choose **More info**, then **Run anyway**.
 
 - [Install, first run, and troubleshooting](docs/INSTALL.md)
 - [Privacy notice](PRIVACY.md)
@@ -177,7 +177,9 @@ The language picker, streamed answers, and Hide prompts were tried in the runnin
 
 Running in the tray after the window is closed was confirmed in the running app on 26 October 2026.
 
-Not yet tested live: how much faster answers arrive, the first-close notice and how the tray icon looks, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
+The published 1.0.0 installer, built by GitHub Actions, was installed and checked on my development PC on 27 October 2026: the language picker, the Italian interface, a full-screen capture, an answer streamed in Italian, the tray notice, Disconnect, and uninstalling. The first draft of that release opened a blank window when installed; it was fixed before publishing, and the release workflow now checks that the packaged window renders.
+
+Not yet tested live: installing on a clean PC that never had the development setup, how much faster answers arrive, account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Keyboard shortcuts
 

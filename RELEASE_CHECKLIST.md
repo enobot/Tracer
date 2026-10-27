@@ -1,10 +1,10 @@
 # Tracer release checklist
 
-Status on 27 October 2026: **not yet released.** The first v1.0.0 draft (from `62891bb`) shows a blank window when installed and must not be published; fixed since (R-07 in the review). **Final review verdict: CONDITIONAL GO** ([docs/RELEASE_REVIEW.md](docs/RELEASE_REVIEW.md)). The packaging, security, error-message, accessibility, and documentation work for a Windows 1.0.0 release is done and tested locally. Tracer should not be called production-ready until the P0 items marked "you" are done on a clean Windows PC.
+Status on 27 October 2026: **released as [v1.0.0](https://github.com/enobot/Tracer/releases/tag/v1.0.0)** from commit `38d16c0`. The first draft (from `62891bb`) opened a blank window when installed and was deleted before publishing; the published build includes the fix (R-07 in [docs/RELEASE_REVIEW.md](docs/RELEASE_REVIEW.md)). The published download links and SHA-256 checksums were verified. Open items are in P1 and P2 below; the most important is an install test on a clean PC.
 
 How to publish: [docs/RELEASING.md](docs/RELEASING.md). Evidence: [TEST_REPORT.md](TEST_REPORT.md), [SECURITY_AUDIT.md](SECURITY_AUDIT.md), [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md).
 
-## P0: before publishing 1.0.0
+## P0: before publishing 1.0.0 (done)
 
 ### Done and verified
 
@@ -23,12 +23,14 @@ How to publish: [docs/RELEASING.md](docs/RELEASING.md). Evidence: [TEST_REPORT.m
 
 - [x] Release preparation committed and pushed (`5c441cb`, `e165cac`, `746857e`); Tests workflow with lint passes.
 - [x] Final review: capture wait removed when starting from the tray (−16% to a ready overlay), lost-connection and oversized-response tests, release candidate rebuilt and smoke-tested.
-- [ ] **You:** review and commit the final-review changes.
+- [x] Final-review changes committed (`993ea86`, `62891bb`), then the blank-window fix (`fd7d198`, `38d16c0`).
 - [x] Repository is public and GitHub detects the MIT license.
-- [ ] **You:** push the `v1.0.0` tag, download the installer from the draft release, and test it in Windows Sandbox or on a PC that never had Tracer: SmartScreen → Run anyway, language picker, sign-in, capture, answer, follow-up, tray notice, Quit Tracer, uninstall from Settings → Apps.
-- [ ] **You:** publish the draft.
+- [x] Tagged `v1.0.0` on `38d16c0`; the Release workflow, now including the blank-window check, built the draft. Installed and tested on the development PC (not a clean PC): SmartScreen → Run anyway, language picker, Italian interface, full-screen capture, streamed answer, tray notice, Disconnect, uninstall.
+- [x] Published on 27 October 2026. Download links and SHA-256 checksums verified (installer `7db1e7bd…7828b7a2`).
 
 ## P1: soon after (or before, if time allows)
+
+- [ ] Install the published release on a clean PC or VM that never had the development setup. 1.0.0 was tested on the development PC only.
 
 - [ ] Disconnect removes Tracer from ChatGPT Settings → Security and login → Login connections (live check).
 - [ ] "Use a different ChatGPT account" with a second account (live check).

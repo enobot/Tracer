@@ -6,6 +6,8 @@ Date: 26 October 2026. Reviewed: `main` at `746857e`, plus the uncommitted audit
 
 **Update, 27 October: the first draft installer showed a blank window when installed (R-07, P0).** Your install test caught it; the fix is below and re-verified. The v1.0.0 draft built from `62891bb` must not be published.
 
+**Outcome: released.** That draft was deleted. v1.0.0 was then tagged on the fixed commit `38d16c0`, built by the Release workflow including the new blank-window check, installed and tested on the development PC, and published on 27 October 2026. The public download links and SHA-256 checksums were verified. The clean-PC install from condition 1 below is still open.
+
 **Verdict: CONDITIONAL GO.** No known security, privacy, or authentication blockers remain in the code, and the release candidate builds, runs standalone, and passes every automated check. It should not be published until a clean-PC install of the release-workflow installer and one live end-to-end run on the installed build are done (section H). Those two checks need a Windows machine without the development setup and your ChatGPT account, which this environment can't provide.
 
 What this review established with evidence:
@@ -121,37 +123,38 @@ Committed after the review (`993ea86`, `62891bb`):
 
 ## H. Release readiness checklist
 
-| Check                                                                                                  | Result                                                                |
-| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Electron security settings and CSP                                                                     | PASS                                                                  |
-| IPC sender validation (17 channels)                                                                    | PASS                                                                  |
-| No unsafe DOM or code execution                                                                        | PASS                                                                  |
-| Secrets scan (history, files, package)                                                                 | PASS                                                                  |
-| Production dependency vulnerabilities                                                                  | PASS (0)                                                              |
-| All dependency vulnerabilities                                                                         | FAIL (2 critical, dev-only; R-03)                                     |
-| Authentication flow (mocked)                                                                           | PASS                                                                  |
-| Authentication live: sign-in, plan usage, answers                                                      | PASS (your run, 26 Oct)                                               |
-| Disconnect and account switching, live                                                                 | NOT VERIFIED                                                          |
-| Screenshot privacy (no disk, no logs, user-initiated send)                                             | PASS                                                                  |
-| Privacy documentation matches behavior                                                                 | PASS                                                                  |
-| Unit and integration tests                                                                             | PASS (100)                                                            |
-| Lint                                                                                                   | PASS                                                                  |
-| CI on GitHub                                                                                           | PASS                                                                  |
-| Production build and installer                                                                         | PASS                                                                  |
-| Packaged app runs standalone                                                                           | PASS (window content checked after R-07)                              |
-| Packaged window renders (`verify-packaged-window.ps1`)                                                 | PASS                                                                  |
-| Installed app from the release workflow                                                                | FAIL for the `62891bb` draft (R-07); NOT VERIFIED for the fixed build |
-| Capture performance measured                                                                           | PASS                                                                  |
-| Memory stability over repeated captures                                                                | PASS (50 captures)                                                    |
-| Idle CPU and network                                                                                   | PASS                                                                  |
-| Edge cases: rapid presses, quit during capture, corrupt settings, offline and dropped streams (mocked) | PASS                                                                  |
-| Sleep/resume, lock/unlock, resolution change                                                           | NOT VERIFIED                                                          |
-| Multi-monitor and high-DPI on real hardware                                                            | NOT VERIFIED                                                          |
-| Clean-machine install, first run, uninstall                                                            | NOT VERIFIED                                                          |
-| Code signing                                                                                           | FAIL (unsigned; documented)                                           |
-| Keyboard navigation and focus                                                                          | PASS (harness and code)                                               |
-| Screen reader with Narrator or NVDA                                                                    | NOT VERIFIED                                                          |
-| Documentation: install, troubleshooting, privacy, license                                              | PASS                                                                  |
+| Check                                                                                                  | Result                                                                             |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Electron security settings and CSP                                                                     | PASS                                                                               |
+| IPC sender validation (17 channels)                                                                    | PASS                                                                               |
+| No unsafe DOM or code execution                                                                        | PASS                                                                               |
+| Secrets scan (history, files, package)                                                                 | PASS                                                                               |
+| Production dependency vulnerabilities                                                                  | PASS (0)                                                                           |
+| All dependency vulnerabilities                                                                         | FAIL (2 critical, dev-only; R-03)                                                  |
+| Authentication flow (mocked)                                                                           | PASS                                                                               |
+| Authentication live: sign-in, plan usage, answers                                                      | PASS (your run, 26 Oct)                                                            |
+| Disconnect, live                                                                                       | PASS (reported by you on the installed 1.0.0 build)                                |
+| Account switching, live                                                                                | NOT VERIFIED                                                                       |
+| Screenshot privacy (no disk, no logs, user-initiated send)                                             | PASS                                                                               |
+| Privacy documentation matches behavior                                                                 | PASS                                                                               |
+| Unit and integration tests                                                                             | PASS (100)                                                                         |
+| Lint                                                                                                   | PASS                                                                               |
+| CI on GitHub                                                                                           | PASS                                                                               |
+| Production build and installer                                                                         | PASS                                                                               |
+| Packaged app runs standalone                                                                           | PASS (window content checked after R-07)                                           |
+| Packaged window renders (`verify-packaged-window.ps1`)                                                 | PASS                                                                               |
+| Installed app from the release workflow                                                                | FAIL for the `62891bb` draft (R-07); PASS for the published build (development PC) |
+| Capture performance measured                                                                           | PASS                                                                               |
+| Memory stability over repeated captures                                                                | PASS (50 captures)                                                                 |
+| Idle CPU and network                                                                                   | PASS                                                                               |
+| Edge cases: rapid presses, quit during capture, corrupt settings, offline and dropped streams (mocked) | PASS                                                                               |
+| Sleep/resume, lock/unlock, resolution change                                                           | NOT VERIFIED                                                                       |
+| Multi-monitor and high-DPI on real hardware                                                            | NOT VERIFIED                                                                       |
+| Clean-machine install, first run, uninstall                                                            | NOT VERIFIED                                                                       |
+| Code signing                                                                                           | FAIL (unsigned; documented)                                                        |
+| Keyboard navigation and focus                                                                          | PASS (harness and code)                                                            |
+| Screen reader with Narrator or NVDA                                                                    | NOT VERIFIED                                                                       |
+| Documentation: install, troubleshooting, privacy, license                                              | PASS                                                                               |
 
 ## I. Final engineering verdict
 
