@@ -41,6 +41,17 @@ const CLIENT_ID = /^[A-Za-z0-9_-]{1,200}$/;
 const MODEL_SLUG = /^[A-Za-z0-9._:-]{1,128}$/;
 const SAFE_CODE = /^[a-z0-9_]{1,80}$/;
 
+// OpenAI's errors-and-recovery page lists these as final for a token set:
+// clear the tokens and sign in again with the saved client id.
+const TERMINAL_GRANT_CODES = new Set([
+  'invalid_grant',
+  'invalid_refresh_token',
+  'token_expired',
+  'refresh_token_expired',
+  'refresh_token_invalidated',
+  'refresh_token_reused',
+]);
+
 function hasControlCharacter(value) {
   for (let index = 0; index < value.length; index += 1) {
     if (value.charCodeAt(index) < 32) return true;
@@ -246,6 +257,9 @@ export function toPublicSession(record, modelName = null) {
         ? record.name
         : null,
     modelName: sharing && typeof modelName === 'string' ? modelName : null,
+    // Lets the window offer "Use a different ChatGPT account" without
+    // learning which account is remembered.
+    savedAccount: Boolean(record?.subject || record?.clientId),
   };
 }
 
@@ -487,17 +501,26 @@ export function explainPlanFailure(status, code = '') {
   if (code === 'subscription_sharing_usage_limit_exceeded') {
     return 'Your ChatGPT plan allowance for other apps is used up. Open Manage usage in ChatGPT, or wait for the limit to reset.';
   }
-  if (code === 'subscription_sharing_usage_unavailable') {
-    return 'ChatGPT plan usage is not available for this account. Analysis inside Tracer requires a Plus or Pro plan that allows app access.';
+  if (code === 'subscription_sharing_user_not_eligible') {
+    return 'This ChatGPT account cannot use its plan in other apps. That needs an eligible Plus or Pro plan, and a workspace policy can also block it.';
+  }
+  if (
+    code === 'subscription_sharing_usage_unavailable' ||
+    code === 'subscription_sharing_user_unavailable'
+  ) {
+    return 'ChatGPT plan usage is temporarily unavailable. Try again in a few minutes.';
+  }
+  if (code === 'subscription_sharing_unsupported_capability') {
+    return 'The ChatGPT model available to this account did not accept this request. It may not support image input.';
   }
   if (code === 'sharing_not_enabled') {
     return 'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.';
   }
-  if (status === 401 || code === 'invalid_grant') {
+  if (status === 401 || TERMINAL_GRANT_CODES.has(code)) {
     return 'ChatGPT sign-in expired. Sign in again.';
   }
   if (status === 403) {
-    return 'ChatGPT refused this request. Allow plan usage for Tracer, then try again.';
+    return 'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.';
   }
   if (status === 429) {
     return 'ChatGPT rate-limited the request. Wait a moment and try again.';
@@ -668,6 +691,16 @@ export function assertOpenable(url, { authorize = false } = {}) {
     return parsed.href;
   }
   throw new Error('Refusing to open that address.');
+}
+
+export function handoffUrl(provider) {
+  if (
+    typeof provider !== 'string' ||
+    !Object.hasOwn(HANDOFF_TARGETS, provider)
+  ) {
+    return null;
+  }
+  return assertOpenable(HANDOFF_TARGETS[provider]);
 }
 
 export function redactSecrets(text) {

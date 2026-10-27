@@ -52,6 +52,21 @@ describe('selection mouse controls', () => {
     assert.equal(gesture.pointerUp({ button: 0, x: 90, y: 90 }).type, 'ignore');
   });
 
+  it('clamps a drag that leaves the monitor to the overlay edge', () => {
+    // Pointer capture keeps reporting positions after the cursor crosses
+    // onto the next monitor, so clientX can exceed this overlay's width.
+    const gesture = createSelectionGesture(() => ({
+      width: 1920,
+      height: 1080,
+    }));
+    gesture.pointerDown({ button: 0, x: 1800, y: 100 });
+    gesture.pointerMove({ x: 2400, y: -40 });
+    assert.deepEqual(gesture.pointerUp({ button: 0, x: 2500, y: -60 }), {
+      type: 'region',
+      rect: { x: 1800, y: 0, width: 120, height: 100 },
+    });
+  });
+
   it('cancels on Escape and ignores a later click', () => {
     const gesture = createSelectionGesture();
     gesture.pointerDown({ button: 0, x: 15, y: 15 });

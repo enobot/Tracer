@@ -71,4 +71,31 @@ describe('prompt library', () => {
     assert.equal(library.past.length, 1);
     assert.equal(clearPast(library).past.length, 0);
   });
+
+  it('unfavorites every copy of a prompt so Favorites does not show a hidden twin', () => {
+    let library = savePrompt(
+      emptyLibrary(),
+      'Explain this error',
+      '2026-10-25T00:00:00.000Z',
+      'saved-1',
+    ).state;
+    library = recordSubmission(
+      library,
+      'explain this error',
+      '2026-10-25T00:00:01.000Z',
+      'past-1',
+    );
+    library = setFavorite(library, 'past-1', true);
+    assert.deepEqual(
+      listFavorites(library).map((item) => item.id),
+      ['saved-1'],
+    );
+    library = setFavorite(library, 'saved-1', false);
+    assert.deepEqual(listFavorites(library), []);
+    assert.equal(
+      library.past[0].favorite,
+      false,
+      'the past copy was cleared too',
+    );
+  });
 });

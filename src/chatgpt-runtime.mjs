@@ -45,6 +45,14 @@ function anySignal(signals) {
   return controller.signal;
 }
 
+function abortedRequest(signal) {
+  return new Error(
+    signal?.reason?.name === 'TimeoutError'
+      ? 'ChatGPT took too long to answer. Try again.'
+      : 'The request was cancelled.',
+  );
+}
+
 function earliestMs(value, now) {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value < 10_000_000_000 ? value * 1000 : value;
@@ -398,6 +406,7 @@ export function createChatGPTRuntime({
           email: null,
           name: null,
           modelName: null,
+          savedAccount: false,
         };
       }
       try {
@@ -415,7 +424,13 @@ export function createChatGPTRuntime({
       requestController?.abort();
     },
 
-    async signIn({ reconsent = false, signal: callerSignal } = {}) {
+    // `fresh` registers a new client for a different ChatGPT account. The
+    // saved account stays untouched until the new identity is verified.
+    async signIn({
+      reconsent = false,
+      fresh = false,
+      signal: callerSignal,
+    } = {}) {
       if (phase === 'connecting' || signInController) {
         throw new Error(
           'Finish the ChatGPT sign-in already open in your browser.',
@@ -438,7 +453,8 @@ export function createChatGPTRuntime({
       let listener;
       try {
         const persistedHostId = await hostId();
-        const record = await loadRecord();
+        const saved = await loadRecord();
+        const record = fresh ? emptyRecord() : saved;
         const provider = await discovery(signal);
         const pkce = createPkce();
         listener = listenForCallback({
@@ -458,7 +474,7 @@ export function createChatGPTRuntime({
             hostId: persistedHostId,
             appName,
             loginHint: record.email,
-            reconsent,
+            reconsent: reconsent && !fresh,
           }),
           { authorize: true },
         );
@@ -476,7 +492,7 @@ export function createChatGPTRuntime({
           );
         }
         const callback = await listener.result;
-        if (record.status !== 'connected') {
+        if (!fresh && record.status !== 'connected') {
           await saveRecord({
             ...record,
             status: 'pending',
@@ -509,9 +525,15 @@ export function createChatGPTRuntime({
         );
         if (record.subject && identity.subject !== record.subject) {
           throw new Error(
-            'This sign-in returned a different ChatGPT account. Sign in to the original account, or disconnect first.',
+            'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.',
           );
         }
+        // The new account replaces the saved one, so the old grant is revoked
+        // rather than left active in that account's ChatGPT settings.
+        const previousRevoked =
+          fresh && saved.clientId !== callback.clientId
+            ? await revokeRefreshToken(saved)
+            : true;
         model = null;
         await saveRecord({
           version: 1,
@@ -526,7 +548,13 @@ export function createChatGPTRuntime({
           expiresAt: token.expiresAt,
           earliestRefreshAt: token.earliestRefreshAt,
         });
-        return toPublicSession(await loadRecord());
+        const session = toPublicSession(await loadRecord());
+        if (previousRevoked) return session;
+        return {
+          ...session,
+          notice:
+            'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.',
+        };
       } finally {
         listener?.close();
         phase = 'idle';
@@ -540,30 +568,8 @@ export function createChatGPTRuntime({
       phase = 'idle';
       model = null;
       const record = await loadRecord();
-      let revocationFailed = false;
-      if (record.refreshToken && record.clientId) {
-        try {
-          const provider = await discovery(AbortSignal.timeout(15_000));
-          const response = await fetchImpl(provider.revocation_endpoint, {
-            method: 'POST',
-            redirect: 'error',
-            signal: AbortSignal.timeout(10_000),
-            headers: {
-              'content-type': 'application/x-www-form-urlencoded',
-            },
-            body: revokeFields({
-              clientId: record.clientId,
-              refreshToken: record.refreshToken,
-            }),
-          });
-          await response.body?.cancel?.().catch(() => undefined);
-          if (response.status !== 200) revocationFailed = true;
-        } catch {
-          revocationFailed = true;
-        }
-      }
-      await saveRecord(withoutSecrets(record, 'disconnected'));
-      if (revocationFailed) {
+      const revoked = await clearCredentials(record, 'disconnected');
+      if (!revoked) {
         throw new Error(
           'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.',
         );
@@ -598,71 +604,74 @@ export function createChatGPTRuntime({
         if (!hasPlanSharing(record.scopes)) {
           throw new Error(explainPlanFailure(0, 'sharing_not_enabled'));
         }
-        const selected =
-          model ?? (await listedModel(record.accessToken, signal));
-        model = selected;
-        const built = buildResponsesBody({
-          model: selected.slug,
-          messages,
-        });
-        if (!built.ok) throw new Error(built.error);
-        let response;
-        try {
-          response = await fetchImpl(RESPONSES_URL, {
-            method: 'POST',
-            redirect: 'error',
-            signal,
-            headers: {
-              accept: 'text/event-stream',
-              authorization: `Bearer ${record.accessToken}`,
-              'content-type': 'application/json',
-            },
-            body: JSON.stringify(built.body),
-          });
-        } catch {
-          if (signal.aborted) throw new Error('The request was cancelled.');
-          throw new Error(
-            'Tracer could not reach ChatGPT. Check your connection and try again.',
-          );
-        }
-        if (!response.ok) {
-          const data = await readJson(response);
-          const code = readErrorCode(data);
-          if (response.status === 401 || code === 'invalid_grant') {
-            model = null;
-            await saveRecord(withoutSecrets(record, 'reauth_required'));
+        let result = await requestAnswer(record, messages, signal);
+        if (result.unauthorized) {
+          // OpenAI asks apps to sign people out only after a refresh fails for
+          // good, so a rejected access token gets one refresh and one retry.
+          // A 401 is not admitted, so the retry does not spend usage twice.
+          record = await freshRecord(record, signal, { force: true });
+          if (!hasPlanSharing(record.scopes)) {
+            throw new Error(explainPlanFailure(0, 'sharing_not_enabled'));
           }
-          throw new Error(explainPlanFailure(response.status, code));
+          result = await requestAnswer(record, messages, signal);
         }
-        const contentType =
-          response.headers
-            .get('content-type')
-            ?.split(';')[0]
-            ?.trim()
-            .toLowerCase() ?? '';
-        if (contentType && contentType !== 'text/event-stream') {
-          await response.body?.cancel?.().catch(() => undefined);
+        if (result.unauthorized) {
+          const revoked = await clearCredentials(record, 'reauth_required');
           throw new Error(
-            'ChatGPT did not return the expected response stream. Try again.',
+            revoked
+              ? 'ChatGPT did not accept this connection. Sign in again.'
+              : 'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.',
           );
         }
-        const answer = await readStream(response, signal);
-        if (!answer.ok) throw new Error(answer.error);
-        return { text: answer.text, modelName: selected.displayName };
+        return result;
       } finally {
+        // Closes a response stream that an error path left unread.
+        requestController.abort();
         requestController = undefined;
       }
     },
   };
 
-  async function freshRecord(record, signal) {
-    if (record.expiresAt > now() + 60_000) return record;
+  // Returns false when OpenAI did not confirm the revocation.
+  async function revokeRefreshToken(record) {
+    if (!record.refreshToken || !record.clientId) return true;
+    try {
+      const provider = await discovery(AbortSignal.timeout(15_000));
+      const response = await fetchImpl(provider.revocation_endpoint, {
+        method: 'POST',
+        redirect: 'error',
+        signal: AbortSignal.timeout(10_000),
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+        },
+        body: revokeFields({
+          clientId: record.clientId,
+          refreshToken: record.refreshToken,
+        }),
+      });
+      await response.body?.cancel?.().catch(() => undefined);
+      return response.status === 200;
+    } catch {
+      return false;
+    }
+  }
+
+  // Revokes before forgetting, so a grant Tracer can no longer use does not
+  // stay active in the user's ChatGPT settings.
+  async function clearCredentials(record, status) {
+    const revoked = await revokeRefreshToken(record);
+    await saveRecord(withoutSecrets(record, status));
+    return revoked;
+  }
+
+  async function freshRecord(record, signal, { force = false } = {}) {
+    if (!force && record.expiresAt > now() + 60_000) return record;
     if (!record.refreshToken || !record.clientId) {
-      await saveRecord(withoutSecrets(record, 'reauth_required'));
+      await clearCredentials(record, 'reauth_required');
       throw new Error('ChatGPT sign-in expired. Sign in again.');
     }
     if (
-      record.expiresAt <= now() &&
+      (force || record.expiresAt <= now()) &&
       earliestMs(record.earliestRefreshAt, now()) > now()
     ) {
       throw new Error(
@@ -685,7 +694,7 @@ export function createChatGPTRuntime({
         error instanceof Error &&
         error.message === 'ChatGPT sign-in expired. Sign in again.'
       ) {
-        await saveRecord(withoutSecrets(record, 'reauth_required'));
+        await clearCredentials(record, 'reauth_required');
       }
       throw error;
     }
@@ -702,7 +711,13 @@ export function createChatGPTRuntime({
         signal,
       );
       if (record.subject && identity.subject !== record.subject) {
-        await saveRecord(withoutSecrets(record, 'reauth_required'));
+        await clearCredentials(
+          {
+            ...record,
+            refreshToken: token.refreshToken ?? record.refreshToken,
+          },
+          'reauth_required',
+        );
         throw new Error(
           'The refreshed ChatGPT identity does not match this account. Sign in again.',
         );
@@ -721,6 +736,63 @@ export function createChatGPTRuntime({
     return next;
   }
 
+  // One authorized attempt. Returns { unauthorized: true } when ChatGPT
+  // rejects the access token, so respond can refresh before giving up.
+  async function requestAnswer(record, messages, signal) {
+    const selected = model ?? (await listedModel(record.accessToken, signal));
+    if (!selected) return { unauthorized: true };
+    model = selected;
+    const built = buildResponsesBody({
+      model: selected.slug,
+      messages,
+    });
+    if (!built.ok) throw new Error(built.error);
+    let response;
+    try {
+      response = await fetchImpl(RESPONSES_URL, {
+        method: 'POST',
+        redirect: 'error',
+        signal,
+        headers: {
+          accept: 'text/event-stream',
+          authorization: `Bearer ${record.accessToken}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(built.body),
+      });
+    } catch {
+      if (signal.aborted) throw abortedRequest(signal);
+      throw new Error(
+        'Tracer could not reach ChatGPT. Check your connection and try again.',
+      );
+    }
+    if (!response.ok) {
+      const data = await readJson(response);
+      const code = readErrorCode(data);
+      if (response.status === 401 || code === 'invalid_grant') {
+        model = null;
+        return { unauthorized: true };
+      }
+      throw new Error(explainPlanFailure(response.status, code));
+    }
+    const contentType =
+      response.headers
+        .get('content-type')
+        ?.split(';')[0]
+        ?.trim()
+        .toLowerCase() ?? '';
+    if (contentType && contentType !== 'text/event-stream') {
+      await response.body?.cancel?.().catch(() => undefined);
+      throw new Error(
+        'ChatGPT did not return the expected response stream. Try again.',
+      );
+    }
+    const answer = await readStream(response, signal);
+    if (!answer.ok) throw new Error(answer.error);
+    return { text: answer.text, modelName: selected.displayName };
+  }
+
+  // Returns null when ChatGPT rejects the access token.
   async function listedModel(accessToken, signal) {
     let response;
     try {
@@ -733,14 +805,16 @@ export function createChatGPTRuntime({
         },
       });
     } catch {
-      if (signal.aborted) throw new Error('The request was cancelled.');
+      if (signal.aborted) throw abortedRequest(signal);
       throw new Error(
         'Tracer could not reach ChatGPT. Check your connection and try again.',
       );
     }
     const data = await readJson(response);
     if (!response.ok) {
-      throw new Error(explainPlanFailure(response.status, readErrorCode(data)));
+      const code = readErrorCode(data);
+      if (response.status === 401 || code === 'invalid_grant') return null;
+      throw new Error(explainPlanFailure(response.status, code));
     }
     const selected = selectListedModel(data);
     if (!selected.ok) throw new Error(selected.error);
@@ -758,12 +832,12 @@ export function createChatGPTRuntime({
     let buffer = '';
     const events = [];
     while (true) {
-      if (signal.aborted) throw new Error('The request was cancelled.');
+      if (signal.aborted) throw abortedRequest(signal);
       let chunk;
       try {
         chunk = await reader.read();
       } catch {
-        if (signal.aborted) throw new Error('The request was cancelled.');
+        if (signal.aborted) throw abortedRequest(signal);
         throw new Error('The connection was interrupted. Try again.');
       }
       if (chunk.done) break;

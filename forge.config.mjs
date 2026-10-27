@@ -12,6 +12,11 @@ const config = {
     asar: true,
     // Ship the Vite build only, and drop maps or secrets if they land under .vite.
     ignore: shouldIgnorePackagePath,
+    // Without these, tracer.exe reports Electron's "Copyright (C) 2015 GitHub, Inc.".
+    appCopyright: 'Copyright © 2026 Tracy Tran',
+    win32metadata: {
+      FileDescription: 'Tracer',
+    },
   },
   rebuildConfig: {},
   makers: [

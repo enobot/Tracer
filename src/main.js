@@ -1,6 +1,7 @@
 import {
   app,
   BrowserWindow,
+  ClipboardItem,
   Menu,
   clipboard,
   desktopCapturer,
@@ -19,10 +20,10 @@ import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
 import { createChatGPTRuntime } from './chatgpt-runtime.mjs';
 import {
-  HANDOFF_TARGETS,
   USAGE_URL,
   assertOpenable,
   buildConversation,
+  handoffUrl,
 } from './chatgpt-plan.mjs';
 import {
   pairDisplaySources,
@@ -37,10 +38,8 @@ import {
   buildContentSecurityPolicy,
   canDeliverHotkey,
   createCaptureGate,
-  evaluateDisplayCapture,
   fittedSize,
   isAllowedNavigation,
-  isMainFrame,
   isScreenshotDataUrl,
   isTrustedSender,
   isValidAccelerator,
@@ -56,6 +55,14 @@ import {
 if (started) {
   app.quit();
 }
+
+// A second copy would fight over the shortcut and the rotating ChatGPT
+// refresh token, so it hands focus to the first copy and exits.
+const primaryInstance = !started && app.requestSingleInstanceLock();
+if (!started && !primaryInstance) {
+  app.quit();
+}
+app.on('second-instance', () => restoreMain());
 
 let mainWindow;
 let chatgpt;
@@ -574,44 +581,11 @@ function installSessionGuards() {
   );
   session.defaultSession.setDevicePermissionHandler(() => false);
 
-  // Screen capture is taken in the main process before any selection overlay exists.
-  // This handler stays as a refusal path if a page asks for display media directly.
-  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    const contents = activeWebContents();
-    const decision = evaluateDisplayCapture(
-      request,
-      Boolean(contents && isMainFrame(request?.frame, contents)),
-    );
-    if (!decision.allow) {
-      callback({});
-      return;
-    }
-
-    let settled = false;
-    const finish = (streams) => {
-      if (settled) return;
-      settled = true;
-      callback(streams);
-    };
-
-    withTimeout(
-      desktopCapturer.getSources({
-        types: ['screen'],
-        thumbnailSize: { width: 0, height: 0 },
-      }),
-      CAPTURE_TIMEOUT_MS,
-    )
-      .then((sources) => {
-        const source = sources?.[0];
-        if (!source) {
-          finish({});
-          return;
-        }
-        finish({ video: source });
-      })
-      .catch(() => {
-        finish({});
-      });
+  // Screen capture is taken in the main process before any selection overlay
+  // exists, so no page needs a screen stream. Granting one here would let a
+  // compromised window record the screen with no prompt.
+  session.defaultSession.setDisplayMediaRequestHandler((_request, callback) => {
+    callback(null);
   });
 }
 
@@ -649,6 +623,7 @@ function validatedCapture(payload) {
 }
 
 app.whenReady().then(async () => {
+  if (!primaryInstance) return;
   installSessionGuards();
   installMenu();
   const userData = app.getPath('userData');
@@ -675,7 +650,10 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('tracer:sign-in', async (event, payload) => {
     requireSender(event);
-    return chatgpt.signIn({ reconsent: payload?.reconsent === true });
+    return chatgpt.signIn({
+      reconsent: payload?.reconsent === true,
+      fresh: payload?.fresh === true,
+    });
   });
 
   ipcMain.handle('tracer:cancel-sign-in', (event) => {
@@ -713,7 +691,7 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('tracer:handoff', async (event, payload) => {
     requireSender(event);
-    const url = HANDOFF_TARGETS[payload?.provider];
+    const url = handoffUrl(payload?.provider);
     if (!url) throw new Error('Choose Gemini or Claude to open a browser.');
     const prompt = validatedCapture(payload);
     const image = nativeImage.createFromDataURL(payload.screenshot);
@@ -721,12 +699,19 @@ app.whenReady().then(async () => {
       throw new Error('The screenshot could not be copied.');
     }
     try {
-      clipboard.write({ text: prompt, image });
+      // Electron 44's clipboard is asynchronous and takes ClipboardItem
+      // entries. One entry keeps the picture and the prompt together.
+      await clipboard.write([
+        new ClipboardItem({
+          'text/plain': prompt,
+          'image/png': new Blob([image.toPNG()], { type: 'image/png' }),
+        }),
+      ]);
     } catch {
       throw new Error('The screenshot could not be copied.');
     }
     try {
-      await shell.openExternal(assertOpenable(url));
+      await shell.openExternal(url);
     } catch {
       throw new Error(
         'The screenshot and prompt were copied, but the browser could not be opened.',

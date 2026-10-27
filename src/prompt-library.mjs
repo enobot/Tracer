@@ -119,14 +119,15 @@ export function deletePrompt(state, id) {
 
 export function setFavorite(state, id, favorite) {
   const current = clone(state);
-  let found = false;
-  for (const item of [...current.saved, ...current.past]) {
-    if (item.id === id) {
-      item.favorite = favorite === true;
-      found = true;
-    }
+  const items = [...current.saved, ...current.past];
+  const target = items.find((item) => item.id === id);
+  if (!target) return state;
+  // Favorites shows one card per text, so the star applies to every copy.
+  const key = target.text.toLowerCase();
+  for (const item of items) {
+    if (item.text.toLowerCase() === key) item.favorite = favorite === true;
   }
-  return found ? current : state;
+  return current;
 }
 
 export function recordSubmission(state, text, now, id) {

@@ -7,10 +7,21 @@ function rectangle(start, end) {
   };
 }
 
-export function createSelectionGesture() {
+// `bounds` returns the overlay's size. With pointer capture a drag can leave
+// the monitor, and an off-screen corner would make the whole selection invalid.
+export function createSelectionGesture(bounds) {
   let start = null;
   let current = null;
   let settled = false;
+
+  const point = (event) => {
+    const size = bounds?.();
+    if (!size) return { x: event.x, y: event.y };
+    return {
+      x: Math.min(Math.max(event.x, 0), size.width),
+      y: Math.min(Math.max(event.y, 0), size.height),
+    };
+  };
 
   return {
     contextMenu() {
@@ -24,13 +35,13 @@ export function createSelectionGesture() {
         return { type: 'full' };
       }
       if (event.button !== 0 || start) return { type: 'ignore' };
-      start = { x: event.x, y: event.y };
+      start = point(event);
       current = start;
       return { type: 'begin', rect: rectangle(start, current) };
     },
     pointerMove(event) {
       if (settled || !start || !event) return { type: 'ignore' };
-      current = { x: event.x, y: event.y };
+      current = point(event);
       return { type: 'move', rect: rectangle(start, current) };
     },
     pointerUp(event) {
@@ -40,7 +51,7 @@ export function createSelectionGesture() {
       settled = true;
       const end =
         Number.isFinite(event.x) && Number.isFinite(event.y)
-          ? { x: event.x, y: event.y }
+          ? point(event)
           : current || start;
       const rect = rectangle(start, end);
       start = null;

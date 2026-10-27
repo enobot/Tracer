@@ -4,7 +4,6 @@ import {
   CAPTURE_SHORTCUT,
   CAPTURE_TIMEOUT_MS,
   LIMITS,
-  allowsDisplayCapturePermission,
   allowsRendererPermission,
   buildContentSecurityPolicy,
   buildInspectResult,
@@ -12,9 +11,7 @@ import {
   contentSecurityPolicyDirective,
   createCaptureGate,
   createListenerHub,
-  evaluateDisplayCapture,
   isAllowedNavigation,
-  isMainFrame,
   isTrustedSender,
   isValidAccelerator,
   nextShortcutRegistration,
@@ -185,63 +182,21 @@ describe('IPC sender and screen-capture permission', () => {
     assert.equal(isTrustedSender(null, webContents), false);
   });
 
-  it('recognizes the main frame by identity or frame ids', () => {
-    const mainFrame = { processId: 4, routingId: 9 };
-    const contents = { mainFrame };
-    assert.equal(isMainFrame(mainFrame, contents), true);
-    assert.equal(isMainFrame({ processId: 4, routingId: 9 }, contents), true);
-    assert.equal(isMainFrame({ processId: 4, routingId: 10 }, contents), false);
-    assert.equal(isMainFrame(null, contents), false);
-  });
-
-  it('grants video-only capture to a trusted frame and denies everything else', () => {
-    assert.deepEqual(
-      evaluateDisplayCapture(
-        { videoRequested: true, audioRequested: false },
-        true,
-      ),
-      { allow: true },
-    );
-    assert.equal(
-      evaluateDisplayCapture(
-        { videoRequested: true, audioRequested: true },
-        true,
-      ).allow,
-      false,
-    );
-    assert.equal(
-      evaluateDisplayCapture(
-        { videoRequested: false, audioRequested: false },
-        true,
-      ).allow,
-      false,
-    );
-    assert.equal(
-      evaluateDisplayCapture(
-        { videoRequested: true, audioRequested: false },
-        false,
-      ).allow,
-      false,
-    );
-  });
-
-  it('allows display capture only, not camera, microphone, or external apps', () => {
-    assert.equal(allowsDisplayCapturePermission('display-capture', true), true);
-    assert.equal(
-      allowsDisplayCapturePermission('display-capture', false),
-      false,
-    );
-    assert.equal(allowsDisplayCapturePermission('media', true), false);
-    assert.equal(allowsDisplayCapturePermission('openExternal', true), false);
-    assert.equal(allowsDisplayCapturePermission('fileSystem', true), false);
-  });
-
-  it('allows a clipboard write from Tracer and still blocks external opens', () => {
-    assert.equal(allowsRendererPermission('display-capture', true), true);
+  it('lets Tracer write text to the clipboard and refuses every capture or device permission', () => {
     assert.equal(
       allowsRendererPermission('clipboard-sanitized-write', true),
       true,
     );
+    // Screenshots come from desktopCapturer in the main process. A page that
+    // asks for a screen stream must be refused, even Tracer's own window.
+    for (const permission of [
+      'display-capture',
+      'media',
+      'fileSystem',
+      'notifications',
+    ]) {
+      assert.equal(allowsRendererPermission(permission, true), false);
+    }
     assert.equal(
       allowsRendererPermission('clipboard-sanitized-write', false),
       false,
@@ -341,6 +296,25 @@ describe('global shortcut and process lifetime', () => {
     assert.equal(isValidAccelerator(`Ctrl+${'A'.repeat(80)}`), false);
     assert.equal(isValidAccelerator('Ctrl+Shift+F13'), true);
     assert.equal(isValidAccelerator('Ctrl+Shift+F25'), false);
+  });
+
+  it('rejects Shift-only and AltGr-only shortcuts that would block typing', () => {
+    for (const accelerator of [
+      'Shift+A',
+      'Shift+1',
+      'Shift+Space',
+      'AltGr+Q',
+      'Shift+AltGr+E',
+    ]) {
+      assert.equal(isValidAccelerator(accelerator), false, accelerator);
+    }
+    assert.equal(isValidAccelerator('Shift+F9'), true);
+    assert.equal(isValidAccelerator('Alt+Shift+A'), true);
+    assert.equal(
+      isValidAccelerator('Ctrl+Shift+A'),
+      true,
+      'a real modifier keeps Shift combinations valid',
+    );
   });
 
   it('replaces an existing registration and refuses an invalid accelerator', () => {

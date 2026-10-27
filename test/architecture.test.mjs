@@ -46,6 +46,24 @@ describe('Electron source boundaries', () => {
     assert.equal((main.match(/console\.log/g) || []).length, 1);
   });
 
+  it('keeps one app instance and never grants a page a screen stream', () => {
+    assert.match(main, /app\.requestSingleInstanceLock\(\)/);
+    assert.match(main, /app\.on\(['"]second-instance['"]/);
+    assert.match(
+      main,
+      /setDisplayMediaRequestHandler\(\(_request, callback\) => \{\s*callback\(null\);\s*\}\)/,
+    );
+  });
+
+  it('awaits the Electron 44 clipboard API for Gemini and Claude handoffs', () => {
+    // clipboard.write({ text, image }) is the pre-44 form. On 44 it returns a
+    // rejected promise, so nothing is copied while Tracer reports success.
+    assert.doesNotMatch(main, /clipboard\.write\(\s*\{/);
+    assert.match(main, /await clipboard\.write\(\[\s*new ClipboardItem\(\{/);
+    assert.match(main, /'image\/png': new Blob\(/);
+    assert.match(main, /'text\/plain': prompt/);
+  });
+
   it('exposes a narrow preload bridge and one hotkey listener', () => {
     assert.match(
       preload,

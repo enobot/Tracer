@@ -110,8 +110,17 @@ export function isValidAccelerator(accelerator) {
   if (new Set(modifiers).size !== modifiers.length) return false;
   if (!modifiers.every((modifier) => MODIFIERS.has(modifier))) return false;
 
+  const functionKey = /^F(?:[1-9]|1\d|2[0-4])$/.test(key);
+  // Shift or AltGr alone are part of normal typing, so a global shortcut
+  // such as Shift+A would swallow capital letters in every application.
+  if (
+    !functionKey &&
+    modifiers.every((modifier) => modifier === 'Shift' || modifier === 'AltGr')
+  ) {
+    return false;
+  }
   if (/^[A-Za-z0-9]$/.test(key) || NAMED_KEYS.has(key)) return true;
-  return /^F(?:[1-9]|1\d|2[0-4])$/.test(key);
+  return functionKey;
 }
 
 export function readStoredAccelerator(parsed, fallback) {
@@ -163,36 +172,10 @@ export function isTrustedSender(event, webContents) {
   );
 }
 
-export function isMainFrame(frame, webContents) {
-  if (!frame || !webContents?.mainFrame) return false;
-  const mainFrame = webContents.mainFrame;
-  if (frame === mainFrame) return true;
-  return (
-    frame.processId != null &&
-    frame.processId === mainFrame.processId &&
-    frame.routingId != null &&
-    frame.routingId === mainFrame.routingId
-  );
-}
-
-export function evaluateDisplayCapture(request, frameTrusted) {
-  if (!request || frameTrusted !== true) return { allow: false };
-  if (request.videoRequested !== true || request.audioRequested === true) {
-    return { allow: false };
-  }
-  return { allow: true };
-}
-
-export function allowsDisplayCapturePermission(permission, isAppContents) {
-  return permission === 'display-capture' && isAppContents === true;
-}
-
+// Screen capture runs in the main process, so pages only need to write text
+// to the clipboard (the Copy button on code blocks).
 export function allowsRendererPermission(permission, isAppContents) {
-  return (
-    isAppContents === true &&
-    (permission === 'display-capture' ||
-      permission === 'clipboard-sanitized-write')
-  );
+  return isAppContents === true && permission === 'clipboard-sanitized-write';
 }
 
 export function fittedSize(width, height, maxEdge = 1600) {
