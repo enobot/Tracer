@@ -1,12 +1,12 @@
 # Tracer security audit
 
-| | |
-| --- | --- |
-| Audit date | 25 October 2026 |
-| Code audited | `c768a2d` on `main` (matches `origin/main`, clean tree at start) plus the uncommitted fixes listed in §7 |
-| Reviewer | Independent review with Claude Code (Opus 5.5) |
-| Machine | Windows 10 Home 10.0.19045, Alienware Area-51 R2, i7-6800K, 16 GB, GTX 1080, one 3440×1440 monitor at 100% |
-| Runtime | Electron 44.9.3, Node 25.8.0 (tests), npm 11.11.0 |
+|                   |                                                                                                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Audit date        | 25 October 2026                                                                                                                                            |
+| Code audited      | `c768a2d` on `main` (matches `origin/main`, clean tree at start) plus the uncommitted fixes listed in §7                                                   |
+| Reviewer          | Independent review with Claude Code (Opus 5.5)                                                                                                             |
+| Machine           | Windows 10 Home 10.0.19045, Alienware Area-51 R2, i7-6800K, 16 GB, GTX 1080, one 3440×1440 monitor at 100%                                                 |
+| Runtime           | Electron 44.9.3, Node 25.8.0 (tests), npm 11.11.0                                                                                                          |
 | Companion reports | [TEST_REPORT.md](TEST_REPORT.md), [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md), [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md), [ARCHITECTURE.md](ARCHITECTURE.md) |
 
 Nothing was committed, pushed, published, or installed. No screenshot was sent to any provider, and no live ChatGPT request was made.
@@ -43,40 +43,40 @@ The serious problems are functional, and some of them mislead users:
 
 ### Discrepancies with the brief and the previous report
 
-| Claim | Reality |
-| --- | --- |
-| Previous audit: preload exposes `tracer.onHotkeyPressed` and `tracer.inspectScreenshot` only | The preload exposes 19 functions; `inspectScreenshot` no longer exists |
-| Previous audit: prompt stored under `tracer:prompt` | Library is `tracer:library`, draft is `tracer:draft`; `tracer:prompt` is only read as a legacy fallback |
-| Previous audit: renderer stops media streams | The renderer no longer uses media streams. Capture is `desktopCapturer` in main |
-| Previous audit: 33 tests | 57 at `c768a2d`, 70 after this audit |
-| README: tokens "encrypted with the operating system's credential store" | `safeStorage` on Windows is Chromium OSCrypt (AES-GCM, key protected by DPAPI in `Local State`), not Windows Credential Manager. README corrected |
-| README: "A live region capture was run on this Windows PC" and handoff works | Handoff could not have worked on Electron 44 (T-01) |
-| `out/tracer-win32-x64` described as the release build | It predated the latest source; rebuilt during this audit |
+| Claim                                                                                        | Reality                                                                                                                                           |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Previous audit: preload exposes `tracer.onHotkeyPressed` and `tracer.inspectScreenshot` only | The preload exposes 19 functions; `inspectScreenshot` no longer exists                                                                            |
+| Previous audit: prompt stored under `tracer:prompt`                                          | Library is `tracer:library`, draft is `tracer:draft`; `tracer:prompt` is only read as a legacy fallback                                           |
+| Previous audit: renderer stops media streams                                                 | The renderer no longer uses media streams. Capture is `desktopCapturer` in main                                                                   |
+| Previous audit: 33 tests                                                                     | 57 at `c768a2d`, 70 after this audit                                                                                                              |
+| README: tokens "encrypted with the operating system's credential store"                      | `safeStorage` on Windows is Chromium OSCrypt (AES-GCM, key protected by DPAPI in `Local State`), not Windows Credential Manager. README corrected |
+| README: "A live region capture was run on this Windows PC" and handoff works                 | Handoff could not have worked on Electron 44 (T-01)                                                                                               |
+| `out/tracer-win32-x64` described as the release build                                        | It predated the latest source; rebuilt during this audit                                                                                          |
 
 ## 3. Findings
 
-| ID | Severity | Finding | Status |
-| --- | --- | --- | --- |
-| T-01 | **High** | Gemini/Claude handoff copied nothing and reported success | Fixed |
-| T-02 | Medium | Expired or rotated refresh tokens showed "could not accept this screenshot" and were never cleared | Fixed |
-| T-03 | Medium | Plan-usage error messages contradicted OpenAI's error table (eligibility, outages, unsupported input) | Fixed |
-| T-04 | Medium | A reply for the previous screenshot could appear under a new capture and enter its follow-ups | Fixed |
-| T-05 | Medium | A single HTTP 401 from `/v1/responses` deleted the refresh token without revoking it | Fixed (approved) |
-| T-06 | Medium | After Disconnect, a different ChatGPT account could never sign in | Fixed (approved) |
-| T-07 | Medium | The first listed model is used without checking image support, and there is no model choice | **Open — needs live test** |
-| T-08 | Low | Shift-only and AltGr-only global shortcuts were accepted and would block typing system-wide | Fixed |
-| T-09 | Low | Two instances could run at once, sharing one rotating refresh token | Fixed |
-| T-10 | Low | Display-media handler would give a full-screen stream to the main frame with no picker (latent) | Fixed |
-| T-11 | Low | A drag that overshoots the monitor edge was silently treated as a cancel | Fixed |
-| T-12 | Low | Unfavoriting a card revealed a hidden duplicate in Favorites | Fixed |
-| T-13 | Low | A 90 s timeout showed "Canceled."; failed streams stayed open until the timeout | Fixed |
-| T-14 | Low | Handoff provider lookup accepted prototype keys and wrote the clipboard before validating the URL | Fixed |
-| T-15 | Low | `tracer.exe` reported "Copyright (C) 2015 GitHub, Inc." | Fixed |
-| T-16 | Low | Disconnect during an in-flight refresh could save stale credentials | Mitigated (button disabled while busy) |
-| T-17 | Low | Credential file is not written atomically; `mode: 0o600` has no effect on Windows | Open |
-| T-18 | Low | On Linux, `safeStorage` may use the `basic_text` backend with a fixed key | Open (Linux untested) |
-| T-19 | Info | Dev-only critical advisories in `tinypool` via `oxfmt` 0.41 | Open (not shipped) |
-| T-20 | Info | Executables and installer are unsigned | Open (distribution decision) |
+| ID   | Severity | Finding                                                                                               | Status                                 |
+| ---- | -------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| T-01 | **High** | Gemini/Claude handoff copied nothing and reported success                                             | Fixed                                  |
+| T-02 | Medium   | Expired or rotated refresh tokens showed "could not accept this screenshot" and were never cleared    | Fixed                                  |
+| T-03 | Medium   | Plan-usage error messages contradicted OpenAI's error table (eligibility, outages, unsupported input) | Fixed                                  |
+| T-04 | Medium   | A reply for the previous screenshot could appear under a new capture and enter its follow-ups         | Fixed                                  |
+| T-05 | Medium   | A single HTTP 401 from `/v1/responses` deleted the refresh token without revoking it                  | Fixed (approved)                       |
+| T-06 | Medium   | After Disconnect, a different ChatGPT account could never sign in                                     | Fixed (approved)                       |
+| T-07 | Medium   | The first listed model is used without checking image support, and there is no model choice           | **Open — needs live test**             |
+| T-08 | Low      | Shift-only and AltGr-only global shortcuts were accepted and would block typing system-wide           | Fixed                                  |
+| T-09 | Low      | Two instances could run at once, sharing one rotating refresh token                                   | Fixed                                  |
+| T-10 | Low      | Display-media handler would give a full-screen stream to the main frame with no picker (latent)       | Fixed                                  |
+| T-11 | Low      | A drag that overshoots the monitor edge was silently treated as a cancel                              | Fixed                                  |
+| T-12 | Low      | Unfavoriting a card revealed a hidden duplicate in Favorites                                          | Fixed                                  |
+| T-13 | Low      | A 90 s timeout showed "Canceled."; failed streams stayed open until the timeout                       | Fixed                                  |
+| T-14 | Low      | Handoff provider lookup accepted prototype keys and wrote the clipboard before validating the URL     | Fixed                                  |
+| T-15 | Low      | `tracer.exe` reported "Copyright (C) 2015 GitHub, Inc."                                               | Fixed                                  |
+| T-16 | Low      | Disconnect during an in-flight refresh could save stale credentials                                   | Mitigated (button disabled while busy) |
+| T-17 | Low      | Credential file is not written atomically; `mode: 0o600` has no effect on Windows                     | Open                                   |
+| T-18 | Low      | On Linux, `safeStorage` may use the `basic_text` backend with a fixed key                             | Open (Linux untested)                  |
+| T-19 | Info     | Dev-only critical advisories in `tinypool` via `oxfmt` 0.41                                           | Open (not shipped)                     |
+| T-20 | Info     | Executables and installer are unsigned                                                                | Open (distribution decision)           |
 
 ### T-01 — Gemini/Claude handoff copied nothing and reported success (High, fixed)
 
@@ -98,16 +98,16 @@ The serious problems are functional, and some of them mislead users:
 
 **Impact.** Anyone who doesn't use Tracer for 30 days would be stuck behind a false screenshot error until they found Disconnect.
 
-**Fix.** A `TERMINAL_GRANT_CODES` set in [chatgpt-plan.mjs:46](src/chatgpt-plan.mjs:46) maps all of them to "ChatGPT sign-in expired. Sign in again." Tracer then clears the tokens, keeps the issued client id as the docs require, and shows the sign-in button. Regression test: *clears tokens and asks for sign-in when the refresh token has expired*.
+**Fix.** A `TERMINAL_GRANT_CODES` set in [chatgpt-plan.mjs:46](src/chatgpt-plan.mjs:46) maps all of them to "ChatGPT sign-in expired. Sign in again." Tracer then clears the tokens, keeps the issued client id as the docs require, and shows the sign-in button. Regression test: _clears tokens and asks for sign-in when the refresh token has expired_.
 
 ### T-03 — Error messages contradicted OpenAI's guidance (Medium, fixed)
 
-| Code (status) | OpenAI says | Tracer said | Tracer says now |
-| --- | --- | --- | --- |
-| `subscription_sharing_usage_unavailable` (503) | Temporary; keep credentials, retry later | "not available for this account… requires a Plus or Pro plan" | "temporarily unavailable. Try again in a few minutes." |
-| `subscription_sharing_user_not_eligible` (403) | Explain the restriction; don't loop OAuth | "Allow plan usage for Tracer, then try again." | "This ChatGPT account cannot use its plan in other apps…" |
-| `subscription_sharing_unsupported_capability` (400) | Remove the unsupported input or model | "Capture the screen again." | "…did not accept this request. It may not support image input." |
-| Other 403 | Policy, permission, or region | "Allow plan usage for Tracer" | "Your account, workspace, or region may not allow plan usage in other apps." |
+| Code (status)                                       | OpenAI says                               | Tracer said                                                   | Tracer says now                                                              |
+| --------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `subscription_sharing_usage_unavailable` (503)      | Temporary; keep credentials, retry later  | "not available for this account… requires a Plus or Pro plan" | "temporarily unavailable. Try again in a few minutes."                       |
+| `subscription_sharing_user_not_eligible` (403)      | Explain the restriction; don't loop OAuth | "Allow plan usage for Tracer, then try again."                | "This ChatGPT account cannot use its plan in other apps…"                    |
+| `subscription_sharing_unsupported_capability` (400) | Remove the unsupported input or model     | "Capture the screen again."                                   | "…did not accept this request. It may not support image input."              |
+| Other 403                                           | Policy, permission, or region             | "Allow plan usage for Tracer"                                 | "Your account, workspace, or region may not allow plan usage in other apps." |
 
 Telling an ineligible user to "allow plan usage" sends them through OAuth again, which OpenAI asks apps not to do.
 
@@ -134,10 +134,10 @@ Telling an ineligible user to "allow plan usage" sends them through OAuth again,
 
 **Tests:**
 
-- *refreshes once and retries when ChatGPT rejects the access token*
-- *revokes, then clears, a connection ChatGPT still rejects after a refresh*: checks one retry only, that the newest token is revoked, and that the record still held it at revocation time
-- *keeps the connection when a rejected token cannot be refreshed right now*
-- *clears tokens and asks for sign-in when the refresh token has expired*: now also asserts revocation
+- _refreshes once and retries when ChatGPT rejects the access token_
+- _revokes, then clears, a connection ChatGPT still rejects after a refresh_: checks one retry only, that the newest token is revoked, and that the record still held it at revocation time
+- _keeps the connection when a rejected token cannot be refreshed right now_
+- _clears tokens and asks for sign-in when the refresh token has expired_: now also asserts revocation
 
 All fail against the original runtime.
 
@@ -157,9 +157,9 @@ Tracer still stores one account at a time. OpenAI's docs allow several saved reg
 
 **Tests:**
 
-- *signs in a different account and revokes the old one only after the new identity checks out*
-- *keeps the remembered account when signing in a different one fails*
-- *points a normal sign-in that returns another account to the switch*
+- _signs in a different account and revokes the old one only after the new identity checks out_
+- _keeps the remembered account when signing in a different one fails_
+- _points a normal sign-in that returns another account to the switch_
 
 A built-renderer check confirmed that the button sends `fresh: true` over IPC and stays hidden when no account is remembered.
 
@@ -183,83 +183,83 @@ A built-renderer check confirmed that the button sends `fresh: true` over IPC an
 
 ## 4. The 20 pre-launch checks
 
-| # | Check | Result | Evidence |
-| --- | --- | --- | --- |
-| 1 | Hide API keys | **PASS** | No developer credential exists. Grep of the tree and the extracted asar for `sk-`, `sk-proj-`, JWTs, AWS, GitHub, Slack, and Google keys, PEM keys, and `client_secret` found nothing. Test fixtures use synthetic values (`oaiapp_testclient`, `access-test-token`). |
-| 2 | Purge git secrets | **PASS** | All 14 commits and every file ever added were scanned with the patterns above. The only hits are the three synthetic `oaiapp_` fixtures. No rotation needed. History not rewritten. |
-| 3 | Public database keys | N/A | No database. |
-| 4 | Row-level security | N/A | No database. |
-| 5 | Encrypt sensitive data | **PASS** | Tokens: `safeStorage.encryptString` (`v10` = AES-256-GCM under a key that DPAPI protects for the Windows user). Sign-in is refused if encryption is unavailable; there is no plaintext fallback. Screenshots stay in memory. Prompts are plain localStorage (see PRIVACY_REVIEW). Notes T-17 and T-18. |
-| 6 | Server-side authentication | **PASS** | Every `ipcMain.handle` calls `requireSender` (main window, main frame) or `overlayFrom` (live overlay, main frame). OpenAI enforces the bearer token. |
-| 7 | Lock record access | N/A | No remote records. Local data lives in the Windows user's profile. |
-| 8 | Block field tampering | **PASS** | No IPC can set tokens, scopes, client id, or model. `sign-in` takes only a boolean. `ask`, `handoff`, `set-hotkey`, and `choose-region` payloads are validated in main. |
-| 9 | Secure session cookies | **PASS (token equivalent)** | No auth cookies. Tokens stay in main, encrypted at rest, sent only over HTTPS with `redirect: 'error'`; 1 h access tokens, rotated refresh tokens, revoked before any clear (T-05). |
-| 10 | Hash passwords | N/A | Tracer never sees a password. Sign-in happens in the system browser at `auth.openai.com`. Gemini and Claude have no sign-in in Tracer. |
-| 11 | Rate-limit login | N/A | OpenAI owns the endpoint. Locally: one sign-in at a time, one accepted callback, 10 s header and 15 s request timeouts, 5 min overall. |
-| 12 | Bot protection | N/A | No public endpoint. The loopback listener exists only during sign-in. `backend/` is not shipped. |
-| 13 | Parameterize queries | N/A | No SQL. |
-| 14 | Validate all input | **PASS after fixes** | See §5. Fixed T-08, T-11, T-14. |
-| 15 | Escape user content | **PASS** | No `innerHTML`, `eval`, or link rendering. Built renderer test: hostile HTML/Markdown in answers and saved prompts rendered as literal text, with no injected `img`, `script`, or `a`. |
-| 16 | Restrict file uploads | **PASS** | Only `data:image/(png\|jpeg);base64` up to 20 M characters. IPC never accepts a file path, and main never reads files for the renderer. Captures are ≤1600 px JPEG. |
-| 17 | Trim API responses | **PASS** | The renderer gets `{status, sharing, email, name, modelName}` and answer text. Errors are fixed strings; provider text is never forwarded (`readErrorCode` keeps `[a-z0-9_]` codes only). Minor: a failed credential write can show a Node error that includes the profile path. |
-| 18 | Security headers | **PASS** | Packaged CSP: `default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; frame-src 'none'; object-src 'none'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'none'`. The callback page sends `no-store`, `nosniff`, `no-referrer`, and `default-src 'none'`. `frame-ancestors` is ignored in a meta tag (harmless console notice). |
-| 19 | Enforce HTTPS | **PASS** | All remote URLs are `https://`. Discovered endpoints must be HTTPS on `auth.openai.com`. Every `fetch` uses `redirect: 'error'`. No certificate overrides (`certificate-error`, `setCertificateVerifyProc`, `rejectUnauthorized`), and the `NODE_OPTIONS` fuse is off. The only plain-HTTP URL is the documented `http://127.0.0.1:<port>/auth/callback` loopback (RFC 8252, required by OpenAI). |
-| 20 | Scan dependencies | **PASS (production)** | `npm audit --omit=dev`: 0. Full audit: 2 critical in `tinypool` ≤2.1.1 via `oxfmt` 0.41 (dev formatter, not in asar; fix is `oxfmt` 0.74, flagged as breaking). `backend/`: 0. Electron 44.9.3 is the latest 44.x; 45.0.0 exists. Production deps: `jose` 6.2.13 (MIT), `electron-squirrel-startup` 1.0.1 (Apache-2.0) → `debug`, `ms` (MIT). Install scripts only in dev deps (`electron-winstaller`, `fsevents`). |
+| #   | Check                      | Result                      | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | -------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Hide API keys              | **PASS**                    | No developer credential exists. Grep of the tree and the extracted asar for `sk-`, `sk-proj-`, JWTs, AWS, GitHub, Slack, and Google keys, PEM keys, and `client_secret` found nothing. Test fixtures use synthetic values (`oaiapp_testclient`, `access-test-token`).                                                                                                                                                               |
+| 2   | Purge git secrets          | **PASS**                    | All 14 commits and every file ever added were scanned with the patterns above. The only hits are the three synthetic `oaiapp_` fixtures. No rotation needed. History not rewritten.                                                                                                                                                                                                                                                 |
+| 3   | Public database keys       | N/A                         | No database.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 4   | Row-level security         | N/A                         | No database.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 5   | Encrypt sensitive data     | **PASS**                    | Tokens: `safeStorage.encryptString` (`v10` = AES-256-GCM under a key that DPAPI protects for the Windows user). Sign-in is refused if encryption is unavailable; there is no plaintext fallback. Screenshots stay in memory. Prompts are plain localStorage (see PRIVACY_REVIEW). Notes T-17 and T-18.                                                                                                                              |
+| 6   | Server-side authentication | **PASS**                    | Every `ipcMain.handle` calls `requireSender` (main window, main frame) or `overlayFrom` (live overlay, main frame). OpenAI enforces the bearer token.                                                                                                                                                                                                                                                                               |
+| 7   | Lock record access         | N/A                         | No remote records. Local data lives in the Windows user's profile.                                                                                                                                                                                                                                                                                                                                                                  |
+| 8   | Block field tampering      | **PASS**                    | No IPC can set tokens, scopes, client id, or model. `sign-in` takes only a boolean. `ask`, `handoff`, `set-hotkey`, and `choose-region` payloads are validated in main.                                                                                                                                                                                                                                                             |
+| 9   | Secure session cookies     | **PASS (token equivalent)** | No auth cookies. Tokens stay in main, encrypted at rest, sent only over HTTPS with `redirect: 'error'`; 1 h access tokens, rotated refresh tokens, revoked before any clear (T-05).                                                                                                                                                                                                                                                 |
+| 10  | Hash passwords             | N/A                         | Tracer never sees a password. Sign-in happens in the system browser at `auth.openai.com`. Gemini and Claude have no sign-in in Tracer.                                                                                                                                                                                                                                                                                              |
+| 11  | Rate-limit login           | N/A                         | OpenAI owns the endpoint. Locally: one sign-in at a time, one accepted callback, 10 s header and 15 s request timeouts, 5 min overall.                                                                                                                                                                                                                                                                                              |
+| 12  | Bot protection             | N/A                         | No public endpoint. The loopback listener exists only during sign-in. `backend/` is not shipped.                                                                                                                                                                                                                                                                                                                                    |
+| 13  | Parameterize queries       | N/A                         | No SQL.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 14  | Validate all input         | **PASS after fixes**        | See §5. Fixed T-08, T-11, T-14.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 15  | Escape user content        | **PASS**                    | No `innerHTML`, `eval`, or link rendering. Built renderer test: hostile HTML/Markdown in answers and saved prompts rendered as literal text, with no injected `img`, `script`, or `a`.                                                                                                                                                                                                                                              |
+| 16  | Restrict file uploads      | **PASS**                    | Only `data:image/(png\|jpeg);base64` up to 20 M characters. IPC never accepts a file path, and main never reads files for the renderer. Captures are ≤1600 px JPEG.                                                                                                                                                                                                                                                                 |
+| 17  | Trim API responses         | **PASS**                    | The renderer gets `{status, sharing, email, name, modelName}` and answer text. Errors are fixed strings; provider text is never forwarded (`readErrorCode` keeps `[a-z0-9_]` codes only). Minor: a failed credential write can show a Node error that includes the profile path.                                                                                                                                                    |
+| 18  | Security headers           | **PASS**                    | Packaged CSP: `default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; frame-src 'none'; object-src 'none'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'none'`. The callback page sends `no-store`, `nosniff`, `no-referrer`, and `default-src 'none'`. `frame-ancestors` is ignored in a meta tag (harmless console notice). |
+| 19  | Enforce HTTPS              | **PASS**                    | All remote URLs are `https://`. Discovered endpoints must be HTTPS on `auth.openai.com`. Every `fetch` uses `redirect: 'error'`. No certificate overrides (`certificate-error`, `setCertificateVerifyProc`, `rejectUnauthorized`), and the `NODE_OPTIONS` fuse is off. The only plain-HTTP URL is the documented `http://127.0.0.1:<port>/auth/callback` loopback (RFC 8252, required by OpenAI).                                   |
+| 20  | Scan dependencies          | **PASS (production)**       | `npm audit --omit=dev`: 0. Full audit: 2 critical in `tinypool` ≤2.1.1 via `oxfmt` 0.41 (dev formatter, not in asar; fix is `oxfmt` 0.74, flagged as breaking). `backend/`: 0. Electron 44.9.3 is the latest 44.x; 45.0.0 exists. Production deps: `jose` 6.2.13 (MIT), `electron-squirrel-startup` 1.0.1 (Apache-2.0) → `debug`, `ms` (MIT). Install scripts only in dev deps (`electron-winstaller`, `fsevents`).                 |
 
 ## 5. Input validation detail (check 14)
 
-| Input | Where checked | Result |
-| --- | --- | --- |
-| Prompt | `validateInspectPayload` in renderer and again in main | String, non-blank, ≤2000. Command-like and HTML-like text is accepted as plain text |
-| Prompt titles and saved text | `cleanTitle`, `cleanText` | ≤80 and ≤2000 characters, control characters stripped, NUL rejected |
-| Library JSON in localStorage | `normalizeLibrary` | Invalid JSON gives an empty library (built-renderer test). Invalid items dropped; saved ≤100, past ≤50 |
-| Hotkey | `isValidAccelerator` in main and when reading `shortcut.json` | Modifier and key allowlists, ≤64 characters, no duplicates; Shift-only rejected (T-08) |
-| IPC payloads | Each handler | Non-objects rejected; numbers coerced with `Number()` and validated |
-| Selection geometry | `validateDipSelection`, `selectionToCrop`, gesture clamp | Non-finite, negative, out-of-bounds, and smaller-than-8 px rejected; crop clamped to the thumbnail |
-| Image data | `isScreenshotDataUrl`, `nativeImage.createFromDataURL`, `isEmpty` | PNG/JPEG base64 only, padded length, ≤20 M characters |
-| Conversation history | `buildConversation` | ≤16 turns, roles user/assistant, user ≤2000, assistant ≤100,000 |
-| Provider responses | `readTokenResponse`, `assessIdentityClaims`, `selectListedModel`, `parseSseMessage`, `consumeResponseEvents` | Token types and lengths, expiry ≤30 days, claims without control characters, model slug regex, JSON-object SSE events only, 2 MB stream cap, 100k answer cap |
-| OAuth callback | `parseCallback` and the listener | GET only, exact `Host`, exact path, one constant-time `state`, one code ≤2048 without spaces or `&`, `client_id` regex, placeholder rejected, mismatch with saved id rejected |
-| URLs | `assertOpenable`, `isAllowedNavigation`, `handoffUrl` | `https` only, exact pages for usage and handoff, authorize URL must be `auth.openai.com/api/accounts/authorize` with no token parameters and a `127.0.0.1` redirect |
+| Input                        | Where checked                                                                                                | Result                                                                                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prompt                       | `validateInspectPayload` in renderer and again in main                                                       | String, non-blank, ≤2000. Command-like and HTML-like text is accepted as plain text                                                                                           |
+| Prompt titles and saved text | `cleanTitle`, `cleanText`                                                                                    | ≤80 and ≤2000 characters, control characters stripped, NUL rejected                                                                                                           |
+| Library JSON in localStorage | `normalizeLibrary`                                                                                           | Invalid JSON gives an empty library (built-renderer test). Invalid items dropped; saved ≤100, past ≤50                                                                        |
+| Hotkey                       | `isValidAccelerator` in main and when reading `shortcut.json`                                                | Modifier and key allowlists, ≤64 characters, no duplicates; Shift-only rejected (T-08)                                                                                        |
+| IPC payloads                 | Each handler                                                                                                 | Non-objects rejected; numbers coerced with `Number()` and validated                                                                                                           |
+| Selection geometry           | `validateDipSelection`, `selectionToCrop`, gesture clamp                                                     | Non-finite, negative, out-of-bounds, and smaller-than-8 px rejected; crop clamped to the thumbnail                                                                            |
+| Image data                   | `isScreenshotDataUrl`, `nativeImage.createFromDataURL`, `isEmpty`                                            | PNG/JPEG base64 only, padded length, ≤20 M characters                                                                                                                         |
+| Conversation history         | `buildConversation`                                                                                          | ≤16 turns, roles user/assistant, user ≤2000, assistant ≤100,000                                                                                                               |
+| Provider responses           | `readTokenResponse`, `assessIdentityClaims`, `selectListedModel`, `parseSseMessage`, `consumeResponseEvents` | Token types and lengths, expiry ≤30 days, claims without control characters, model slug regex, JSON-object SSE events only, 2 MB stream cap, 100k answer cap                  |
+| OAuth callback               | `parseCallback` and the listener                                                                             | GET only, exact `Host`, exact path, one constant-time `state`, one code ≤2048 without spaces or `&`, `client_id` regex, placeholder rejected, mismatch with saved id rejected |
+| URLs                         | `assertOpenable`, `isAllowedNavigation`, `handoffUrl`                                                        | `https` only, exact pages for usage and handoff, authorize URL must be `auth.openai.com/api/accounts/authorize` with no token parameters and a `127.0.0.1` redirect           |
 
 ## 6. Electron, OAuth, screenshot, and AI-request checks
 
 ### Electron (phase 3)
 
-| Requirement | Result | How verified |
-| --- | --- | --- |
-| A compromised renderer cannot reach Node | PASS | `sandbox`, `contextIsolation`, `nodeIntegration` off in all windows; preload exposes functions only; fuses `RunAsNode`, `NODE_OPTIONS`, and inspect off |
-| IPC cannot run commands | PASS | No `child_process`, `exec`, or `shell.openPath`. `shell.openExternal` only receives allowlisted URLs |
-| Only authorized frames can request screenshots | PASS | No renderer API starts a capture. `tracer:frozen-frame` and `choose-region` require a live overlay's main frame. `getDisplayMedia` is always refused (T-10) |
-| External URLs cannot run code in Tracer | PASS | `will-navigate` and `will-redirect` restricted to the renderer folder, `window.open` denied, `<webview>` blocked, `frame-src 'none'` |
-| Unexpected windows and navigation blocked | PASS | `setWindowOpenHandler` deny on every `web-contents-created` |
-| No dev server in production | PASS | The packaged `main.cjs` compiles `devServerUrl` to the empty-string constant |
-| No DevTools in production | PASS | No `openDevTools` or `toggleDevTools` in the packaged bundle; the menu adds them only with a dev server |
+| Requirement                                    | Result | How verified                                                                                                                                                |
+| ---------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A compromised renderer cannot reach Node       | PASS   | `sandbox`, `contextIsolation`, `nodeIntegration` off in all windows; preload exposes functions only; fuses `RunAsNode`, `NODE_OPTIONS`, and inspect off     |
+| IPC cannot run commands                        | PASS   | No `child_process`, `exec`, or `shell.openPath`. `shell.openExternal` only receives allowlisted URLs                                                        |
+| Only authorized frames can request screenshots | PASS   | No renderer API starts a capture. `tracer:frozen-frame` and `choose-region` require a live overlay's main frame. `getDisplayMedia` is always refused (T-10) |
+| External URLs cannot run code in Tracer        | PASS   | `will-navigate` and `will-redirect` restricted to the renderer folder, `window.open` denied, `<webview>` blocked, `frame-src 'none'`                        |
+| Unexpected windows and navigation blocked      | PASS   | `setWindowOpenHandler` deny on every `web-contents-created`                                                                                                 |
+| No dev server in production                    | PASS   | The packaged `main.cjs` compiles `devServerUrl` to the empty-string constant                                                                                |
+| No DevTools in production                      | PASS   | No `openDevTools` or `toggleDevTools` in the packaged bundle; the menu adds them only with a dev server                                                     |
 
 ### ChatGPT OAuth (phase 4)
 
-| # | Item | Result |
-| --- | --- | --- |
-| 1 | Eligibility | Likely eligible: OpenAI's self-serve docs cover open-source and locally hosted apps, and Tracer runs locally under MIT. **Confirm:** the repository has no LICENSE file, and I could not confirm the GitHub repo is public (`gh` not signed in). |
-| 2 | Protocol | Matches the registration and sign-in page: endpoint, `dynamic_agent_client` first and the issued id later, `agent_name_hint` only on first registration, `urn:uuid:` host id, `127.0.0.1` loopback started before the browser, same redirect URI and `resource` in the exchange, no secret. Optional `id_token_hint` not used. `prompt=consent` for re-consent is the documented fallback until `force_reconsent` rollout. |
-| 3 | PKCE | 32 random bytes base64url verifier, S256 challenge without padding |
-| 4 | State | 32 random bytes per attempt; nonce the same |
-| 5 | State verification | Exactly one `state`, constant-time compare; a mismatch is rejected without ending the sign-in |
-| 6 | CSRF | State plus PKCE plus `Host` and path checks |
-| 7 | Loopback binding | `127.0.0.1` only |
-| 8 | Port | OS-assigned; OpenAI allows the port to vary |
-| 9 | Code replay | Listener settles once; PKCE binds the code |
-| 10 | Malicious callbacks | Wrong method, host, or path → 404; bad state → 400; `error=` with a valid state stops the attempt |
-| 11 | Listener cleanup | `finally` closes the server and all connections; abort and 5 min timeout |
-| 12 | Refresh | 60 s before expiry, and once more on a 401 (T-05); fields per docs (no `scope`); rotated refresh token stored; ID token re-verified and subject must match. Terminal errors fixed (T-02) |
-| 13 | Expiry | `expires_in` must be 0 < x ≤ 30 days |
-| 14 | Disconnect and revocation | Per docs; every clear revokes first; unconfirmed revocation is reported. Caveat T-16 |
-| 15 | Account switching | **PASS after fix** (T-06): fresh registration, old grant revoked after the new identity verifies |
-| 16 | Duplicate login | Blocked in one process; second instance prevented (T-09) |
-| 17 | Cancellation | Cancel aborts and closes the listener. The browser tab stays open; Tracer can't close it |
-| 18 | Scope enforcement | `chatgpt.tokens.use.direct` is checked before any Responses call and again after refresh. Sign-in alone shows "Allow ChatGPT plan usage" |
-| 19 | Error handling | Fixed (T-02, T-03, T-05, T-13) |
-| 20 | Credential leakage | Tokens never reach the renderer, URLs, logs, or error text. No crash reporter (no `Crashpad` folder in the profile). The authorize URL in browser history contains `login_hint` (email) and the host id, both allowed by OpenAI |
+| #   | Item                      | Result                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Eligibility               | Likely eligible: OpenAI's self-serve docs cover open-source and locally hosted apps, and Tracer runs locally under MIT. **Confirm:** the repository has no LICENSE file, and I could not confirm the GitHub repo is public (`gh` not signed in).                                                                                                                                                                           |
+| 2   | Protocol                  | Matches the registration and sign-in page: endpoint, `dynamic_agent_client` first and the issued id later, `agent_name_hint` only on first registration, `urn:uuid:` host id, `127.0.0.1` loopback started before the browser, same redirect URI and `resource` in the exchange, no secret. Optional `id_token_hint` not used. `prompt=consent` for re-consent is the documented fallback until `force_reconsent` rollout. |
+| 3   | PKCE                      | 32 random bytes base64url verifier, S256 challenge without padding                                                                                                                                                                                                                                                                                                                                                         |
+| 4   | State                     | 32 random bytes per attempt; nonce the same                                                                                                                                                                                                                                                                                                                                                                                |
+| 5   | State verification        | Exactly one `state`, constant-time compare; a mismatch is rejected without ending the sign-in                                                                                                                                                                                                                                                                                                                              |
+| 6   | CSRF                      | State plus PKCE plus `Host` and path checks                                                                                                                                                                                                                                                                                                                                                                                |
+| 7   | Loopback binding          | `127.0.0.1` only                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 8   | Port                      | OS-assigned; OpenAI allows the port to vary                                                                                                                                                                                                                                                                                                                                                                                |
+| 9   | Code replay               | Listener settles once; PKCE binds the code                                                                                                                                                                                                                                                                                                                                                                                 |
+| 10  | Malicious callbacks       | Wrong method, host, or path → 404; bad state → 400; `error=` with a valid state stops the attempt                                                                                                                                                                                                                                                                                                                          |
+| 11  | Listener cleanup          | `finally` closes the server and all connections; abort and 5 min timeout                                                                                                                                                                                                                                                                                                                                                   |
+| 12  | Refresh                   | 60 s before expiry, and once more on a 401 (T-05); fields per docs (no `scope`); rotated refresh token stored; ID token re-verified and subject must match. Terminal errors fixed (T-02)                                                                                                                                                                                                                                   |
+| 13  | Expiry                    | `expires_in` must be 0 < x ≤ 30 days                                                                                                                                                                                                                                                                                                                                                                                       |
+| 14  | Disconnect and revocation | Per docs; every clear revokes first; unconfirmed revocation is reported. Caveat T-16                                                                                                                                                                                                                                                                                                                                       |
+| 15  | Account switching         | **PASS after fix** (T-06): fresh registration, old grant revoked after the new identity verifies                                                                                                                                                                                                                                                                                                                           |
+| 16  | Duplicate login           | Blocked in one process; second instance prevented (T-09)                                                                                                                                                                                                                                                                                                                                                                   |
+| 17  | Cancellation              | Cancel aborts and closes the listener. The browser tab stays open; Tracer can't close it                                                                                                                                                                                                                                                                                                                                   |
+| 18  | Scope enforcement         | `chatgpt.tokens.use.direct` is checked before any Responses call and again after refresh. Sign-in alone shows "Allow ChatGPT plan usage"                                                                                                                                                                                                                                                                                   |
+| 19  | Error handling            | Fixed (T-02, T-03, T-05, T-13)                                                                                                                                                                                                                                                                                                                                                                                             |
+| 20  | Credential leakage        | Tokens never reach the renderer, URLs, logs, or error text. No crash reporter (no `Crashpad` folder in the profile). The authorize URL in browser history contains `login_hint` (email) and the host id, both allowed by OpenAI                                                                                                                                                                                            |
 
 **Token storage.** Tokens stay in main and never touch renderer storage, and the runtime has no logging (enforced by a source test). Electron prints IPC handler errors to stderr, but those messages are Tracer's fixed strings. On Windows, the encrypted file can be opened by any process running as the same Windows user; that is DPAPI's design, and it is how Chrome protects cookies too. Copied to another Windows account or machine, it can't be decrypted. Tracer would then show `reauth_required`. That follows from DPAPI's design; I didn't physically copy the files to test it.
 
@@ -267,85 +267,85 @@ A built-renderer check confirmed that the button sends `fresh: true` over IPC an
 
 ### Screenshot capture (phase 5)
 
-| Behavior | Result |
-| --- | --- |
-| Capture only after the shortcut | PASS. No other code path calls `desktopCapturer` |
-| Nothing written to disk | PASS. No `writeFile` of image data. A profile search after repeated synthetic captures found no JPEG data |
-| Not logged, not in crash dumps | PASS. No logging and no crash reporter |
-| Memory released | PASS. Frozen frames cleared on every exit path, overlays destroyed. 60 cycles showed no upward trend (TEST_REPORT §5) |
-| Escape keeps the previous preview | PASS by code review |
-| New capture clears the conversation | PASS after fix (T-04) |
+| Behavior                                                      | Result                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Capture only after the shortcut                               | PASS. No other code path calls `desktopCapturer`                                                                                                                                                                                                                                                                        |
+| Nothing written to disk                                       | PASS. No `writeFile` of image data. A profile search after repeated synthetic captures found no JPEG data                                                                                                                                                                                                               |
+| Not logged, not in crash dumps                                | PASS. No logging and no crash reporter                                                                                                                                                                                                                                                                                  |
+| Memory released                                               | PASS. Frozen frames cleared on every exit path, overlays destroyed. 60 cycles showed no upward trend (TEST_REPORT §5)                                                                                                                                                                                                   |
+| Escape keeps the previous preview                             | PASS by code review                                                                                                                                                                                                                                                                                                     |
+| New capture clears the conversation                           | PASS after fix (T-04)                                                                                                                                                                                                                                                                                                   |
 | Sent only by a deliberate action, to the selected destination | PASS. With "Send right after capture" on (the default, at your request), finishing the selection is the action that sends. With it off, nothing is sent until Analyze screenshot. Built-renderer tests cover both, and confirm that loading or saving prompts sends nothing and that a signed-out capture sends nothing |
-| Overlay absent from the picture | PASS. The snapshot is taken before overlays exist |
-| Tracer's own window absent | PASS on this PC (hide plus 150 ms). Slow machines need a manual check |
-| Selection matches pixels | PASS at 3440×1440, 100%: the overlay viewport equals the display, and the crop maps 1:1 |
-| Zoom leaking into overlay | Not an issue: tested on Electron 44.9.3, the overlay stays at zoom 1.0 after the main window zooms |
-| Multiple monitors, other DPI, negative origins | **NEEDS MANUAL TESTING.** Logic is unit-tested; no hardware. Known Electron risk: windows created on a monitor with a different scale can get the wrong size |
+| Overlay absent from the picture                               | PASS. The snapshot is taken before overlays exist                                                                                                                                                                                                                                                                       |
+| Tracer's own window absent                                    | PASS on this PC (hide plus 150 ms). Slow machines need a manual check                                                                                                                                                                                                                                                   |
+| Selection matches pixels                                      | PASS at 3440×1440, 100%: the overlay viewport equals the display, and the crop maps 1:1                                                                                                                                                                                                                                 |
+| Zoom leaking into overlay                                     | Not an issue: tested on Electron 44.9.3, the overlay stays at zoom 1.0 after the main window zooms                                                                                                                                                                                                                      |
+| Multiple monitors, other DPI, negative origins                | **NEEDS MANUAL TESTING.** Logic is unit-tested; no hardware. Known Electron risk: windows created on a monitor with a different scale can get the wrong size                                                                                                                                                            |
 
 ### AI request (phase 6)
 
 `POST https://api.openai.com/v1/responses` with `store: false`, `stream: true`, `instructions`, and `input_image` on the first user turn is confirmed in code and in the mocked test. No forbidden fields are sent (`temperature`, `max_output_tokens`, `previous_response_id`, `user`, system-role items).
 
-| Scenario | Handling |
-| --- | --- |
-| Wrong or unavailable model | `selectListedModel` fails → "did not list a model"; unsupported → T-03 message (T-07 open) |
-| Invalid auth / expired token | Refresh before expiry; on a 401, one forced refresh and one retry, then revoke and sign in again (T-05); terminal refresh → sign in again (T-02) |
-| Missing scope | Blocked before any request |
-| Usage limit, rate limit | `subscription_sharing_usage_limit_exceeded` → Manage usage message; 429 → wait message |
-| Offline / outage | "could not reach ChatGPT" / "unavailable right now" |
-| Timeout | 90 s → "took too long" (T-13) |
-| Malformed or interrupted stream | Invalid JSON event → error and connection released; no `response.completed` → "ended before completion" |
-| Oversized | Captures ≤1600 px; stream ≤2 MB; answer ≤100k characters |
-| Rapid repeats | Renderer `busy` flag plus main single-flight |
-| Cancel / shutdown | Cancel aborts the fetch; `will-quit` cancels sign-in and requests |
+| Scenario                        | Handling                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Wrong or unavailable model      | `selectListedModel` fails → "did not list a model"; unsupported → T-03 message (T-07 open)                                                       |
+| Invalid auth / expired token    | Refresh before expiry; on a 401, one forced refresh and one retry, then revoke and sign in again (T-05); terminal refresh → sign in again (T-02) |
+| Missing scope                   | Blocked before any request                                                                                                                       |
+| Usage limit, rate limit         | `subscription_sharing_usage_limit_exceeded` → Manage usage message; 429 → wait message                                                           |
+| Offline / outage                | "could not reach ChatGPT" / "unavailable right now"                                                                                              |
+| Timeout                         | 90 s → "took too long" (T-13)                                                                                                                    |
+| Malformed or interrupted stream | Invalid JSON event → error and connection released; no `response.completed` → "ended before completion"                                          |
+| Oversized                       | Captures ≤1600 px; stream ≤2 MB; answer ≤100k characters                                                                                         |
+| Rapid repeats                   | Renderer `busy` flag plus main single-flight                                                                                                     |
+| Cancel / shutdown               | Cancel aborts the fetch; `will-quit` cancels sign-in and requests                                                                                |
 
 **Prompt injection.** Screenshot text can steer the answer, and Tracer's instructions only ask the model to treat it as data. The model has no tools, and Tracer never acts on the answer: no links, no commands, no file access, no automatic follow-ups. The worst case is a misleading answer.
 
 ## 7. Changes made in this audit (committed as 13dcaca)
 
-| File | Change |
-| --- | --- |
-| [src/main.js](src/main.js) | Electron 44 clipboard handoff (T-01); `handoffUrl` (T-14); single-instance lock (T-09); `getDisplayMedia` always refused (T-10) |
-| [src/chatgpt-plan.mjs](src/chatgpt-plan.mjs) | Error mapping per OpenAI (T-02, T-03); `handoffUrl` |
-| [src/chatgpt-runtime.mjs](src/chatgpt-runtime.mjs) | Timeout message; abort in `finally` (T-13); refresh-and-retry on 401 and revoke-before-clear (T-05); `signIn({ fresh })` (T-06) |
-| [src/preload.js](src/preload.js) | `signIn` passes `fresh` (T-06) |
-| [src/security-policy.mjs](src/security-policy.mjs) | Shift/AltGr-only shortcuts rejected (T-08); permission allowlist narrowed; unused display-capture helpers removed |
-| [src/overlay-gestures.mjs](src/overlay-gestures.mjs) | Clamp to overlay bounds (T-11) |
-| [src/renderer.js](src/renderer.js) | `abandonAction` (T-04); Disconnect disabled while busy (T-16); overlay bounds; "Use a different ChatGPT account" (T-06) |
-| [src/prompt-library.mjs](src/prompt-library.mjs) | Favorites sync (T-12) |
-| [index.html](index.html) | `aria-live="polite"` on the answer area; `chatgpt-switch` button in the ChatGPT panel (T-06) |
-| [forge.config.mjs](forge.config.mjs) | `appCopyright`, `FileDescription` (T-15) |
-| [scripts/verify-handoff-clipboard.mjs](scripts/verify-handoff-clipboard.mjs) | New Electron clipboard contract check |
-| `test/*.mjs` | 16 regression tests added (10, then 6 for T-05/T-06), 3 tests of removed helpers deleted, 3 updated |
-| [README.md](README.md) | Corrected credential storage, Disconnect, `store: false`, model, handoff, and privacy claims; added uninstall and non-affiliation notes |
-| ARCHITECTURE.md, TEST_REPORT.md, PRIVACY_REVIEW.md, RELEASE_CHECKLIST.md | New. This file was rewritten; §11 keeps what was still valid from the previous version |
+| File                                                                         | Change                                                                                                                                  |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| [src/main.js](src/main.js)                                                   | Electron 44 clipboard handoff (T-01); `handoffUrl` (T-14); single-instance lock (T-09); `getDisplayMedia` always refused (T-10)         |
+| [src/chatgpt-plan.mjs](src/chatgpt-plan.mjs)                                 | Error mapping per OpenAI (T-02, T-03); `handoffUrl`                                                                                     |
+| [src/chatgpt-runtime.mjs](src/chatgpt-runtime.mjs)                           | Timeout message; abort in `finally` (T-13); refresh-and-retry on 401 and revoke-before-clear (T-05); `signIn({ fresh })` (T-06)         |
+| [src/preload.js](src/preload.js)                                             | `signIn` passes `fresh` (T-06)                                                                                                          |
+| [src/security-policy.mjs](src/security-policy.mjs)                           | Shift/AltGr-only shortcuts rejected (T-08); permission allowlist narrowed; unused display-capture helpers removed                       |
+| [src/overlay-gestures.mjs](src/overlay-gestures.mjs)                         | Clamp to overlay bounds (T-11)                                                                                                          |
+| [src/renderer.js](src/renderer.js)                                           | `abandonAction` (T-04); Disconnect disabled while busy (T-16); overlay bounds; "Use a different ChatGPT account" (T-06)                 |
+| [src/prompt-library.mjs](src/prompt-library.mjs)                             | Favorites sync (T-12)                                                                                                                   |
+| [index.html](index.html)                                                     | `aria-live="polite"` on the answer area; `chatgpt-switch` button in the ChatGPT panel (T-06)                                            |
+| [forge.config.mjs](forge.config.mjs)                                         | `appCopyright`, `FileDescription` (T-15)                                                                                                |
+| [scripts/verify-handoff-clipboard.mjs](scripts/verify-handoff-clipboard.mjs) | New Electron clipboard contract check                                                                                                   |
+| `test/*.mjs`                                                                 | 16 regression tests added (10, then 6 for T-05/T-06), 3 tests of removed helpers deleted, 3 updated                                     |
+| [README.md](README.md)                                                       | Corrected credential storage, Disconnect, `store: false`, model, handoff, and privacy claims; added uninstall and non-affiliation notes |
+| ARCHITECTURE.md, TEST_REPORT.md, PRIVACY_REVIEW.md, RELEASE_CHECKLIST.md     | New. This file was rewritten; §11 keeps what was still valid from the previous version                                                  |
 
 The only visual change is the approved "Use a different ChatGPT account" button, styled like the panel's other buttons. The screenshot workflow and prompt library are unchanged apart from the fixes above. The OAuth mechanism (PKCE, loopback, scopes) is unchanged; only the 401 recovery and account switching were changed, with your approval.
 
 ## 8. Extra checks (phase 15)
 
-| # | Area | Result |
-| --- | --- | --- |
-| 1 | XSS / unsafe Markdown | PASS (built-renderer test) |
-| 2 | Command injection | PASS (no shell or process APIs) |
-| 3 | IPC privilege escalation | PASS (sender checks; overlay and main channels separated) |
-| 4 | Token theft or leakage | PASS within the same-user DPAPI model |
-| 5 | Callback hijacking | PASS (127.0.0.1, random port, state, PKCE, Host check) |
-| 6 | Untrusted navigation | PASS |
-| 7 | Screenshot memory leaks | PASS for 60 synthetic cycles |
-| 8 | Clipboard privacy | Needs UX work (PRIVACY_REVIEW §6) |
-| 9 | Prompt injection | Contained; answer only |
-| 10 | Insecure logging | PASS (no logs; the bundled `debug` library logs only when a `DEBUG` environment variable is set) |
-| 11 | Race conditions | Fixed T-04 and T-09; mitigated T-16 |
-| 12 | Resource exhaustion | Bounded (sizes, timeouts, single-flight). A compromised renderer could open handoff tabs repeatedly; nuisance only |
-| 13 | Supply chain | Small production tree (4 packages); lockfile present; dev-only advisory |
-| 14 | Electron permissions | PASS after T-10 |
-| 15 | Renderer compromise | Can spend the user's plan through `ask` and write the clipboard. It can't read tokens, files, or the network, or capture the screen |
-| 16 | Protocol handlers | None registered |
-| 17 | Updates | No auto-update, so no update attack surface. Users won't learn about fixes (RELEASE_CHECKLIST) |
-| 18 | Local data exposure | Profile is per user; tokens encrypted; prompts plain (PRIVACY_REVIEW) |
-| 19 | Auth failure recovery | Fixed (T-02, T-05, T-06) |
-| 20 | Unintended network | PASS: 0 TCP/UDP endpoints at idle on the packaged app |
+| #   | Area                     | Result                                                                                                                              |
+| --- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | XSS / unsafe Markdown    | PASS (built-renderer test)                                                                                                          |
+| 2   | Command injection        | PASS (no shell or process APIs)                                                                                                     |
+| 3   | IPC privilege escalation | PASS (sender checks; overlay and main channels separated)                                                                           |
+| 4   | Token theft or leakage   | PASS within the same-user DPAPI model                                                                                               |
+| 5   | Callback hijacking       | PASS (127.0.0.1, random port, state, PKCE, Host check)                                                                              |
+| 6   | Untrusted navigation     | PASS                                                                                                                                |
+| 7   | Screenshot memory leaks  | PASS for 60 synthetic cycles                                                                                                        |
+| 8   | Clipboard privacy        | Needs UX work (PRIVACY_REVIEW §6)                                                                                                   |
+| 9   | Prompt injection         | Contained; answer only                                                                                                              |
+| 10  | Insecure logging         | PASS (no logs; the bundled `debug` library logs only when a `DEBUG` environment variable is set)                                    |
+| 11  | Race conditions          | Fixed T-04 and T-09; mitigated T-16                                                                                                 |
+| 12  | Resource exhaustion      | Bounded (sizes, timeouts, single-flight). A compromised renderer could open handoff tabs repeatedly; nuisance only                  |
+| 13  | Supply chain             | Small production tree (4 packages); lockfile present; dev-only advisory                                                             |
+| 14  | Electron permissions     | PASS after T-10                                                                                                                     |
+| 15  | Renderer compromise      | Can spend the user's plan through `ask` and write the clipboard. It can't read tokens, files, or the network, or capture the screen |
+| 16  | Protocol handlers        | None registered                                                                                                                     |
+| 17  | Updates                  | No auto-update, so no update attack surface. Users won't learn about fixes (RELEASE_CHECKLIST)                                      |
+| 18  | Local data exposure      | Profile is per user; tokens encrypted; prompts plain (PRIVACY_REVIEW)                                                               |
+| 19  | Auth failure recovery    | Fixed (T-02, T-05, T-06)                                                                                                            |
+| 20  | Unintended network       | PASS: 0 TCP/UDP endpoints at idle on the packaged app                                                                               |
 
 ## 9. Remaining risks
 
@@ -377,14 +377,14 @@ Dependency fixes recorded earlier remain in place: Electron moved from 44.5.1 to
 
 These are new features, reviewed against the same checks. No finding.
 
-| Area | What changed | Check |
-| --- | --- | --- |
-| IPC | New `answer-delta` event from main to the main window, and the new preload function `onAnswerText` (20 in total) | Sent only to the main window through `emitTracer`. The preload passes on only an integer `requestId` and a string of at most 100,000 characters. The window ignores pieces for any request but the current one, so a stale stream cannot write into a new conversation (the T-04 pattern) |
-| Request body | `language` in `tracer:ask`; `reasoning: { effort: 'low' }` | The main process accepts only codes from its fixed list (`isLanguageCode`), and the instructions get a fixed sentence with that language's English name. A compromised renderer already controls the prompt, so this keeps the instructions fixed rather than closing a new hole. OpenAI's plan-usage docs don't confirm that every model accepts `reasoning.effort`; on a 400 that names it, Tracer retries once without it |
-| Rendering | Translated labels and streamed text | Translations are static modules bundled with the app. They are applied with `textContent` and `setAttribute`; streamed text goes through the same Markdown-to-`textContent` path as finished answers. No `innerHTML` in `renderer.js`. Lookups use `Object.hasOwn`, so a message such as `__proto__` cannot reach the prototype |
-| Storage | `tracer:language`, `tracer:library-hidden` in localStorage | The stored language is checked against the list before use; an invalid value means the first-launch picker opens again |
-| Network | None added | The language list and names come from Chromium's `Intl.DisplayNames`; nothing is downloaded |
-| Logging | Development-only timing line | Prints only the milliseconds to the first text and to the end, never the prompt or answer. Not printed in the packaged app |
+| Area         | What changed                                                                                                     | Check                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IPC          | New `answer-delta` event from main to the main window, and the new preload function `onAnswerText` (20 in total) | Sent only to the main window through `emitTracer`. The preload passes on only an integer `requestId` and a string of at most 100,000 characters. The window ignores pieces for any request but the current one, so a stale stream cannot write into a new conversation (the T-04 pattern)                                                                                                                                    |
+| Request body | `language` in `tracer:ask`; `reasoning: { effort: 'low' }`                                                       | The main process accepts only codes from its fixed list (`isLanguageCode`), and the instructions get a fixed sentence with that language's English name. A compromised renderer already controls the prompt, so this keeps the instructions fixed rather than closing a new hole. OpenAI's plan-usage docs don't confirm that every model accepts `reasoning.effort`; on a 400 that names it, Tracer retries once without it |
+| Rendering    | Translated labels and streamed text                                                                              | Translations are static modules bundled with the app. They are applied with `textContent` and `setAttribute`; streamed text goes through the same Markdown-to-`textContent` path as finished answers. No `innerHTML` in `renderer.js`. Lookups use `Object.hasOwn`, so a message such as `__proto__` cannot reach the prototype                                                                                              |
+| Storage      | `tracer:language`, `tracer:library-hidden` in localStorage                                                       | The stored language is checked against the list before use; an invalid value means the first-launch picker opens again                                                                                                                                                                                                                                                                                                       |
+| Network      | None added                                                                                                       | The language list and names come from Chromium's `Intl.DisplayNames`; nothing is downloaded                                                                                                                                                                                                                                                                                                                                  |
+| Logging      | Development-only timing line                                                                                     | Prints only the milliseconds to the first text and to the end, never the prompt or answer. Not printed in the packaged app                                                                                                                                                                                                                                                                                                   |
 
 `npm test`: 94 passing. Lint and format clean.
 
@@ -392,15 +392,30 @@ These are new features, reviewed against the same checks. No finding.
 
 No finding.
 
-| Area | What changed | Check |
-| --- | --- | --- |
-| IPC | `tracer:set-language` and the preload function `setLanguage` (21 in total) | Main-window main frame only (`requireSender`); only listed codes are accepted. It changes only which built-in translation the tray menu and notice use |
-| Lifetime | Closing hides the window; Tracer runs until Quit Tracer, File → Quit, or the end of the Windows session | `quitting` is set on `before-quit`, `query-session-end`, and `session-end`, so shutdown and sign-out are not blocked (checked in Electron: a simulated session end quit the app). Without a tray icon, closing quits as before, so Tracer can't be left running with no way to reach it |
-| Shortcut while hidden | The global shortcut stays registered while the window is hidden | Same capture path and checks as before. A cancelled capture started from the tray leaves the window hidden |
-| Disk | `tray-notice.json` in the profile | Holds `{"shown":true}` only |
-| Icon | PNGs embedded in `main.cjs`; `.ico` stamped into the executables at package time | Generated locally from SVG by `scripts/build-icons.mjs`; nothing is downloaded |
+| Area                  | What changed                                                                                            | Check                                                                                                                                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IPC                   | `tracer:set-language` and the preload function `setLanguage` (21 in total)                              | Main-window main frame only (`requireSender`); only listed codes are accepted. It changes only which built-in translation the tray menu and notice use                                                                                                                                  |
+| Lifetime              | Closing hides the window; Tracer runs until Quit Tracer, File → Quit, or the end of the Windows session | `quitting` is set on `before-quit`, `query-session-end`, and `session-end`, so shutdown and sign-out are not blocked (checked in Electron: a simulated session end quit the app). Without a tray icon, closing quits as before, so Tracer can't be left running with no way to reach it |
+| Shortcut while hidden | The global shortcut stays registered while the window is hidden                                         | Same capture path and checks as before. A cancelled capture started from the tray leaves the window hidden                                                                                                                                                                              |
+| Disk                  | `tray-notice.json` in the profile                                                                       | Holds `{"shown":true}` only                                                                                                                                                                                                                                                             |
+| Icon                  | PNGs embedded in `main.cjs`; `.ico` stamped into the executables at package time                        | Generated locally from SVG by `scripts/build-icons.mjs`; nothing is downloaded                                                                                                                                                                                                          |
 
 `npm test`: 97 passing. Lint and format clean.
+
+## 14. Release preparation (26 October, uncommitted)
+
+| Area             | Result                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dependencies     | `npm audit --omit=dev`: 0 vulnerabilities in what ships (`jose`, `electron-squirrel-startup` and its `debug` and `ms`). Full audit: 2 critical advisories in `tinypool`, used only by the `oxfmt` formatter at development time. Fixed by `oxfmt` 0.74, a major-version jump left for approval                                                                 |
+| Secrets          | No API keys, tokens, or private keys in the git history, tracked files, or `app.asar`. The ChatGPT client id is issued per install at sign-in, so nothing secret ships                                                                                                                                                                                         |
+| Package          | `app.asar` holds only the Vite build and `package.json`; `resources/` adds `LICENSE` and `THIRD_PARTY_NOTICES.md`. Fuses unchanged                                                                                                                                                                                                                             |
+| Error messages   | The window now shows only messages from Tracer's message list; any other exception text, such as a file path from a Node error, is replaced with "Tracer could not complete that request." and logged to the developer console only. This also stops internal details reaching the screen. A test fails if a new main-process message is missing from the list |
+| App identity     | `app.setAppUserModelId('com.squirrel.tracer.Tracer')` only when packaged on Windows                                                                                                                                                                                                                                                                            |
+| Release workflow | Runs only on `v*.*.*` tags, with `contents: write` limited to that job. It checks the tag against `package.json`, runs tests and lint, and creates a **draft** release, so nothing is published without review. Actions are pinned to major versions (`@v5`); pinning to commit SHAs would harden it further                                                   |
+| Code signing     | Not signed. Options and costs in docs/RELEASING.md; nothing purchased                                                                                                                                                                                                                                                                                          |
+| Auto-update      | Not added. It would add regular requests to update.electronjs.org; recommended only after signing and a privacy-notice update                                                                                                                                                                                                                                  |
+
+`npm test`: 98 passing. `npm run lint`: passing.
 
 ## Sources
 

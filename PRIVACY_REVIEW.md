@@ -21,18 +21,18 @@ None. The app sends no telemetry or identifiers to the developer.
 
 Everything lives in `%APPDATA%\tracer` (the Electron profile for product name `tracer`).
 
-| Item | Contents | Protection | Lifetime |
-| --- | --- | --- | --- |
-| `chatgpt-connection.bin` | Status, issued client id, OpenAI subject id, email, name, scopes, access token, refresh token, expiry | `safeStorage`: AES-256-GCM with a key that DPAPI protects for this Windows user | Tokens until Disconnect or sign-in failure; identifiers until the file is deleted |
-| `chatgpt-host-id` | Random `urn:uuid:` | None (not secret) | Forever; sent to OpenAI at sign-in as `ext_agent_host_id` |
-| `shortcut.json` | The chosen shortcut | None | Until changed |
-| `tray-notice.json` | `{"shown":true}` once the "still running" notice has appeared | None (not personal) | Until the profile is deleted |
-| Local Storage `tracer:library` | Saved prompts (≤100), past prompts (≤50) with timestamps, favorite flags, "Remember prompts" setting | **Plain text** | Until deleted in the app |
-| Local Storage `tracer:draft` | The current prompt box, saved on every keystroke | **Plain text** | Until overwritten |
-| Local Storage `tracer:provider` | ChatGPT, Gemini, or Claude | Plain text | Until changed |
-| Local Storage `tracer:language`, `tracer:library-hidden`, `tracer:auto-send` | Chosen language code, whether the prompts panel is hidden, whether captures send right away | Plain text | Until changed |
-| `Local State` | Chromium settings, including the DPAPI-wrapped key that `safeStorage` uses | DPAPI | App lifetime |
-| Chromium files | Preferences, caches (code, GPU, shader), DIPS, network state | Chromium defaults | App lifetime |
+| Item                                                                         | Contents                                                                                              | Protection                                                                      | Lifetime                                                                          |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `chatgpt-connection.bin`                                                     | Status, issued client id, OpenAI subject id, email, name, scopes, access token, refresh token, expiry | `safeStorage`: AES-256-GCM with a key that DPAPI protects for this Windows user | Tokens until Disconnect or sign-in failure; identifiers until the file is deleted |
+| `chatgpt-host-id`                                                            | Random `urn:uuid:`                                                                                    | None (not secret)                                                               | Forever; sent to OpenAI at sign-in as `ext_agent_host_id`                         |
+| `shortcut.json`                                                              | The chosen shortcut                                                                                   | None                                                                            | Until changed                                                                     |
+| `tray-notice.json`                                                           | `{"shown":true}` once the "still running" notice has appeared                                         | None (not personal)                                                             | Until the profile is deleted                                                      |
+| Local Storage `tracer:library`                                               | Saved prompts (≤100), past prompts (≤50) with timestamps, favorite flags, "Remember prompts" setting  | **Plain text**                                                                  | Until deleted in the app                                                          |
+| Local Storage `tracer:draft`                                                 | The current prompt box, saved on every keystroke                                                      | **Plain text**                                                                  | Until overwritten                                                                 |
+| Local Storage `tracer:provider`                                              | ChatGPT, Gemini, or Claude                                                                            | Plain text                                                                      | Until changed                                                                     |
+| Local Storage `tracer:language`, `tracer:library-hidden`, `tracer:auto-send` | Chosen language code, whether the prompts panel is hidden, whether captures send right away           | Plain text                                                                      | Until changed                                                                     |
+| `Local State`                                                                | Chromium settings, including the DPAPI-wrapped key that `safeStorage` uses                            | DPAPI                                                                           | App lifetime                                                                      |
+| Chromium files                                                               | Preferences, caches (code, GPU, shader), DIPS, network state                                          | Chromium defaults                                                               | App lifetime                                                                      |
 
 Not stored: screenshots, answers, conversation history, logs, crash dumps. A search of a test profile after repeated synthetic captures found no JPEG data. The real profile on this PC has no `Crashpad` folder.
 
@@ -46,13 +46,13 @@ Not stored: screenshots, answers, conversation history, logs, crash dumps. A sea
 
 With **Send right after capture** on (the default), finishing a selection sends the screenshot and the prompt right away. Pressing the hotkey and choosing an area is the deliberate act. Turn the setting off to see the screenshot first and send it with Analyze screenshot. A capture made while signed out is never sent.
 
-| Destination | Sent by | Contents |
-| --- | --- | --- |
-| `auth.openai.com` authorize page | System browser | Client id, loopback redirect, scopes, resource, `state`, `nonce`, PKCE challenge, host id, app name on first sign-in, **email as `login_hint`** on later sign-ins. This URL is saved in the browser's history |
-| `auth.openai.com` discovery, JWKS, token, revoke | Main process | Code + verifier, refresh token, client id. HTTPS only, no redirects followed |
-| `api.openai.com/v1/models` | Main process | Bearer token |
-| `api.openai.com/v1/responses` | Main process | Model, Tracer's instructions (which name the chosen answer language, for example "Write the answer in Vietnamese"), a request for low reasoning effort, the screenshot (JPEG, longest edge ≤1600 px), the prompt, and earlier turns in this conversation. **Each follow-up sends the screenshot again** |
-| `chatgpt.com/settings/usage` | System browser | Only when the user clicks Manage usage |
+| Destination                                      | Sent by        | Contents                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.openai.com` authorize page                 | System browser | Client id, loopback redirect, scopes, resource, `state`, `nonce`, PKCE challenge, host id, app name on first sign-in, **email as `login_hint`** on later sign-ins. This URL is saved in the browser's history                                                                                           |
+| `auth.openai.com` discovery, JWKS, token, revoke | Main process   | Code + verifier, refresh token, client id. HTTPS only, no redirects followed                                                                                                                                                                                                                            |
+| `api.openai.com/v1/models`                       | Main process   | Bearer token                                                                                                                                                                                                                                                                                            |
+| `api.openai.com/v1/responses`                    | Main process   | Model, Tracer's instructions (which name the chosen answer language, for example "Write the answer in Vietnamese"), a request for low reasoning effort, the screenshot (JPEG, longest edge ≤1600 px), the prompt, and earlier turns in this conversation. **Each follow-up sends the screenshot again** |
+| `chatgpt.com/settings/usage`                     | System browser | Only when the user clicks Manage usage                                                                                                                                                                                                                                                                  |
 
 `store: false` tells the Responses API not to keep the response for later retrieval through the API. It doesn't mean OpenAI never processes or keeps the data; OpenAI's own policies for the user's ChatGPT account still apply. Tracer's text should not suggest zero retention.
 
@@ -62,13 +62,13 @@ Tracer sends nothing to Google or Anthropic. It puts the screenshot and prompt o
 
 ## 5. Screenshot lifecycle
 
-| Stage | Where | Cleared when |
-| --- | --- | --- |
-| Full-resolution frozen frame per monitor | Main process memory | The selection ends (capture, cancel, failure, or window close) |
-| 1600 px preview of the frame | Each overlay renderer | Overlay destroyed at the end of the selection |
-| Cropped screenshot | Workspace renderer (`latestScreenshot`, `<img>`) | Remove preview, File → Clear, the next capture, or quit |
-| In-flight request | Main process | Request completes or is cancelled |
-| After a handoff | **System clipboard** | Only when something else is copied |
+| Stage                                    | Where                                            | Cleared when                                                   |
+| ---------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| Full-resolution frozen frame per monitor | Main process memory                              | The selection ends (capture, cancel, failure, or window close) |
+| 1600 px preview of the frame             | Each overlay renderer                            | Overlay destroyed at the end of the selection                  |
+| Cropped screenshot                       | Workspace renderer (`latestScreenshot`, `<img>`) | Remove preview, File → Clear, the next capture, or quit        |
+| In-flight request                        | Main process                                     | Request completes or is cancelled                              |
+| After a handoff                          | **System clipboard**                             | Only when something else is copied                             |
 
 Like any program's memory, these can reach the Windows page file or hibernation file. Tracer can't control that.
 
@@ -106,29 +106,29 @@ Recommended, in order of effort:
 
 ## 9. User deletion controls
 
-| Control | Removes | Leaves |
-| --- | --- | --- |
-| Escape during selection | The new frozen frames | The previous preview |
-| Remove preview / File → Clear | Screenshot and conversation from memory; cancels a running request | The Past Prompts entry, the clipboard |
-| Disconnect | Remote refresh grant (when a token is present) and local tokens | Account identifiers in the encrypted file, host id |
-| Use a different ChatGPT account | The previous account's grant and record, once the new account verifies | Host id |
-| Clear history | Past Prompts | Saved prompts, draft, old LevelDB log data until compaction |
-| Remember prompts off | New Past Prompts entries | Existing entries, the draft |
-| Delete on a card | That record | A copy with the same text in the other list; LevelDB log data until compaction |
-| Uninstall (Squirrel) | Program files and shortcuts | **All of `%APPDATA%\tracer`, and the ChatGPT grant** |
+| Control                         | Removes                                                                | Leaves                                                                         |
+| ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Escape during selection         | The new frozen frames                                                  | The previous preview                                                           |
+| Remove preview / File → Clear   | Screenshot and conversation from memory; cancels a running request     | The Past Prompts entry, the clipboard                                          |
+| Disconnect                      | Remote refresh grant (when a token is present) and local tokens        | Account identifiers in the encrypted file, host id                             |
+| Use a different ChatGPT account | The previous account's grant and record, once the new account verifies | Host id                                                                        |
+| Clear history                   | Past Prompts                                                           | Saved prompts, draft, old LevelDB log data until compaction                    |
+| Remember prompts off            | New Past Prompts entries                                               | Existing entries, the draft                                                    |
+| Delete on a card                | That record                                                            | A copy with the same text in the other list; LevelDB log data until compaction |
+| Uninstall (Squirrel)            | Program files and shortcuts                                            | **All of `%APPDATA%\tracer`, and the ChatGPT grant**                           |
 
 To remove everything: Disconnect in Tracer, check ChatGPT Settings → Security and login → Login connections, uninstall, then delete `%APPDATA%\tracer`.
 
 ## 10. Disclosures that need clarification
 
-| Where | Current text | Issue | Suggested |
-| --- | --- | --- | --- |
-| README (before this audit) | "encrypted with the operating system's credential store" | Not Credential Manager | Corrected to "Electron safeStorage (Windows DPAPI for your user account)" |
-| README | "The screenshot is not written to disk." | True for Tracer, but a handoff leaves it on the clipboard | Corrected in README (clipboard and Clipboard History sentence) |
-| README | "The saved prompt is local." | Not encrypted; draft always kept | Corrected in README ("stored locally in plain text, including the current draft") |
-| README | "Disconnect revokes the ChatGPT refresh token and deletes the local credential" | Keeps identifiers; could have nothing to revoke | Corrected in README; the code path is fixed (T-05) |
-| UI note | "Analysis uses that account's Plus or Pro plan allowance, not a separate API bill." | Credits can apply; plan list differs between OpenAI pages | "Analysis uses your ChatGPT plan's usage limits. If you allow credits for Tracer in ChatGPT settings, extra use can spend credits." Link "Learn more" to help.openai.com/articles/20001542 |
-| README | "`store: false`" | Can read as "nothing kept" | Corrected in README ("OpenAI's own retention policies still apply") |
-| Release notes, app | Affiliation | Uses ChatGPT, Gemini, and Claude names | Added to README: "not affiliated with or endorsed by OpenAI, Google, or Anthropic." Repeat it in the release notes |
-| README | Uninstall | Data and grant remain | Added to README. Consider removing the data on uninstall |
-| Nowhere | Privacy policy | None for users | Add a short `PRIVACY.md` built from §3–§9 and link it from the release page |
+| Where                      | Current text                                                                        | Issue                                                     | Suggested                                                                                                                                                                                  |
+| -------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| README (before this audit) | "encrypted with the operating system's credential store"                            | Not Credential Manager                                    | Corrected to "Electron safeStorage (Windows DPAPI for your user account)"                                                                                                                  |
+| README                     | "The screenshot is not written to disk."                                            | True for Tracer, but a handoff leaves it on the clipboard | Corrected in README (clipboard and Clipboard History sentence)                                                                                                                             |
+| README                     | "The saved prompt is local."                                                        | Not encrypted; draft always kept                          | Corrected in README ("stored locally in plain text, including the current draft")                                                                                                          |
+| README                     | "Disconnect revokes the ChatGPT refresh token and deletes the local credential"     | Keeps identifiers; could have nothing to revoke           | Corrected in README; the code path is fixed (T-05)                                                                                                                                         |
+| UI note                    | "Analysis uses that account's Plus or Pro plan allowance, not a separate API bill." | Credits can apply; plan list differs between OpenAI pages | "Analysis uses your ChatGPT plan's usage limits. If you allow credits for Tracer in ChatGPT settings, extra use can spend credits." Link "Learn more" to help.openai.com/articles/20001542 |
+| README                     | "`store: false`"                                                                    | Can read as "nothing kept"                                | Corrected in README ("OpenAI's own retention policies still apply")                                                                                                                        |
+| Release notes, app         | Affiliation                                                                         | Uses ChatGPT, Gemini, and Claude names                    | Added to README: "not affiliated with or endorsed by OpenAI, Google, or Anthropic." Repeat it in the release notes                                                                         |
+| README                     | Uninstall                                                                           | Data and grant remain                                     | Added to README. Consider removing the data on uninstall                                                                                                                                   |
+| Nowhere                    | Privacy policy                                                                      | None for users                                            | Add a short `PRIVACY.md` built from §3–§9 and link it from the release page                                                                                                                |

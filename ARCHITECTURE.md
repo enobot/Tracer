@@ -51,16 +51,16 @@ flowchart LR
 
 The boundary that matters is between **Main** and **Renderers**. Everything that touches the operating system, the network, or credentials is on the main side. A renderer can only call the 21 functions in [preload.js](src/preload.js), and each IPC handler in [main.js](src/main.js) checks who is calling: main-window channels require the main window's main frame (`requireSender`), and overlay channels require a live overlay's main frame (`overlayFrom`).
 
-| Data or capability | Main process | Main-window renderer | Overlay renderer | Leaves the machine |
-| --- | --- | --- | --- | --- |
-| Full-resolution frozen frames | Yes, during selection only | No | No | No |
-| 1600px preview of the frozen frame | Yes | No | Its own monitor only | No |
-| Cropped screenshot | Yes, transiently | Yes, until Clear / new capture / quit | No | Only after the user submits |
-| Prompt text | Yes, per request | Yes, plus Local Storage | No | Only after the user submits |
-| ChatGPT access / refresh / ID tokens | Yes | **No** (status, email, name, model name only) | No | Only to OpenAI over HTTPS |
-| OS APIs (capture, clipboard, shell, shortcut, files) | Yes | No, only through IPC | No | n/a |
-| Local files | Main reads/writes `%APPDATA%\tracer` | No (fuse `GrantFileProtocolExtraPrivileges` off) | No | n/a |
-| Network | `fetch` to `auth.openai.com`, `api.openai.com`; loopback listener while signing in | No (`connect-src 'self'`) | No | n/a |
+| Data or capability                                   | Main process                                                                       | Main-window renderer                             | Overlay renderer     | Leaves the machine          |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------ | -------------------- | --------------------------- |
+| Full-resolution frozen frames                        | Yes, during selection only                                                         | No                                               | No                   | No                          |
+| 1600px preview of the frozen frame                   | Yes                                                                                | No                                               | Its own monitor only | No                          |
+| Cropped screenshot                                   | Yes, transiently                                                                   | Yes, until Clear / new capture / quit            | No                   | Only after the user submits |
+| Prompt text                                          | Yes, per request                                                                   | Yes, plus Local Storage                          | No                   | Only after the user submits |
+| ChatGPT access / refresh / ID tokens                 | Yes                                                                                | **No** (status, email, name, model name only)    | No                   | Only to OpenAI over HTTPS   |
+| OS APIs (capture, clipboard, shell, shortcut, files) | Yes                                                                                | No, only through IPC                             | No                   | n/a                         |
+| Local files                                          | Main reads/writes `%APPDATA%\tracer`                                               | No (fuse `GrantFileProtocolExtraPrivileges` off) | No                   | n/a                         |
+| Network                                              | `fetch` to `auth.openai.com`, `api.openai.com`; loopback listener while signing in | No (`connect-src 'self'`)                        | No                   | n/a                         |
 
 ## Main process — [src/main.js](src/main.js)
 
@@ -89,7 +89,7 @@ The boundary that matters is between **Main** and **Renderers**. Everything that
 
 ## ChatGPT sign-in and requests — [src/chatgpt-runtime.mjs](src/chatgpt-runtime.mjs), [src/chatgpt-plan.mjs](src/chatgpt-plan.mjs)
 
-Implements OpenAI's *Sign in with ChatGPT — plan usage for open-source and locally hosted apps* (developers.openai.com/siwc).
+Implements OpenAI's _Sign in with ChatGPT — plan usage for open-source and locally hosted apps_ (developers.openai.com/siwc).
 
 - **Sign-in.** Generates a stable `ext_agent_host_id` (`urn:uuid:`), fresh PKCE verifier, `state`, and `nonce`. Starts an HTTP listener on `127.0.0.1` with a random port, then opens the system browser at `https://auth.openai.com/api/accounts/authorize`. First registration uses `client_id=dynamic_agent_client` and `agent_name_hint=Tracer`; later sign-ins reuse the issued `oaiapp_…` id. Scopes: `openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`, resource `https://api.openai.com/v1`.
 - **Callback.** Only `GET /auth/callback` with the exact `Host` header and a constant-time `state` match is accepted. The page never echoes the code. The listener closes when sign-in finishes, fails, is cancelled, or times out after 5 minutes.
