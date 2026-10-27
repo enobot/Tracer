@@ -1,4 +1,18 @@
 import './index.css';
+import {
+  DEFAULT_PROMPT,
+  hasInterface,
+  isDefaultPrompt,
+  translator,
+} from './i18n.mjs';
+import {
+  LANGUAGE_CODES,
+  englishName,
+  isLanguageCode,
+  isRightToLeft,
+  matchLanguage,
+  nativeName,
+} from './languages.mjs';
 import { parseMarkdown } from './markdown-blocks.mjs';
 import { createSelectionGesture } from './overlay-gestures.mjs';
 import {
@@ -23,11 +37,57 @@ const MAX_HISTORY = 14;
 const LIBRARY_KEY = 'tracer:library';
 const DRAFT_KEY = 'tracer:draft';
 const AUTO_SEND_KEY = 'tracer:auto-send';
+const LANGUAGE_KEY = 'tracer:language';
+const LIBRARY_HIDDEN_KEY = 'tracer:library-hidden';
 const PROVIDER_NAMES = {
   chatgpt: 'ChatGPT',
   gemini: 'Gemini',
   claude: 'Claude',
 };
+
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Preferences still work for this session.
+  }
+}
+
+function storedLanguage() {
+  const code = readStorage(LANGUAGE_KEY);
+  return isLanguageCode(code) ? code : null;
+}
+
+// Interface direction follows the language only when its labels are
+// translated; otherwise the English labels stay left to right.
+function setDocumentLanguage(code) {
+  document.documentElement.lang = code;
+  document.documentElement.dir =
+    hasInterface(code) && isRightToLeft(code) ? 'rtl' : 'ltr';
+}
+
+function translateStatic(t) {
+  for (const element of document.querySelectorAll('[data-i18n]')) {
+    element.textContent = t(element.dataset.i18n);
+  }
+  for (const element of document.querySelectorAll('[data-i18n-label]')) {
+    element.setAttribute('aria-label', t(element.dataset.i18nLabel));
+  }
+  for (const element of document.querySelectorAll('[data-i18n-placeholder]')) {
+    element.setAttribute('placeholder', t(element.dataset.i18nPlaceholder));
+  }
+  for (const element of document.querySelectorAll('[data-i18n-alt]')) {
+    element.setAttribute('alt', t(element.dataset.i18nAlt));
+  }
+}
 
 const params = new URLSearchParams(location.search);
 if (params.get('overlay') === '1') {
@@ -38,6 +98,9 @@ if (params.get('overlay') === '1') {
 
 function initOverlay() {
   document.body.classList.add('is-overlay');
+  const language = storedLanguage() ?? 'en';
+  setDocumentLanguage(language);
+  translateStatic(translator(language));
   const workspace = document.getElementById('workspace');
   const root = document.getElementById('snip');
   const image = document.getElementById('snip-image');
@@ -165,11 +228,16 @@ function initWorkspace() {
     modelName: null,
     savedAccount: false,
   });
+  let language = storedLanguage() ?? matchLanguage(navigator.language);
+  let t = translator(language);
   let latestScreenshot = null;
   // Questions and answers about the current screenshot, oldest first.
   let turns = [];
-  // The question and "waiting" line shown while a reply is on its way.
+  // The question and the line under it (waiting text, then the answer as it
+  // streams in) while a reply is on its way.
   let pendingNodes = [];
+  let streamText = '';
+  let streamFrame = 0;
   let modelName = null;
   let session = signedOut();
   let busy = false;
@@ -180,7 +248,11 @@ function initWorkspace() {
   let editingId = '';
   let hotkeyAccelerator = 'Ctrl+Shift+Space';
   let pendingHotkey = '';
+  let pendingLanguage = language;
+  let firstRunLanguage = false;
+  let lastStatus = { message: '', values: undefined };
 
+  const app = document.getElementById('workspace');
   const promptInput = document.getElementById('tracer-prompt');
   const autoSend = document.getElementById('auto-send');
   const statusDisplay = document.getElementById('tracer-status');
@@ -209,6 +281,9 @@ function initWorkspace() {
   const usageButton = document.getElementById('manage-usage');
   const chip = document.getElementById('provider-chip');
   const panel = document.getElementById('provider-panel');
+  const languageButton = document.getElementById('language-button');
+  const languageNameLabel = document.getElementById('language-name');
+  const libraryToggle = document.getElementById('library-toggle');
   const saveButton = document.getElementById('save-prompt');
   const hotkeyButton = document.getElementById('set-hotkey');
   const saveNote = document.getElementById('save-note');
@@ -218,6 +293,12 @@ function initWorkspace() {
   const hotkeyError = document.getElementById('hotkey-error');
   const hotkeyApply = document.getElementById('hotkey-apply');
   const hotkeyCancel = document.getElementById('hotkey-cancel');
+  const languageDialog = document.getElementById('language-dialog');
+  const languageSearch = document.getElementById('language-search');
+  const languageList = document.getElementById('language-list');
+  const languageDetail = document.getElementById('language-detail');
+  const languageCancel = document.getElementById('language-cancel');
+  const languageContinue = document.getElementById('language-continue');
 
   function bridgeReady() {
     return Boolean(window.tracer?.ask && window.tracer?.handoff);
@@ -230,13 +311,17 @@ function initWorkspace() {
       '',
     );
     if (!cleaned || cleaned === 'Unauthorized IPC sender') {
-      return 'Tracer could not complete that request.';
+      return t('Tracer could not complete that request.');
     }
-    return cleaned.slice(0, 300);
+    return t(cleaned.slice(0, 300));
   }
 
-  function setStatus(message) {
-    if (statusDisplay) statusDisplay.textContent = message;
+  // Status messages are kept in English with their values, so they can be
+  // shown again in a newly chosen language.
+  function setStatus(message, values) {
+    lastStatus = { message, values };
+    if (statusDisplay)
+      statusDisplay.textContent = message ? t(message, values) : '';
   }
 
   function appendInline(parent, segments) {
@@ -266,14 +351,14 @@ function initWorkspace() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'link';
-    button.textContent = label;
+    button.textContent = t(label);
     button.addEventListener('click', () => {
       navigator.clipboard.writeText(getText()).then(
         () => {
-          button.textContent = 'Copied';
+          button.textContent = t('Copied');
         },
         () => {
-          button.textContent = 'Copy failed';
+          button.textContent = t('Copy failed');
         },
       );
     });
@@ -340,12 +425,21 @@ function initWorkspace() {
     return paragraph;
   }
 
+  function answerBody(text) {
+    const body = document.createElement('div');
+    body.className = 'answer-body';
+    body.dir = 'auto';
+    for (const block of parseMarkdown(text)) body.append(renderBlock(block));
+    return body;
+  }
+
   function questionNode(text) {
     const question = document.createElement('p');
     question.className = 'turn-question';
+    question.dir = 'auto';
     const label = document.createElement('span');
     label.className = 'sr-only';
-    label.textContent = 'You asked: ';
+    label.textContent = `${t('You asked:')} `;
     question.append(label, document.createTextNode(text));
     return question;
   }
@@ -355,10 +449,8 @@ function initWorkspace() {
     answer.className = 'turn-answer';
     const label = document.createElement('span');
     label.className = 'sr-only';
-    label.textContent = 'ChatGPT answered: ';
-    const body = document.createElement('div');
-    body.className = 'answer-body';
-    for (const block of parseMarkdown(text)) body.append(renderBlock(block));
+    label.textContent = `${t('ChatGPT answered:')} `;
+    const body = answerBody(text);
     const actions = document.createElement('div');
     actions.className = 'answer-actions';
     actions.append(copyButton(() => body.innerText, 'Copy answer'));
@@ -370,29 +462,56 @@ function initWorkspace() {
     const question = questionNode(prompt);
     const waiting = document.createElement('p');
     waiting.className = 'waiting';
-    waiting.textContent = 'Waiting for ChatGPT…';
+    waiting.textContent = t('Waiting for ChatGPT…');
     conversation?.append(question, waiting);
     pendingNodes = [question, waiting];
+    streamText = '';
     waiting.scrollIntoView({ block: 'nearest' });
   }
 
-  // Replaces the waiting line with the answer, or removes the unanswered
-  // question when the request failed.
+  // Shows the answer so far. Screen readers hear it once, when it is done.
+  function renderStream() {
+    streamFrame = 0;
+    const [question, placeholder] = pendingNodes;
+    if (!placeholder) return;
+    let live = placeholder;
+    if (!live.classList.contains('turn-answer')) {
+      live = document.createElement('div');
+      live.className = 'turn-answer';
+      live.setAttribute('aria-busy', 'true');
+      placeholder.replaceWith(live);
+      pendingNodes = [question, live];
+      question.scrollIntoView({ block: 'start' });
+    }
+    live.replaceChildren(answerBody(streamText));
+  }
+
+  // Replaces the waiting line or partial answer with the full answer, or
+  // removes the unanswered question when the request failed.
   function settlePending(answerText) {
-    const [question, waiting] = pendingNodes;
+    if (streamFrame) cancelAnimationFrame(streamFrame);
+    streamFrame = 0;
+    const [question, placeholder] = pendingNodes;
+    const streamed = placeholder?.classList.contains('turn-answer');
     pendingNodes = [];
-    waiting?.remove();
+    streamText = '';
     if (answerText === null) {
       question?.remove();
+      placeholder?.remove();
       return;
     }
-    conversation?.append(answerNode(answerText));
-    question?.scrollIntoView({ block: 'start' });
+    const answer = answerNode(answerText);
+    if (placeholder) placeholder.replaceWith(answer);
+    else conversation?.append(answer);
+    if (!streamed) question?.scrollIntoView({ block: 'start' });
   }
 
   function clearConversation() {
+    if (streamFrame) cancelAnimationFrame(streamFrame);
+    streamFrame = 0;
     turns = [];
     pendingNodes = [];
+    streamText = '';
     conversation?.replaceChildren();
   }
 
@@ -402,22 +521,6 @@ function initWorkspace() {
       return selected.value;
     }
     return 'chatgpt';
-  }
-
-  function readStorage(key) {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
-  }
-
-  function writeStorage(key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch {
-      // Preferences still work for this session.
-    }
   }
 
   function loadLibrary() {
@@ -437,11 +540,12 @@ function initWorkspace() {
     return promptInput?.value.trim() ?? '';
   }
 
-  function showSaveNote(message) {
+  function showSaveNote(message, values) {
     if (!saveNote) return;
-    saveNote.textContent = message;
+    const text = t(message, values);
+    saveNote.textContent = text;
     setTimeout(() => {
-      if (saveNote.textContent === message) saveNote.textContent = '';
+      if (saveNote.textContent === text) saveNote.textContent = '';
     }, 2500);
   }
 
@@ -452,7 +556,7 @@ function initWorkspace() {
     if (error === 'Invalid screenshot') {
       return 'The screenshot could not be used. Capture the screen again.';
     }
-    return 'The request could not be processed.';
+    return 'Tracer could not complete that request.';
   }
 
   function setBusy(value) {
@@ -486,6 +590,14 @@ function initWorkspace() {
     chip.setAttribute('aria-expanded', String(open));
   }
 
+  function setLibraryHidden(hidden) {
+    app?.classList.toggle('library-hidden', hidden);
+    if (libraryToggle) {
+      libraryToggle.textContent = t(hidden ? 'Show prompts' : 'Hide prompts');
+      libraryToggle.setAttribute('aria-expanded', String(!hidden));
+    }
+  }
+
   function planReady() {
     return session.status === 'connected' && session.sharing;
   }
@@ -500,18 +612,26 @@ function initWorkspace() {
 
   function updateHint() {
     if (hint) {
-      hint.textContent = `Press ${hotkeyAccelerator}, then drag over what you want to ask about. Right-click captures the whole monitor, and Esc cancels.`;
+      hint.textContent = t(
+        'Press {hotkey}, then drag over what you want to ask about. Right-click captures the whole monitor, and Esc cancels.',
+        { hotkey: hotkeyAccelerator },
+      );
     }
     if (!sendNote) return;
     const provider = selectedProvider();
     if (!autoSend?.checked) {
-      sendNote.textContent =
-        'Nothing is sent until you choose Analyze screenshot.';
+      sendNote.textContent = t(
+        'Nothing is sent until you choose Analyze screenshot.',
+      );
     } else if (provider === 'chatgpt') {
-      sendNote.textContent =
-        'Tracer sends the capture to ChatGPT with your prompt as soon as you let go.';
+      sendNote.textContent = t(
+        'Tracer sends the capture to ChatGPT with your prompt as soon as you let go.',
+      );
     } else {
-      sendNote.textContent = `Tracer copies the capture and your prompt, then opens ${PROVIDER_NAMES[provider]}, as soon as you let go.`;
+      sendNote.textContent = t(
+        'Tracer copies the capture and your prompt, then opens {provider}, as soon as you let go.',
+        { provider: PROVIDER_NAMES[provider] },
+      );
     }
   }
 
@@ -524,21 +644,31 @@ function initWorkspace() {
     if (shot) shot.hidden = !hasShot;
     if (analyzeCommand) {
       analyzeCommand.textContent = handoff
-        ? `Open in ${PROVIDER_NAMES[provider]}`
-        : 'Analyze screenshot';
+        ? t('Open in {provider}', { provider: PROVIDER_NAMES[provider] })
+        : t('Analyze screenshot');
       analyzeCommand.hidden = !handoff && asked;
     }
     if (followupRow) followupRow.hidden = handoff || !hasShot;
     if (followupInput) {
-      followupInput.placeholder = turns.length
-        ? 'Ask a follow-up about this screenshot'
-        : 'Ask about this screenshot';
+      followupInput.placeholder = t(
+        turns.length
+          ? 'Ask a follow-up about this screenshot'
+          : 'Ask about this screenshot',
+      );
     }
     if (planNote) planNote.hidden = handoff || !planReady();
     if (planText) {
       planText.textContent = modelName
-        ? `Uses your ChatGPT plan with ${modelName}. Follow-ups send the screenshot again.`
-        : 'Uses your ChatGPT plan. Follow-ups send the screenshot again.';
+        ? t(
+            'Uses your ChatGPT plan with {model}. Follow-ups send the screenshot again.',
+            { model: modelName },
+          )
+        : t('Uses your ChatGPT plan. Follow-ups send the screenshot again.');
+    }
+    if (shotToggle && shot) {
+      shotToggle.title = t(
+        shot.classList.contains('expanded') ? 'Show smaller' : 'Show full size',
+      );
     }
     updateHint();
   }
@@ -548,40 +678,55 @@ function initWorkspace() {
     const handoff = provider !== 'chatgpt';
     let chipText = 'ChatGPT';
     if (handoff) chipText = PROVIDER_NAMES[provider];
-    else if (planReady()) chipText = 'ChatGPT connected';
-    else if (session.status === 'connected') chipText = 'ChatGPT signed in';
+    else if (planReady())
+      chipText = t('{provider} connected', { provider: 'ChatGPT' });
+    else if (session.status === 'connected') {
+      chipText = t('{provider} signed in', { provider: 'ChatGPT' });
+    }
     if (chip) chip.textContent = chipText;
     if (statusLine) {
-      if (handoff) statusLine.textContent = 'Open in browser';
+      if (handoff) statusLine.textContent = t('Open in browser');
       else if (session.status === 'connected')
-        statusLine.textContent = 'Connected';
-      else statusLine.textContent = 'Not connected';
+        statusLine.textContent = t('Connected');
+      else statusLine.textContent = t('Not connected');
     }
     if (noteLine) {
       if (handoff) {
-        noteLine.textContent = `Tracer does not connect to a ${PROVIDER_NAMES[provider]} subscription. It copies the screenshot and prompt so you can paste them into the official site.`;
+        noteLine.textContent = t(
+          'Tracer does not connect to a {provider} subscription. It copies the screenshot and prompt so you can paste them into the official site.',
+          { provider: PROVIDER_NAMES[provider] },
+        );
       } else if (session.status === 'connecting') {
-        noteLine.textContent = 'Opening the browser to sign in with ChatGPT.';
+        noteLine.textContent = t(
+          'Opening the browser to sign in with ChatGPT.',
+        );
       } else if (session.status === 'reauth_required') {
-        noteLine.textContent =
-          'The saved ChatGPT connection expired. Continue with ChatGPT to sign in again.';
+        noteLine.textContent = t(
+          'The saved ChatGPT connection expired. Continue with ChatGPT to sign in again.',
+        );
       } else if (planReady()) {
-        const who = session.email || session.name || 'your ChatGPT account';
-        noteLine.textContent = `Signed in as ${who}. Analysis uses this account's ChatGPT plan limits. If you allow credits for Tracer in ChatGPT settings, extra use can spend credits.`;
+        const who = session.email || session.name || t('your ChatGPT account');
+        noteLine.textContent = t(
+          "Signed in as {who}. Analysis uses this account's ChatGPT plan limits. If you allow credits for Tracer in ChatGPT settings, extra use can spend credits.",
+          { who },
+        );
       } else if (session.status === 'connected') {
-        noteLine.textContent =
-          'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage before analyzing.';
+        noteLine.textContent = t(
+          'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage before analyzing.',
+        );
       } else {
-        noteLine.textContent =
-          'Continue with ChatGPT uses your own ChatGPT account. Analysis needs a ChatGPT plan that works in other apps, and your permission to use it.';
+        noteLine.textContent = t(
+          'Continue with ChatGPT uses your own ChatGPT account. Analysis needs a ChatGPT plan that works in other apps, and your permission to use it.',
+        );
       }
     }
     if (signInButton) {
       signInButton.hidden = handoff || planReady();
-      signInButton.textContent =
+      signInButton.textContent = t(
         session.status === 'connected'
           ? 'Allow ChatGPT plan usage'
-          : 'Continue with ChatGPT';
+          : 'Continue with ChatGPT',
+      );
     }
     if (switchButton) {
       switchButton.hidden =
@@ -594,6 +739,119 @@ function initWorkspace() {
       usageButton.hidden = handoff || session.status !== 'connected';
     }
     updateLayout();
+  }
+
+  // Applies a language to every label. `remember` keeps it for next time.
+  function applyLanguage(code, { remember = false } = {}) {
+    language = code;
+    t = translator(code);
+    setDocumentLanguage(code);
+    translateStatic(t);
+    if (languageNameLabel) languageNameLabel.textContent = nativeName(code);
+    languageButton?.setAttribute(
+      'aria-label',
+      `${t('Language')}: ${nativeName(code)}`,
+    );
+    if (promptInput && isDefaultPrompt(promptInput.value)) {
+      promptInput.value = t(DEFAULT_PROMPT);
+      writeStorage(DRAFT_KEY, promptInput.value);
+    }
+    if (remember) writeStorage(LANGUAGE_KEY, code);
+    setLibraryHidden(app?.classList.contains('library-hidden') ?? false);
+    renderConnection();
+    renderLibrary();
+    setStatus(lastStatus.message, lastStatus.values);
+  }
+
+  function searchable(text) {
+    return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  }
+
+  function languageOption(code) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'language-option';
+    option.dataset.code = code;
+    option.lang = code;
+    option.setAttribute('aria-pressed', String(code === pendingLanguage));
+    const native = document.createElement('span');
+    native.className = 'language-native';
+    native.textContent = nativeName(code);
+    option.append(native);
+    const english = englishName(code);
+    if (english !== nativeName(code)) {
+      const label = document.createElement('span');
+      label.className = 'language-english';
+      label.lang = 'en';
+      label.textContent = english;
+      option.append(label);
+    }
+    option.addEventListener('click', () => chooseLanguage(code));
+    option.addEventListener('dblclick', () => commitLanguage());
+    return option;
+  }
+
+  function renderLanguageList() {
+    if (!languageList) return;
+    const query = searchable(languageSearch?.value.trim() ?? '');
+    const matches = LANGUAGE_CODES.filter(
+      (code) =>
+        !query ||
+        searchable(nativeName(code)).includes(query) ||
+        searchable(englishName(code)).includes(query) ||
+        code.toLowerCase() === query,
+    ).sort((a, b) => englishName(a).localeCompare(englishName(b), 'en'));
+    languageList.replaceChildren();
+    for (const [title, codes] of [
+      ['Full app translation', matches.filter((code) => hasInterface(code))],
+      ['Answers only', matches.filter((code) => !hasInterface(code))],
+    ]) {
+      if (!codes.length) continue;
+      const heading = document.createElement('p');
+      heading.className = 'language-group';
+      heading.textContent = t(title);
+      const options = document.createElement('div');
+      options.className = 'language-options';
+      for (const code of codes) options.append(languageOption(code));
+      languageList.append(heading, options);
+    }
+    if (languageDetail) {
+      languageDetail.textContent = t(
+        hasInterface(pendingLanguage)
+          ? 'Buttons and answers use this language.'
+          : 'Answers use this language. Buttons stay in English.',
+      );
+    }
+  }
+
+  // Previews a language while the picker is open.
+  function chooseLanguage(code) {
+    pendingLanguage = code;
+    applyLanguage(code);
+    renderLanguageList();
+    languageList
+      ?.querySelector(`[data-code="${code}"]`)
+      ?.focus({ preventScroll: true });
+  }
+
+  function commitLanguage() {
+    applyLanguage(pendingLanguage, { remember: true });
+    firstRunLanguage = false;
+    languageDialog?.close();
+  }
+
+  function openLanguageDialog({ firstRun = false } = {}) {
+    if (!languageDialog) return;
+    firstRunLanguage = firstRun;
+    pendingLanguage = language;
+    if (languageSearch) languageSearch.value = '';
+    if (languageCancel) languageCancel.hidden = firstRun;
+    renderLanguageList();
+    languageDialog.showModal();
+    languageList
+      ?.querySelector(`[data-code="${pendingLanguage}"]`)
+      ?.scrollIntoView({ block: 'center' });
+    languageSearch?.focus();
   }
 
   function clearPreview() {
@@ -612,8 +870,9 @@ function initWorkspace() {
     shot?.classList.remove('expanded');
     shotToggle?.setAttribute('aria-expanded', 'false');
     if (shotLabel) {
-      shotLabel.textContent =
-        mode === 'full' ? 'Captured monitor' : 'Captured area';
+      shotLabel.textContent = t(
+        mode === 'full' ? 'Captured monitor' : 'Captured area',
+      );
     }
     updateLayout();
     if (autoSend?.checked) {
@@ -647,13 +906,15 @@ function initWorkspace() {
   // Sends one question about the current screenshot. Returns false when it
   // was not sent or failed, so a typed follow-up can be put back.
   async function ask(prompt) {
-    if (busy || hotkeyDialog?.open) return false;
+    if (busy || hotkeyDialog?.open || languageDialog?.open) return false;
     const generation = ++actionGeneration;
     pendingAction = generation;
     setBusy(true);
     try {
       if (!latestScreenshot) {
-        setStatus(`Capture a screenshot first: press ${hotkeyAccelerator}.`);
+        setStatus('Capture a screenshot first: press {hotkey}.', {
+          hotkey: hotkeyAccelerator,
+        });
         return false;
       }
       if (!prompt) {
@@ -669,14 +930,14 @@ function initWorkspace() {
         return false;
       }
       if (!bridgeReady()) {
-        setStatus('Tracer desktop bridge is unavailable.');
+        setStatus('Tracer could not complete that request.');
         return false;
       }
       const provider = selectedProvider();
       if (provider !== 'chatgpt') {
-        setStatus(
-          `Copying the screenshot and opening ${PROVIDER_NAMES[provider]}.`,
-        );
+        setStatus('Copying the screenshot and opening {provider}.', {
+          provider: PROVIDER_NAMES[provider],
+        });
         const result = await window.tracer.handoff({
           provider,
           screenshot: latestScreenshot,
@@ -693,6 +954,8 @@ function initWorkspace() {
         screenshot: latestScreenshot,
         prompt,
         history: turns.slice(-MAX_HISTORY),
+        requestId: generation,
+        language,
       });
       rememberPrompt(prompt);
       if (generation !== actionGeneration) return true;
@@ -706,10 +969,12 @@ function initWorkspace() {
     } catch (error) {
       if (generation !== actionGeneration) return true;
       settlePending(null);
-      const message = errorText(error);
-      setStatus(
-        message === 'The request was cancelled.' ? 'Canceled.' : message,
-      );
+      const raw = typeof error?.message === 'string' ? error.message : '';
+      if (raw.endsWith('The request was cancelled.')) setStatus('Canceled.');
+      else {
+        lastStatus = { message: '', values: undefined };
+        if (statusDisplay) statusDisplay.textContent = errorText(error);
+      }
       return false;
     } finally {
       if (pendingAction === generation) pendingAction = 0;
@@ -782,11 +1047,11 @@ function initWorkspace() {
         library = setHistoryEnabled(library, checkbox.checked);
         persistLibrary();
       });
-      label.append(checkbox, document.createTextNode('Remember prompts'));
+      label.append(checkbox, document.createTextNode(t('Remember prompts')));
       const clear = document.createElement('button');
       clear.type = 'button';
       clear.className = 'link';
-      clear.textContent = 'Clear history';
+      clear.textContent = t('Clear history');
       clear.addEventListener('click', () => {
         library = clearPast(library);
         persistLibrary();
@@ -803,12 +1068,13 @@ function initWorkspace() {
     if (!items.length) {
       const empty = document.createElement('p');
       empty.className = 'empty';
-      empty.textContent =
+      empty.textContent = t(
         libraryTab === 'saved'
           ? 'Saved prompts appear here.'
           : libraryTab === 'favorites'
             ? 'Star a prompt to keep it here.'
-            : 'Prompts you submit appear here.';
+            : 'Prompts you submit appear here.',
+      );
       list.append(empty);
       return;
     }
@@ -841,19 +1107,21 @@ function initWorkspace() {
       const title = document.createElement('input');
       title.value = item.title;
       title.maxLength = 80;
-      title.setAttribute('aria-label', 'Prompt title');
+      title.dir = 'auto';
+      title.setAttribute('aria-label', t('Prompt title'));
       const text = document.createElement('textarea');
       text.value = item.text;
       text.maxLength = 2000;
-      text.setAttribute('aria-label', 'Prompt text');
+      text.dir = 'auto';
+      text.setAttribute('aria-label', t('Prompt text'));
       const save = document.createElement('button');
       save.type = 'button';
       save.className = 'btn';
-      save.textContent = 'Save';
+      save.textContent = t('Save');
       const cancel = document.createElement('button');
       cancel.type = 'button';
       cancel.className = 'btn btn-quiet';
-      cancel.textContent = 'Cancel';
+      cancel.textContent = t('Cancel');
       save.addEventListener('click', () => {
         const result = updatePrompt(
           library,
@@ -886,23 +1154,25 @@ function initWorkspace() {
     }
     const title = document.createElement('div');
     title.className = 'prompt-title';
-    title.textContent = item.title || 'Prompt';
+    title.dir = 'auto';
+    title.textContent = item.title || t('Prompt');
     const body = document.createElement('button');
     body.type = 'button';
     body.className = 'prompt-body';
+    body.dir = 'auto';
     body.textContent =
       item.text.length > 90 ? `${item.text.slice(0, 89)}…` : item.text;
     body.addEventListener('click', () => usePrompt(item.text));
     const meta = document.createElement('div');
     meta.className = 'prompt-meta';
     const stamp = item.updatedAt || item.usedAt;
-    meta.textContent = stamp ? new Date(stamp).toLocaleString() : '';
+    meta.textContent = stamp ? new Date(stamp).toLocaleString(language) : '';
     const menu = document.createElement('div');
     menu.className = 'card-menu';
     const star = document.createElement('button');
     star.type = 'button';
     star.className = 'link';
-    star.textContent = item.favorite ? 'Unfavorite' : 'Favorite';
+    star.textContent = t(item.favorite ? 'Unfavorite' : 'Favorite');
     star.addEventListener('click', () => {
       library = setFavorite(library, item.id, !item.favorite);
       persistLibrary();
@@ -913,7 +1183,7 @@ function initWorkspace() {
       const edit = document.createElement('button');
       edit.type = 'button';
       edit.className = 'link';
-      edit.textContent = 'Edit';
+      edit.textContent = t('Edit');
       edit.addEventListener('click', () => {
         editingId = item.id;
         libraryTab = 'saved';
@@ -924,7 +1194,7 @@ function initWorkspace() {
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'link';
-    remove.textContent = 'Delete';
+    remove.textContent = t('Delete');
     remove.addEventListener('click', () => {
       library = deletePrompt(library, item.id);
       persistLibrary();
@@ -956,11 +1226,14 @@ function initWorkspace() {
     if (!hotkeyDialog) return;
     pendingHotkey = '';
     if (hotkeyCurrent) {
-      hotkeyCurrent.textContent = `Current shortcut: ${hotkeyAccelerator}`;
+      hotkeyCurrent.textContent = t('Current shortcut: {hotkey}', {
+        hotkey: hotkeyAccelerator,
+      });
     }
     if (hotkeyCapture) {
-      hotkeyCapture.textContent =
-        'Press the new shortcut, for example Ctrl+Alt+S.';
+      hotkeyCapture.textContent = t(
+        'Press the new shortcut, for example Ctrl+Alt+S.',
+      );
     }
     if (hotkeyError) hotkeyError.textContent = '';
     if (hotkeyApply) hotkeyApply.disabled = true;
@@ -979,8 +1252,9 @@ function initWorkspace() {
     }
     if (!result?.ok) {
       if (hotkeyError) {
-        hotkeyError.textContent =
-          result?.error || 'That shortcut could not be registered.';
+        hotkeyError.textContent = t(
+          result?.error || 'That shortcut could not be registered.',
+        );
       }
       hotkeyApply.disabled = false;
       return;
@@ -988,12 +1262,15 @@ function initWorkspace() {
     hotkeyAccelerator = result.accelerator;
     updateHint();
     hotkeyDialog?.close();
-    showSaveNote(`Hotkey set to ${hotkeyAccelerator}.`);
+    showSaveNote('Hotkey set to {hotkey}.', { hotkey: hotkeyAccelerator });
   }
 
   const savedDraft = readStorage(DRAFT_KEY) ?? readStorage('tracer:prompt');
-  if (promptInput && typeof savedDraft === 'string') {
-    promptInput.value = savedDraft.slice(0, LIMITS.promptChars);
+  if (promptInput) {
+    promptInput.value =
+      typeof savedDraft === 'string'
+        ? savedDraft.slice(0, LIMITS.promptChars)
+        : t(DEFAULT_PROMPT);
   }
   const savedProvider = readStorage('tracer:provider');
   if (
@@ -1070,8 +1347,9 @@ function initWorkspace() {
     event.stopPropagation();
     if (!accelerator) {
       if (hotkeyError) {
-        hotkeyError.textContent =
-          'Use a letter, number, Space, or F1 to F24 with Ctrl or Alt.';
+        hotkeyError.textContent = t(
+          'Use a letter, number, Space, or F1 to F24 with Ctrl or Alt.',
+        );
       }
       return;
     }
@@ -1081,7 +1359,7 @@ function initWorkspace() {
     if (hotkeyError) {
       hotkeyError.textContent = valid
         ? ''
-        : 'Add Ctrl or Alt so the shortcut does not block normal typing.';
+        : t('Add Ctrl or Alt so the shortcut does not block normal typing.');
     }
     if (hotkeyApply) hotkeyApply.disabled = !valid;
   });
@@ -1099,6 +1377,36 @@ function initWorkspace() {
       }
     });
   });
+  languageButton?.addEventListener('click', () => {
+    openLanguageDialog();
+  });
+  languageSearch?.addEventListener('input', renderLanguageList);
+  languageSearch?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const first = languageList?.querySelector('.language-option');
+    if (first?.dataset.code) chooseLanguage(first.dataset.code);
+  });
+  languageContinue?.addEventListener('click', () => {
+    commitLanguage();
+  });
+  languageCancel?.addEventListener('click', () => {
+    languageDialog?.close();
+  });
+  languageDialog?.addEventListener('cancel', (event) => {
+    // On first launch a language must be chosen before anything else.
+    if (firstRunLanguage) event.preventDefault();
+  });
+  languageDialog?.addEventListener('close', () => {
+    // Closing without Continue puts the saved language back.
+    const saved = storedLanguage();
+    if (saved && saved !== language) applyLanguage(saved);
+  });
+  libraryToggle?.addEventListener('click', () => {
+    const hidden = !app?.classList.contains('library-hidden');
+    setLibraryHidden(hidden);
+    writeStorage(LIBRARY_HIDDEN_KEY, hidden ? 'on' : 'off');
+  });
   chip?.addEventListener('click', () => {
     setPanel(panel?.hidden ?? false);
   });
@@ -1109,7 +1417,7 @@ function initWorkspace() {
   });
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || !panel || panel.hidden) return;
-    if (hotkeyDialog?.open) return;
+    if (hotkeyDialog?.open || languageDialog?.open) return;
     setPanel(false);
     chip?.focus();
   });
@@ -1124,7 +1432,7 @@ function initWorkspace() {
     const expanded = !shot.classList.contains('expanded');
     shot.classList.toggle('expanded', expanded);
     shotToggle.setAttribute('aria-expanded', String(expanded));
-    shotToggle.title = expanded ? 'Show smaller' : 'Show full size';
+    updateLayout();
   });
   analyzeCommand?.addEventListener('click', () => {
     void sendCapture();
@@ -1142,7 +1450,7 @@ function initWorkspace() {
   // remembered one.
   async function startSignIn(fresh) {
     if (!window.tracer?.signIn) {
-      setStatus('Tracer desktop bridge is unavailable.');
+      setStatus('Tracer could not complete that request.');
       return;
     }
     const reconsent =
@@ -1155,19 +1463,19 @@ function initWorkspace() {
       session = await window.tracer.signIn({ reconsent, fresh });
       renderConnection();
       if (session.notice) setStatus(session.notice);
-      else {
-        setStatus(
-          session.sharing
-            ? `ChatGPT is connected. Press ${hotkeyAccelerator} to capture.`
-            : 'Signed in. Allow ChatGPT plan usage before analyzing.',
-        );
+      else if (session.sharing) {
+        setStatus('ChatGPT is connected. Press {hotkey} to capture.', {
+          hotkey: hotkeyAccelerator,
+        });
+      } else {
+        setStatus('Signed in. Allow ChatGPT plan usage before analyzing.');
       }
     } catch (error) {
       await refreshSession();
-      const message = errorText(error);
-      setStatus(
-        message === 'Sign-in was cancelled.' ? 'Sign-in canceled.' : message,
-      );
+      const raw = typeof error?.message === 'string' ? error.message : '';
+      if (raw.endsWith('Sign-in was cancelled.'))
+        setStatus('Sign-in canceled.');
+      else if (statusDisplay) statusDisplay.textContent = errorText(error);
     } finally {
       setBusy(false);
     }
@@ -1187,7 +1495,7 @@ function initWorkspace() {
       setStatus('Disconnected from ChatGPT on this computer.');
     } catch (error) {
       await refreshSession();
-      setStatus(errorText(error));
+      if (statusDisplay) statusDisplay.textContent = errorText(error);
     } finally {
       setBusy(false);
     }
@@ -1197,7 +1505,7 @@ function initWorkspace() {
       try {
         await window.tracer?.openUsage?.();
       } catch (error) {
-        setStatus(errorText(error));
+        if (statusDisplay) statusDisplay.textContent = errorText(error);
       }
     });
   }
@@ -1211,6 +1519,13 @@ function initWorkspace() {
       renderLibrary();
     });
   }
+  window.tracer?.onAnswerText?.((event) => {
+    if (event?.requestId !== actionGeneration || pendingNodes.length !== 2) {
+      return;
+    }
+    streamText += event.text;
+    if (!streamFrame) streamFrame = requestAnimationFrame(renderStream);
+  });
   window.tracer?.onCapture?.((event) => {
     if (event?.type === 'capture' && typeof event.image === 'string') {
       showPreview(event.image, event.mode);
@@ -1244,8 +1559,11 @@ function initWorkspace() {
     }
   });
 
-  renderConnection();
-  renderLibrary();
+  app?.classList.toggle(
+    'library-hidden',
+    readStorage(LIBRARY_HIDDEN_KEY) === 'on',
+  );
+  applyLanguage(language);
   void refreshSession();
   void window.tracer?.getHotkey?.().then((result) => {
     if (result?.accelerator) {
@@ -1253,6 +1571,7 @@ function initWorkspace() {
       updateHint();
     }
   });
+  if (!storedLanguage()) openLanguageDialog({ firstRun: true });
 }
 
 function createId() {

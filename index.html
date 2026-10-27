@@ -9,119 +9,158 @@
       <main class="workspace">
         <header class="topbar">
           <h1>Tracer</h1>
-          <div class="provider">
+          <div class="topbar-actions">
             <button
-              id="provider-chip"
+              id="language-button"
+              class="chip chip-language"
+              type="button"
+              aria-haspopup="dialog"
+            >
+              <svg
+                class="globe"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9" />
+                <path d="M12 3C9.5 5.6 8.2 8.6 8.2 12s1.3 6.4 3.8 9" />
+              </svg>
+              <span id="language-name">English</span>
+            </button>
+            <button
+              id="library-toggle"
               class="chip"
               type="button"
-              aria-expanded="false"
-              aria-controls="provider-panel"
+              aria-controls="library"
+              aria-expanded="true"
             >
-              ChatGPT
+              Hide prompts
             </button>
-            <div id="provider-panel" class="provider-panel" hidden>
-              <fieldset>
-                <legend>Send screenshots to</legend>
-                <label>
-                  <input
-                    id="provider-chatgpt"
-                    type="radio"
-                    name="provider"
-                    value="chatgpt"
-                    checked
-                  />
-                  ChatGPT
-                </label>
-                <label>
-                  <input
-                    id="provider-gemini"
-                    type="radio"
-                    name="provider"
-                    value="gemini"
-                  />
-                  Gemini
-                </label>
-                <label>
-                  <input
-                    id="provider-claude"
-                    type="radio"
-                    name="provider"
-                    value="claude"
-                  />
-                  Claude
-                </label>
-              </fieldset>
-              <p id="provider-status" class="panel-status">
-                Connection available
-              </p>
-              <p id="provider-note" class="panel-note"></p>
-              <p class="panel-actions">
-                <button id="chatgpt-sign-in" class="btn" type="button">
-                  Continue with ChatGPT
-                </button>
-                <button
-                  id="chatgpt-switch"
-                  class="btn btn-quiet"
-                  type="button"
-                  hidden
-                >
-                  Use a different ChatGPT account
-                </button>
-                <button
-                  id="chatgpt-disconnect"
-                  class="btn btn-quiet"
-                  type="button"
-                  hidden
-                >
-                  Disconnect
-                </button>
-                <button
-                  id="manage-usage"
-                  class="btn btn-quiet"
-                  type="button"
-                  hidden
-                >
-                  Manage usage
-                </button>
-              </p>
+            <div class="provider">
+              <button
+                id="provider-chip"
+                class="chip"
+                type="button"
+                aria-expanded="false"
+                aria-controls="provider-panel"
+              >
+                ChatGPT
+              </button>
+              <div id="provider-panel" class="provider-panel" hidden>
+                <fieldset>
+                  <legend data-i18n="Send screenshots to">
+                    Send screenshots to
+                  </legend>
+                  <label>
+                    <input
+                      id="provider-chatgpt"
+                      type="radio"
+                      name="provider"
+                      value="chatgpt"
+                      checked
+                    />
+                    ChatGPT
+                  </label>
+                  <label>
+                    <input
+                      id="provider-gemini"
+                      type="radio"
+                      name="provider"
+                      value="gemini"
+                    />
+                    Gemini
+                  </label>
+                  <label>
+                    <input
+                      id="provider-claude"
+                      type="radio"
+                      name="provider"
+                      value="claude"
+                    />
+                    Claude
+                  </label>
+                </fieldset>
+                <p id="provider-status" class="panel-status"></p>
+                <p id="provider-note" class="panel-note"></p>
+                <p class="panel-actions">
+                  <button id="chatgpt-sign-in" class="btn" type="button">
+                    Continue with ChatGPT
+                  </button>
+                  <button
+                    id="chatgpt-switch"
+                    class="btn btn-quiet"
+                    type="button"
+                    data-i18n="Use a different ChatGPT account"
+                    hidden
+                  >
+                    Use a different ChatGPT account
+                  </button>
+                  <button
+                    id="chatgpt-disconnect"
+                    class="btn btn-quiet"
+                    type="button"
+                    data-i18n="Disconnect"
+                    hidden
+                  >
+                    Disconnect
+                  </button>
+                  <button
+                    id="manage-usage"
+                    class="btn btn-quiet"
+                    type="button"
+                    data-i18n="Manage usage"
+                    hidden
+                  >
+                    Manage usage
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
         </header>
 
-        <section class="compose" aria-label="Prompt">
-          <label for="tracer-prompt" class="field-label">Prompt</label>
+        <section class="compose">
+          <label for="tracer-prompt" class="field-label" data-i18n="Prompt">
+            Prompt
+          </label>
           <textarea
             id="tracer-prompt"
             rows="2"
             maxlength="2000"
             autocomplete="off"
-          >
-Explain what is visible in this screenshot.</textarea
-          >
+            dir="auto"
+          ></textarea>
           <div class="actions">
-            <button id="save-prompt" class="btn" type="button">
+            <button
+              id="save-prompt"
+              class="btn"
+              type="button"
+              data-i18n="Save Prompt"
+            >
               Save Prompt
             </button>
-            <button id="set-hotkey" class="btn" type="button">
+            <button
+              id="set-hotkey"
+              class="btn"
+              type="button"
+              data-i18n="Set Hotkey"
+            >
               Set Hotkey
             </button>
             <label class="toggle">
               <input id="auto-send" type="checkbox" checked />
-              Send right after capture
+              <span data-i18n="Send right after capture">
+                Send right after capture
+              </span>
             </label>
           </div>
           <p id="save-note" class="save-note" aria-live="polite"></p>
         </section>
 
-        <section
-          id="session"
-          class="session"
-          aria-label="Screenshot and answers"
-        >
+        <section id="session" class="session">
           <div id="empty-state" class="empty-state">
-            <p id="capture-hint">
-              Press the hotkey, then drag over what you want to ask about.
-            </p>
+            <p id="capture-hint"></p>
             <p id="send-note"></p>
           </div>
           <figure id="shot" class="shot" hidden>
@@ -130,12 +169,15 @@ Explain what is visible in this screenshot.</textarea
               class="shot-toggle"
               type="button"
               aria-expanded="false"
-              title="Show full size"
             >
-              <img id="shot-preview" alt="Captured screenshot" />
+              <img
+                id="shot-preview"
+                alt="Captured screenshot"
+                data-i18n-alt="Captured screenshot"
+              />
             </button>
             <figcaption>
-              <span id="shot-label">Captured area</span>
+              <span id="shot-label"></span>
               <button
                 id="analyze-command"
                 class="btn"
@@ -144,7 +186,12 @@ Explain what is visible in this screenshot.</textarea
               >
                 Analyze screenshot
               </button>
-              <button id="dismiss-preview" class="link" type="button">
+              <button
+                id="dismiss-preview"
+                class="link"
+                type="button"
+                data-i18n="Remove screenshot"
+              >
                 Remove screenshot
               </button>
             </figcaption>
@@ -153,7 +200,7 @@ Explain what is visible in this screenshot.</textarea
             id="conversation"
             class="conversation"
             role="log"
-            aria-label="Answers"
+            data-i18n-label="Answers"
           ></div>
         </section>
 
@@ -164,6 +211,7 @@ Explain what is visible in this screenshot.</textarea
               id="cancel-button"
               class="btn btn-quiet"
               type="button"
+              data-i18n="Cancel"
               hidden
             >
               Cancel
@@ -175,23 +223,41 @@ Explain what is visible in this screenshot.</textarea
               rows="1"
               maxlength="2000"
               autocomplete="off"
-              aria-label="Question about this screenshot"
-              placeholder="Ask about this screenshot"
+              dir="auto"
+              data-i18n-label="Question about this screenshot"
             ></textarea>
-            <button id="followup-send" class="btn" type="button">Send</button>
+            <button
+              id="followup-send"
+              class="btn"
+              type="button"
+              data-i18n="Send"
+            >
+              Send
+            </button>
           </div>
           <p id="plan-note" class="plan-note" hidden>
             <span id="plan-text"></span>
-            <button id="plan-usage" class="link" type="button">
+            <button
+              id="plan-usage"
+              class="link"
+              type="button"
+              data-i18n="Manage usage"
+            >
               Manage usage
             </button>
           </p>
         </footer>
       </main>
 
-      <aside class="library" aria-label="Prompt library">
+      <aside id="library" class="library" data-i18n-label="Prompt library">
         <div class="tabs" role="tablist">
-          <button id="tab-past" type="button" role="tab" aria-selected="true">
+          <button
+            id="tab-past"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            data-i18n="Past Prompts"
+          >
             Past Prompts
           </button>
           <button
@@ -199,10 +265,17 @@ Explain what is visible in this screenshot.</textarea
             type="button"
             role="tab"
             aria-selected="false"
+            data-i18n="Favorites"
           >
             Favorites
           </button>
-          <button id="tab-saved" type="button" role="tab" aria-selected="false">
+          <button
+            id="tab-saved"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-i18n="Saved Prompts"
+          >
             Saved Prompts
           </button>
         </div>
@@ -212,18 +285,71 @@ Explain what is visible in this screenshot.</textarea
     </div>
 
     <dialog id="hotkey-dialog" aria-labelledby="hotkey-title">
-      <h2 id="hotkey-title">Set Hotkey</h2>
+      <h2 id="hotkey-title" data-i18n="Set Hotkey">Set Hotkey</h2>
       <p id="hotkey-current" class="dialog-note"></p>
-      <p id="hotkey-capture" class="hotkey-capture" aria-live="polite">
-        Press the new shortcut.
-      </p>
+      <p id="hotkey-capture" class="hotkey-capture" aria-live="polite"></p>
       <p id="hotkey-error" class="hotkey-error" role="alert"></p>
       <div class="dialog-actions">
-        <button id="hotkey-cancel" class="btn btn-quiet" type="button">
+        <button
+          id="hotkey-cancel"
+          class="btn btn-quiet"
+          type="button"
+          data-i18n="Cancel"
+        >
           Cancel
         </button>
-        <button id="hotkey-apply" class="btn" type="button" disabled>
+        <button
+          id="hotkey-apply"
+          class="btn"
+          type="button"
+          data-i18n="Apply &amp; Save"
+          disabled
+        >
           Apply &amp; Save
+        </button>
+      </div>
+    </dialog>
+
+    <dialog
+      id="language-dialog"
+      class="language-dialog"
+      aria-labelledby="language-title"
+    >
+      <h2 id="language-title" data-i18n="Choose your language">
+        Choose your language
+      </h2>
+      <p
+        class="dialog-note"
+        data-i18n="You can change this anytime with the language button at the top."
+      >
+        You can change this anytime with the language button at the top.
+      </p>
+      <input
+        id="language-search"
+        class="language-search"
+        type="search"
+        autocomplete="off"
+        data-i18n-placeholder="Search languages"
+        data-i18n-label="Search languages"
+      />
+      <div id="language-list" class="language-list"></div>
+      <p id="language-detail" class="dialog-note language-detail"></p>
+      <div class="dialog-actions">
+        <button
+          id="language-cancel"
+          class="btn btn-quiet"
+          type="button"
+          data-i18n="Cancel"
+        >
+          Cancel
+        </button>
+        <button
+          id="language-continue"
+          class="btn"
+          type="button"
+          data-i18n="Continue"
+        >
+          Continue
         </button>
       </div>
     </dialog>
@@ -232,7 +358,10 @@ Explain what is visible in this screenshot.</textarea
       <img id="snip-image" alt="" draggable="false" />
       <div id="snip-shade"></div>
       <div id="snip-rect" hidden></div>
-      <p id="snip-help">
+      <p
+        id="snip-help"
+        data-i18n="Drag to select an area. Right-click to capture this monitor. Escape cancels."
+      >
         Drag to select an area. Right-click to capture this monitor. Escape
         cancels.
       </p>

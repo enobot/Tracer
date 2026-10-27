@@ -12,6 +12,7 @@ import {
   authorizationCodeFields,
   buildAuthorizeUrl,
   buildResponsesBody,
+  rejectedReasoning,
   consumeResponseEvents,
   createPkce,
   explainPlanFailure,
@@ -111,6 +112,9 @@ export function createChatGPTRuntime({
   let phase = 'idle';
   let signInController;
   let requestController;
+  // Models that refused the lighter reasoning setting; they are asked
+  // without it from then on.
+  const fullReasoningModels = new Set();
 
   const emptyRecord = () =>
     normalizeRecord({ version: 1, status: 'disconnected' });
@@ -577,7 +581,10 @@ export function createChatGPTRuntime({
       return toPublicSession(await loadRecord());
     },
 
-    async respond(messages, callerSignal) {
+    // `language` is the answer language code; `onDelta` receives answer text
+    // as it streams in.
+    async respond(messages, callerSignal, { language, onDelta } = {}) {
+      const options = { language, onDelta };
       if (phase === 'connecting') {
         throw new Error(
           'Finish the ChatGPT sign-in already open in your browser.',
@@ -604,7 +611,7 @@ export function createChatGPTRuntime({
         if (!hasPlanSharing(record.scopes)) {
           throw new Error(explainPlanFailure(0, 'sharing_not_enabled'));
         }
-        let result = await requestAnswer(record, messages, signal);
+        let result = await requestAnswer(record, messages, signal, options);
         if (result.unauthorized) {
           // OpenAI asks apps to sign people out only after a refresh fails for
           // good, so a rejected access token gets one refresh and one retry.
@@ -613,7 +620,7 @@ export function createChatGPTRuntime({
           if (!hasPlanSharing(record.scopes)) {
             throw new Error(explainPlanFailure(0, 'sharing_not_enabled'));
           }
-          result = await requestAnswer(record, messages, signal);
+          result = await requestAnswer(record, messages, signal, options);
         }
         if (result.unauthorized) {
           const revoked = await clearCredentials(record, 'reauth_required');
@@ -738,13 +745,16 @@ export function createChatGPTRuntime({
 
   // One authorized attempt. Returns { unauthorized: true } when ChatGPT
   // rejects the access token, so respond can refresh before giving up.
-  async function requestAnswer(record, messages, signal) {
+  async function requestAnswer(record, messages, signal, options) {
     const selected = model ?? (await listedModel(record.accessToken, signal));
     if (!selected) return { unauthorized: true };
     model = selected;
+    const quick = !fullReasoningModels.has(selected.slug);
     const built = buildResponsesBody({
       model: selected.slug,
       messages,
+      language: options.language,
+      quick,
     });
     if (!built.ok) throw new Error(built.error);
     let response;
@@ -773,6 +783,11 @@ export function createChatGPTRuntime({
         model = null;
         return { unauthorized: true };
       }
+      if (quick && rejectedReasoning(response.status, data)) {
+        // A rejected request is not admitted, so asking again costs nothing.
+        fullReasoningModels.add(selected.slug);
+        return requestAnswer(record, messages, signal, options);
+      }
       throw new Error(explainPlanFailure(response.status, code));
     }
     const contentType =
@@ -787,7 +802,7 @@ export function createChatGPTRuntime({
         'ChatGPT did not return the expected response stream. Try again.',
       );
     }
-    const answer = await readStream(response, signal);
+    const answer = await readStream(response, signal, options.onDelta);
     if (!answer.ok) throw new Error(answer.error);
     return { text: answer.text, modelName: selected.displayName };
   }
@@ -821,7 +836,7 @@ export function createChatGPTRuntime({
     return selected.model;
   }
 
-  async function readStream(response, signal) {
+  async function readStream(response, signal, onDelta) {
     const reader = response.body?.getReader?.();
     if (!reader) {
       throw new Error(
@@ -855,6 +870,17 @@ export function createChatGPTRuntime({
         const event = parseSseMessage(block);
         if (!event || event.type === 'done') continue;
         events.push(event);
+        if (
+          onDelta &&
+          event.type === 'response.output_text.delta' &&
+          typeof event.delta === 'string'
+        ) {
+          try {
+            onDelta(event.delta);
+          } catch {
+            // Showing partial text is optional; the full answer still returns.
+          }
+        }
         if (
           event.type === 'response.completed' ||
           event.type === 'response.failed' ||

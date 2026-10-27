@@ -25,6 +25,7 @@ import {
   buildConversation,
   handoffUrl,
 } from './chatgpt-plan.mjs';
+import { isLanguageCode } from './languages.mjs';
 import {
   pairDisplaySources,
   selectionForRequest,
@@ -596,6 +597,35 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
+// Sends streamed answer text to the window in batches, so a fast stream does
+// not turn into hundreds of IPC messages a second.
+function createDeltaRelay(requestId) {
+  const started = Date.now();
+  let firstText = 0;
+  let pending = '';
+  let timer = null;
+  const flush = () => {
+    timer = null;
+    if (!pending) return;
+    emitTracer({ type: 'answer-delta', requestId, text: pending });
+    pending = '';
+  };
+  return {
+    push(text) {
+      if (!firstText) firstText = Date.now() - started;
+      pending += text;
+      if (!timer) timer = setTimeout(flush, 60);
+    },
+    finish() {
+      if (timer) clearTimeout(timer);
+      flush();
+      devLog(
+        `ChatGPT: first text after ${firstText || 'none'} ms, finished after ${Date.now() - started} ms`,
+      );
+    },
+  };
+}
+
 function requireSender(event) {
   const contents = activeWebContents();
   if (!contents || !isTrustedSender(event, contents)) {
@@ -680,7 +710,18 @@ app.whenReady().then(async () => {
         'The conversation could not be sent. Clear it and try again.',
       );
     }
-    return chatgpt.respond(conversation.messages);
+    const requestId = Number.isSafeInteger(payload?.requestId)
+      ? payload.requestId
+      : 0;
+    const relay = createDeltaRelay(requestId);
+    try {
+      return await chatgpt.respond(conversation.messages, undefined, {
+        language: isLanguageCode(payload?.language) ? payload.language : null,
+        onDelta: relay.push,
+      });
+    } finally {
+      relay.finish();
+    }
   });
 
   ipcMain.handle('tracer:cancel-ask', (event) => {

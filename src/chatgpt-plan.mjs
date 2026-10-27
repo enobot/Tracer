@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { englishName, isLanguageCode } from './languages.mjs';
 
 export const ISSUER = 'https://auth.openai.com';
 export const RESOURCE = 'https://api.openai.com/v1';
@@ -432,26 +433,51 @@ function contentParts(message) {
   return parts;
 }
 
-export function buildResponsesBody({ model, messages }) {
+// `language` is a code from languages.mjs; anything else is ignored, so the
+// window cannot add its own text to the instructions. `quick` asks for
+// lighter reasoning, which most screenshot questions do not need.
+export function buildResponsesBody({
+  model,
+  messages,
+  language,
+  quick = false,
+}) {
   if (!MODEL_SLUG.test(model)) {
     return {
       ok: false,
       error: 'ChatGPT did not list a model this connection can use.',
     };
   }
+  const instructions = isLanguageCode(language)
+    ? `${INSTRUCTIONS} Write the answer in ${englishName(language)} unless the user asks for another language.`
+    : INSTRUCTIONS;
   return {
     ok: true,
     body: {
       model,
-      instructions: INSTRUCTIONS,
+      instructions,
       input: messages.map((message) => ({
         role: message.role,
         content: contentParts(message),
       })),
+      ...(quick ? { reasoning: { effort: 'low' } } : {}),
       store: false,
       stream: true,
     },
   };
+}
+
+// True when a rejected request names the reasoning setting, so it can be
+// sent again without it.
+export function rejectedReasoning(status, payload) {
+  if (status !== 400 || !payload || typeof payload !== 'object') return false;
+  const error =
+    payload.error && typeof payload.error === 'object'
+      ? payload.error
+      : payload;
+  return [error.param, error.message].some(
+    (value) => typeof value === 'string' && /\breasoning\b/i.test(value),
+  );
 }
 
 export function selectListedModel(payload) {

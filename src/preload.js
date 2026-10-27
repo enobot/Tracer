@@ -4,6 +4,7 @@ import { createListenerHub, isScreenshotDataUrl } from './security-policy.mjs';
 const hotkeys = createListenerHub();
 const captures = createListenerHub();
 const commands = createListenerHub();
+const answerText = createListenerHub();
 
 ipcRenderer.on('tracer-event', (_event, payload) => {
   if (!payload || typeof payload !== 'object') {
@@ -25,6 +26,16 @@ ipcRenderer.on('tracer-event', (_event, payload) => {
     captures.deliver({ type: payload.type });
     return;
   }
+  if (payload.type === 'answer-delta') {
+    if (
+      Number.isSafeInteger(payload.requestId) &&
+      typeof payload.text === 'string' &&
+      payload.text.length <= 100_000
+    ) {
+      answerText.deliver({ requestId: payload.requestId, text: payload.text });
+    }
+    return;
+  }
   if (payload.type === 'analyze' || payload.type === 'clear') {
     commands.deliver(payload.type);
     return;
@@ -36,6 +47,7 @@ contextBridge.exposeInMainWorld('tracer', {
   onHotkeyPressed: (callback) => hotkeys.add(callback),
   onCapture: (callback) => captures.add(callback),
   onCommand: (callback) => commands.add(callback),
+  onAnswerText: (callback) => answerText.add(callback),
   getSession: () => ipcRenderer.invoke('tracer:get-session'),
   signIn: (options) =>
     ipcRenderer.invoke('tracer:sign-in', {

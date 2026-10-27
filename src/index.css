@@ -140,8 +140,44 @@ h1 {
   font-weight: 650;
 }
 
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .provider {
   position: relative;
+}
+
+/* The language button is the one control people who cannot read the
+   current language must find, so it uses the accent color and a globe. */
+.chip-language {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-color: var(--accent);
+  background: #edf2fd;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.globe {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.app.library-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app.library-hidden .library {
+  display: none;
 }
 
 .chip {
@@ -155,7 +191,7 @@ h1 {
 .provider-panel {
   position: absolute;
   top: calc(100% + 0.4rem);
-  right: 0;
+  inset-inline-end: 0;
   z-index: 10;
   width: min(25rem, 80vw);
   padding: 0.9rem 1rem;
@@ -181,7 +217,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  margin-right: 1rem;
+  margin-inline-end: 1rem;
 }
 
 .panel-status {
@@ -239,7 +275,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto;
+  margin-inline-start: auto;
   color: var(--muted);
   cursor: pointer;
 }
@@ -326,7 +362,8 @@ textarea {
   max-width: 85%;
   margin: 0;
   padding: 0.5rem 0.8rem;
-  border-radius: 12px 12px 4px 12px;
+  border-radius: 12px;
+  border-end-end-radius: 4px;
   background: var(--question);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -357,7 +394,7 @@ textarea {
 
 .turn-answer ul,
 .turn-answer ol {
-  padding-left: 1.4rem;
+  padding-inline-start: 1.4rem;
 }
 
 .turn-answer li + li {
@@ -377,8 +414,9 @@ textarea {
 }
 
 .turn-answer blockquote {
-  padding: 0.1rem 0 0.1rem 0.8rem;
-  border-left: 3px solid var(--line);
+  padding-block: 0.1rem;
+  padding-inline: 0.8rem 0;
+  border-inline-start: 3px solid var(--line);
   color: var(--muted);
 }
 
@@ -425,7 +463,7 @@ textarea {
 .turn-answer td {
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--line);
-  text-align: left;
+  text-align: start;
   vertical-align: top;
 }
 
@@ -563,7 +601,7 @@ textarea {
   border: 0;
   background: transparent;
   color: var(--accent);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -623,6 +661,83 @@ textarea {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* Language picker */
+.language-dialog {
+  width: min(40rem, 94vw);
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(20, 24, 33, 0.16);
+}
+
+.language-dialog h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.3rem;
+}
+
+.language-search {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #d5d8e0;
+  border-radius: 10px;
+}
+
+.language-list {
+  max-height: min(52vh, 26rem);
+  margin-top: 0.6rem;
+  overflow: auto;
+}
+
+.language-group {
+  margin: 0.7rem 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.language-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.4rem;
+}
+
+.language-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  text-align: start;
+  cursor: pointer;
+}
+
+.language-option:hover {
+  background: var(--canvas);
+}
+
+.language-option[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: #edf2fd;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.language-native {
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.language-english {
+  color: var(--faint);
+  font-size: 0.85rem;
+}
+
+.language-detail {
+  min-height: 1.3rem;
+  margin: 0.6rem 0;
 }
 
 /* Selection overlay */
