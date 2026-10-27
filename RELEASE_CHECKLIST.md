@@ -1,6 +1,6 @@
 # Tracer release checklist
 
-Status on 26 October 2026: **not yet released. Final review verdict: CONDITIONAL GO** ([docs/RELEASE_REVIEW.md](docs/RELEASE_REVIEW.md)). The packaging, security, error-message, accessibility, and documentation work for a Windows 1.0.0 release is done and tested locally. Tracer should not be called production-ready until the P0 items marked "you" are done on a clean Windows PC.
+Status on 27 October 2026: **not yet released.** The first v1.0.0 draft (from `62891bb`) shows a blank window when installed and must not be published; fixed since (R-07 in the review). **Final review verdict: CONDITIONAL GO** ([docs/RELEASE_REVIEW.md](docs/RELEASE_REVIEW.md)). The packaging, security, error-message, accessibility, and documentation work for a Windows 1.0.0 release is done and tested locally. Tracer should not be called production-ready until the P0 items marked "you" are done on a clean Windows PC.
 
 How to publish: [docs/RELEASING.md](docs/RELEASING.md). Evidence: [TEST_REPORT.md](TEST_REPORT.md), [SECURITY_AUDIT.md](SECURITY_AUDIT.md), [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md).
 
@@ -11,7 +11,7 @@ How to publish: [docs/RELEASING.md](docs/RELEASING.md). Evidence: [TEST_REPORT.m
 - [x] Packaging: Electron Forge 8 with the Vite plugin, Squirrel.Windows maker, and security fuses (RunAsNode off, asar integrity, only load from asar).
 - [x] Installer: `Tracer-Setup-win32-x64.exe`, per-user, no administrator rights, Tracer icon, product name "Tracer", publisher Tracy Tran, version 1.0.0. App ID set so the tray notice and taskbar pins belong to the installed app.
 - [x] The packaged app runs on its own: no Node.js needed. Smoke test on 26 Oct: window opened, profile written only where told, no network connections while idle.
-- [x] `npm test`: 100 passing. `npm run lint`: passing (it was failing on formatting; fixed, and now also run in CI). `.gitattributes` keeps CI checkouts at LF so the format check matches.
+- [x] `npm test`: 102 passing. `npm run lint`: passing (it was failing on formatting; fixed, and now also run in CI). `.gitattributes` keeps CI checkouts at LF so the format check matches.
 - [x] `npm audit --omit=dev`: 0 vulnerabilities in what ships. No secrets in the git history, tracked files, or the app archive.
 - [x] IPC: every handler checks the sender; the new `tracer:set-language` accepts only listed codes. Screenshots stay in memory and are sent only when the user sends.
 - [x] Error messages: the window shows only Tracer's own messages, now translated in all 20 languages (43 added). Anything else, such as a file or network exception, becomes "Tracer could not complete that request." A test fails if a new message isn't translated.

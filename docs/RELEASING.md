@@ -32,11 +32,18 @@ The workflow in [.github/workflows/release.yml](../.github/workflows/release.yml
    git push origin v1.0.0
    ```
 
-6. Wait for the Release workflow (Actions tab). It checks that the tag matches `package.json`, runs the tests and lint, builds the installer, writes `SHA256SUMS.txt`, and creates the draft release with all four files.
+6. Wait for the Release workflow (Actions tab). It checks that the tag matches `package.json`, runs the tests and lint, builds the installer, starts the packaged app and fails if its window is blank (`scripts/verify-packaged-window.ps1`), writes `SHA256SUMS.txt`, and creates the draft release with all four files.
 7. Download the installer from the draft and test it on a Windows PC (see "Before publishing" below).
 8. On the draft release page, choose **Publish release**.
 
-If the workflow fails, fix the problem on `main`, delete the tag (`git push origin :refs/tags/v1.0.0` and `git tag -d v1.0.0`), and tag again.
+If the workflow fails, or the draft fails your testing:
+
+1. On the Releases page, open the draft and choose **Delete**.
+2. Fix the problem on `main` and push it.
+3. Delete the tag on GitHub and locally (`git push origin :refs/tags/v1.0.0`, then `git tag -d v1.0.0`).
+4. Tag the fixed commit and push the tag again.
+
+This is safe only while the release is still a draft. Once a version is published, people may have downloaded it, so fix it with a new version number instead.
 
 ### Before publishing
 

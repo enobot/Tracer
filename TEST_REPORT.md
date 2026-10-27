@@ -297,6 +297,20 @@ Built window with a fake main process (Vietnamese selected): a raw `EACCES: perm
 
 Not covered: installing with Setup.exe (it writes to `%LocalAppData%` on C:, so it is left for a clean-PC test), and the draft release built by the workflow.
 
+### 6.7 Blank packaged window (27 Oct)
+
+Installing the first v1.0.0 draft showed a blank white window. Reproduced with the local packaged `Tracer.exe`: `scripts/verify-packaged-window.ps1` measured 0% of the page area drawn. The same build with only `GrantFileProtocolExtraPrivileges` turned back on rendered normally. Earlier "packaged app runs" checks, including the startup timings in section 5, only waited for a window titled Tracer, so they missed this.
+
+After the fix (window served from `tracer://app`, fuse still off):
+
+| Check                                                           | Result                                                                                                         |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `verify-packaged-window.ps1` on the packaged app                | 55.8% of the page drawn; language picker visible                                                               |
+| Fuses                                                           | GrantFileProtocolExtraPrivileges disabled, asar integrity and only-load-from-asar enabled                      |
+| Captures through the new protocol (harness, shipped `main.cjs`) | 3 from the window and 3 from the tray completed; 10 rapid presses → 1 overlay; quit exits                      |
+| Settings across a restart                                       | `tracer:language` written in one run was read in the next; the window came up in Vietnamese without the picker |
+| `npm test`                                                      | 102 passed                                                                                                     |
+
 ## 7. Functional review
 
 Status key: **Auto** = automated test, **Probe** = Electron probe, **Code** = code review only, **Manual** = needs a person or hardware.

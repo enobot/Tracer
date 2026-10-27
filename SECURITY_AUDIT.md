@@ -417,6 +417,12 @@ No finding.
 
 `npm test`: 98 passing. `npm run lint`: passing.
 
+## 15. Blank packaged window (27 October, P0, fixed; uncommitted)
+
+The `GrantFileProtocolExtraPrivileges` fuse was turned off in an earlier audit. With it off, the packaged window, loaded from `file://`, could not load its own script and stylesheet and stayed blank. No packaged check looked at the window's contents, so this shipped in the first v1.0.0 draft and was found when you installed it.
+
+Fix: packaged windows load from `tracer://app`, a privileged standard and secure scheme registered before startup. `protocol.handle` serves only files inside the renderer folder (`resolveAppFile` refuses other hosts and schemes, encoded traversal, and null bytes), and navigation is allowed only within that origin. The fuse stays off, which also follows Electron's recommendation to avoid `file://` (checklist item 18). The CSP is unchanged (`'self'` now means `tracer://app`). Tests: `app-protocol.test.mjs`, the updated navigation test, and source checks that `main.js` never uses `loadFile`. The release workflow now fails if the packaged window is blank.
+
 ## Sources
 
 - OpenAI, Sign in with ChatGPT for open-source apps: [overview](https://developers.openai.com/siwc/token-sharing-open-source), [registration and sign-in](https://developers.openai.com/siwc/token-sharing-open-source/sign-in), [accounts and sessions](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions), [models and inference](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference), [token reference](https://developers.openai.com/siwc/token-sharing-open-source/token-reference), [errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery), [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations), [UI/UX guidelines](https://developers.openai.com/siwc/ui-ux-guidelines), [quickstart](https://developers.openai.com/siwc/quickstart)

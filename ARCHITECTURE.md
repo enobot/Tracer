@@ -110,6 +110,7 @@ Implements OpenAI's _Sign in with ChatGPT — plan usage for open-source and loc
 ## Renderer — [src/renderer.js](src/renderer.js)
 
 - One bundle serves both windows; `?overlay=1` selects overlay mode.
+- Packaged builds load it from `tracer://app/index.html`, a privileged scheme that [app-protocol.mjs](src/app-protocol.mjs) maps to files inside the renderer folder only. This keeps the `GrantFileProtocolExtraPrivileges` fuse off; with that fuse off, a `file://` page could not load its own script and styles. Development builds use the Vite dev server.
 - Layout: a top bar with the language button, Hide prompts, and the account menu, the prompt box with Save Prompt, Set Hotkey, and "Send right after capture", a scrolling area with the screenshot and the conversation, and a bottom bar with status, the follow-up box, and the plan note.
 - The workspace keeps `latestScreenshot` and `turns` (the questions and answers for that screenshot) in memory. Each request sends the last 14 turns.
 - With "Send right after capture" on (stored in `localStorage['tracer:auto-send']`), a capture event sends the prompt box at once. A capture made while signed out is held, and the account menu opens instead.
