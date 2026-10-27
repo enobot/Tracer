@@ -29,6 +29,7 @@ Everything lives in `%APPDATA%\tracer` (the Electron profile for product name `t
 | Local Storage `tracer:library` | Saved prompts (≤100), past prompts (≤50) with timestamps, favorite flags, "Remember prompts" setting | **Plain text** | Until deleted in the app |
 | Local Storage `tracer:draft` | The current prompt box, saved on every keystroke | **Plain text** | Until overwritten |
 | Local Storage `tracer:provider` | ChatGPT, Gemini, or Claude | Plain text | Until changed |
+| Local Storage `tracer:language`, `tracer:library-hidden`, `tracer:auto-send` | Chosen language code, whether the prompts panel is hidden, whether captures send right away | Plain text | Until changed |
 | `Local State` | Chromium settings, including the DPAPI-wrapped key that `safeStorage` uses | DPAPI | App lifetime |
 | Chromium files | Preferences, caches (code, GPU, shader), DIPS, network state | Chromium defaults | App lifetime |
 
@@ -49,7 +50,7 @@ With **Send right after capture** on (the default), finishing a selection sends 
 | `auth.openai.com` authorize page | System browser | Client id, loopback redirect, scopes, resource, `state`, `nonce`, PKCE challenge, host id, app name on first sign-in, **email as `login_hint`** on later sign-ins. This URL is saved in the browser's history |
 | `auth.openai.com` discovery, JWKS, token, revoke | Main process | Code + verifier, refresh token, client id. HTTPS only, no redirects followed |
 | `api.openai.com/v1/models` | Main process | Bearer token |
-| `api.openai.com/v1/responses` | Main process | Model, Tracer's instructions, the screenshot (JPEG, longest edge ≤1600 px), the prompt, and earlier turns in this conversation. **Each follow-up sends the screenshot again** |
+| `api.openai.com/v1/responses` | Main process | Model, Tracer's instructions (which name the chosen answer language, for example "Write the answer in Vietnamese"), a request for low reasoning effort, the screenshot (JPEG, longest edge ≤1600 px), the prompt, and earlier turns in this conversation. **Each follow-up sends the screenshot again** |
 | `chatgpt.com/settings/usage` | System browser | Only when the user clicks Manage usage |
 
 `store: false` tells the Responses API not to keep the response for later retrieval through the API. It doesn't mean OpenAI never processes or keeps the data; OpenAI's own policies for the user's ChatGPT account still apply. Tracer's text should not suggest zero retention.

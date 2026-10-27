@@ -301,7 +301,7 @@ A built-renderer check confirmed that the button sends `fresh: true` over IPC an
 
 **Prompt injection.** Screenshot text can steer the answer, and Tracer's instructions only ask the model to treat it as data. The model has no tools, and Tracer never acts on the answer: no links, no commands, no file access, no automatic follow-ups. The worst case is a misleading answer.
 
-## 7. Changes made in this audit (uncommitted)
+## 7. Changes made in this audit (committed as 13dcaca)
 
 | File | Change |
 | --- | --- |
@@ -361,7 +361,7 @@ The only visual change is the approved "Use a different ChatGPT account" button,
 
 **READY AFTER SPECIFIC FIXES.** The security posture is good, and the confirmed defects found here, including the approved T-05 and T-06 changes, are fixed and tested. The primary feature has now worked against the real service (26 October), but parts of the live flow and the release work remain. In order:
 
-1. **Review and commit this audit's changes.** Run `npm test` (79 passing) and `npx electron scripts/verify-handoff-clipboard.mjs`.
+1. ~~**Review and commit this audit's changes.**~~ Done: committed and pushed on 26 October; CI passes on Windows.
 2. **Live end-to-end test** with your own eligible account (you run it; it uses your plan). Sign in, allow plan usage, capture, analyze, ask a follow-up, then Disconnect. Confirm the app disappears from ChatGPT Settings → Security and login → Login connections. Then try "Use a different ChatGPT account". Record what `/v1/models` lists first and whether it accepts the image.
 3. **Paste test** in Gemini and Claude in your browser. If only the image arrives, change the handoff to copy the image first and offer a "Copy prompt" button.
 4. **Decide T-07** (model picker or fallback) from what step 2 shows.
@@ -372,6 +372,21 @@ The only visual change is the approved "Use a different ChatGPT account" button,
 ## 11. Previous audit, still valid
 
 Dependency fixes recorded earlier remain in place: Electron moved from 44.5.1 to 44.9.3, Vite 8.3.5, `undici` advisories fixed without `--force`, `openDevTools` limited to development, package restricted to the Vite build, and the `GrantFileProtocolExtraPrivileges` fuse off. `npm audit` still reports only the `oxfmt`/`tinypool` pair.
+
+## 12. Changes after the audit: languages, streaming, prompts toggle (26 October, uncommitted)
+
+These are new features, reviewed against the same checks. No finding.
+
+| Area | What changed | Check |
+| --- | --- | --- |
+| IPC | New `answer-delta` event from main to the main window, and the new preload function `onAnswerText` (20 in total) | Sent only to the main window through `emitTracer`. The preload passes on only an integer `requestId` and a string of at most 100,000 characters. The window ignores pieces for any request but the current one, so a stale stream cannot write into a new conversation (the T-04 pattern) |
+| Request body | `language` in `tracer:ask`; `reasoning: { effort: 'low' }` | The main process accepts only codes from its fixed list (`isLanguageCode`), and the instructions get a fixed sentence with that language's English name. A compromised renderer already controls the prompt, so this keeps the instructions fixed rather than closing a new hole. OpenAI's plan-usage docs don't confirm that every model accepts `reasoning.effort`; on a 400 that names it, Tracer retries once without it |
+| Rendering | Translated labels and streamed text | Translations are static modules bundled with the app. They are applied with `textContent` and `setAttribute`; streamed text goes through the same Markdown-to-`textContent` path as finished answers. No `innerHTML` in `renderer.js`. Lookups use `Object.hasOwn`, so a message such as `__proto__` cannot reach the prototype |
+| Storage | `tracer:language`, `tracer:library-hidden` in localStorage | The stored language is checked against the list before use; an invalid value means the first-launch picker opens again |
+| Network | None added | The language list and names come from Chromium's `Intl.DisplayNames`; nothing is downloaded |
+| Logging | Development-only timing line | Prints only the milliseconds to the first text and to the end, never the prompt or answer. Not printed in the packaged app |
+
+`npm test`: 94 passing. Lint and format clean.
 
 ## Sources
 

@@ -49,7 +49,7 @@ flowchart LR
   Workspace <--> Disk
 ```
 
-The boundary that matters is between **Main** and **Renderers**. Everything that touches the operating system, the network, or credentials is on the main side. A renderer can only call the 19 functions in [preload.js](src/preload.js), and each IPC handler in [main.js](src/main.js) checks who is calling: main-window channels require the main window's main frame (`requireSender`), and overlay channels require a live overlay's main frame (`overlayFrom`).
+The boundary that matters is between **Main** and **Renderers**. Everything that touches the operating system, the network, or credentials is on the main side. A renderer can only call the 20 functions in [preload.js](src/preload.js), and each IPC handler in [main.js](src/main.js) checks who is calling: main-window channels require the main window's main frame (`requireSender`), and overlay channels require a live overlay's main frame (`overlayFrom`).
 
 | Data or capability | Main process | Main-window renderer | Overlay renderer | Leaves the machine |
 | --- | --- | --- | --- | --- |
@@ -87,7 +87,10 @@ Implements OpenAI's *Sign in with ChatGPT — plan usage for open-source and loc
 - **Callback.** Only `GET /auth/callback` with the exact `Host` header and a constant-time `state` match is accepted. The page never echoes the code. The listener closes when sign-in finishes, fails, is cancelled, or times out after 5 minutes.
 - **Token exchange.** Form POST to the discovered token endpoint, no client secret. The ID token is verified with `jose` against the discovered JWKS (RS256, issuer, audience, nonce, `azp`). Plan usage is enabled only if the granted `scope` contains `chatgpt.tokens.use.direct`.
 - **Storage.** The record (tokens, scopes, expiry, client id, subject, email, name) is JSON encrypted with `safeStorage` and written to `chatgpt-connection.bin`. The renderer only sees `toPublicSession` output.
-- **Analyze.** Refreshes when the access token is within 60 s of expiry, lists models (`GET /v1/models`, first `visibility: "list"` entry), then `POST /v1/responses` with `store: false`, `stream: true`, `instructions`, and the conversation. The first user turn carries the screenshot as an `input_image` data URL. The SSE stream is read to `response.completed`, capped at 2 MB of stream and 100,000 answer characters, with a 90 s limit.
+- **Analyze.** Refreshes when the access token is within 60 s of expiry, lists models (`GET /v1/models`, first `visibility: "list"` entry), then `POST /v1/responses` with `store: false`, `stream: true`, `reasoning: { effort: 'low' }`, `instructions`, and the conversation. The first user turn carries the screenshot as an `input_image` data URL. The SSE stream is read to `response.completed`, capped at 2 MB of stream and 100,000 answer characters, with a 90 s limit.
+- **Answer language.** `tracer:ask` passes `language` on only if `isLanguageCode` finds it in the fixed list in [languages.mjs](src/languages.mjs). `buildResponsesBody` then appends "Write the answer in {English name} unless the user asks for another language." to the instructions. Any other value adds nothing, so the window cannot add its own text to the instructions.
+- **Lighter reasoning.** If a model answers 400 with an error that names `reasoning` (`rejectedReasoning`), the request is sent once more without it, and that model is remembered in `fullReasoningModels` for the rest of the session.
+- **Streaming to the window.** Each `response.output_text.delta` goes to an `onDelta` callback. `createDeltaRelay` in main batches the pieces and sends `{ type: 'answer-delta', requestId, text }` on `tracer-event` at most every 60 ms, then flushes when the request ends. The preload accepts only an integer `requestId` and a string of up to 100,000 characters. The window ignores pieces whose `requestId` is not the current request, and the finished answer from `tracer:ask` replaces the streamed text. In development the main process logs the time to the first text and to the end.
 - **401 recovery.** A 401 from `/v1/models` or `/v1/responses` triggers one forced refresh and one retry. If the refreshed token is also rejected, it is revoked and cleared. A temporary refresh failure keeps the credentials.
 - **Clearing credentials.** Every path that forgets tokens goes through `clearCredentials`, which revokes the refresh token at the discovered `revocation_endpoint` first. That covers Disconnect, terminal refresh errors, a rejected retry, and an identity mismatch. Disconnect keeps the client id and subject so the same account can sign back in.
 - **Use a different ChatGPT account.** `signIn({ fresh: true })` registers with `dynamic_agent_client`, ignores the saved client id and email, and writes nothing until the new ID token verifies. It then revokes the old account's refresh token and replaces the record. The window only learns `savedAccount: true/false`.
@@ -99,16 +102,27 @@ Implements OpenAI's *Sign in with ChatGPT — plan usage for open-source and loc
 ## Renderer — [src/renderer.js](src/renderer.js)
 
 - One bundle serves both windows; `?overlay=1` selects overlay mode.
-- Layout: a top bar with the account menu, the prompt box with Save Prompt, Set Hotkey, and "Send right after capture", a scrolling area with the screenshot and the conversation, and a bottom bar with status, the follow-up box, and the plan note.
+- Layout: a top bar with the language button, Hide prompts, and the account menu, the prompt box with Save Prompt, Set Hotkey, and "Send right after capture", a scrolling area with the screenshot and the conversation, and a bottom bar with status, the follow-up box, and the plan note.
 - The workspace keeps `latestScreenshot` and `turns` (the questions and answers for that screenshot) in memory. Each request sends the last 14 turns.
 - With "Send right after capture" on (stored in `localStorage['tracer:auto-send']`), a capture event sends the prompt box at once. A capture made while signed out is held, and the account menu opens instead.
 - Answers are parsed by [markdown-blocks.mjs](src/markdown-blocks.mjs) into paragraphs (keeping line breaks), headings, bulleted and numbered lists, quotes, dividers, tables, and code blocks, with inline code, bold, and italics. Everything is built with `textContent`. There is no `innerHTML`, and links are shown as text.
 - `abandonAction` cancels and ignores an in-flight reply when the screenshot changes or is cleared.
 - Set Hotkey records the pressed keys and registers them only on Apply & Save.
+- Hide prompts adds `library-hidden` to the app grid, which drops the library column. The choice is stored in `localStorage['tracer:library-hidden']`.
+
+## Languages — [src/languages.mjs](src/languages.mjs), [src/i18n.mjs](src/i18n.mjs)
+
+- `LANGUAGE_CODES` lists 217 codes: ISO 639-1 plus common extras such as Cantonese, Filipino, and both Chinese scripts. Names come from `Intl.DisplayNames`, in English and in the language itself. `matchLanguage` maps the Windows locale to a listed code for the first-launch preselection.
+- The window's text uses English as the key. [i18n-messages.mjs](src/i18n-messages.mjs) lists every message, and each file in [src/locales/](src/locales/) maps those messages to one language. `translator(code)` looks up a message with `Object.hasOwn`, fills `{name}` placeholders, and falls back to English. HTML text is marked with `data-i18n`, `data-i18n-label`, `data-i18n-placeholder`, and `data-i18n-alt`. Messages from the main process are English and are translated in the window.
+- The chosen code is stored in `localStorage['tracer:language']`. With nothing stored, the window opens the picker first; there it has no Cancel and Escape is blocked. Choosing a language previews it at once; Cancel restores the saved one.
+- `<html lang>` follows the choice. `dir="rtl"` is set only for right-to-left languages that have a translation (Arabic and Persian), and the CSS uses logical properties so the layout mirrors. Prompts and answers use `dir="auto"`.
+- An untouched default prompt is replaced with the new language's version; a prompt the user typed is kept.
 
 ## Prompt library — [src/prompt-library.mjs](src/prompt-library.mjs)
 
 Pure functions over `{ historyEnabled, saved[≤100], past[≤50] }`, persisted to `localStorage['tracer:library']`. Text is limited to 2000 characters and titles to 80. Favorites is a view over both lists, one card per text. The current draft is stored separately in `localStorage['tracer:draft']`.
+
+Other window settings in `localStorage`: `tracer:auto-send`, `tracer:language`, and `tracer:library-hidden`.
 
 ## Packaging — [forge.config.mjs](forge.config.mjs)
 

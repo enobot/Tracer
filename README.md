@@ -17,9 +17,10 @@ What the current code does:
 - **Screen capture with a global shortcut.** `Ctrl+Shift+Space` by default. Tracer hides its window, freezes every monitor, and shows a selection overlay. Drag to capture an area, right-click to capture the whole monitor, Esc to cancel.
 - **Send right after capture.** On by default: when you let go of the selection, the screenshot and the prompt are sent immediately. Turn it off to look at the screenshot first and send it with **Analyze screenshot** or `Ctrl+Enter`.
 - **ChatGPT through your own plan.** Sign in with ChatGPT in the browser. Tracer asks for permission to use your plan and never sees your password or an API key.
-- **Conversation per screenshot.** Answers show up under the screenshot, and the box at the bottom sends follow-up questions with the earlier turns. Answers support lists, tables, quotes, and code, and have a Copy button.
+- **Conversation per screenshot.** Answers appear under the screenshot word by word as ChatGPT writes them, and the box at the bottom sends follow-up questions with the earlier turns. Answers support lists, tables, quotes, and code, and have a Copy button.
+- **Language setting.** The first time Tracer opens, it asks which language to use, with the Windows language preselected. The globe button at the top changes it later. The list has 217 languages, each shown in its own script and in English, and is searchable. Answers come back in the chosen language. The buttons and messages are translated into 20 languages besides English; for the others they stay in English. Arabic and Persian lay the window out right to left.
 - **Gemini and Claude handoff.** For these, Tracer copies the screenshot and prompt to the clipboard and opens the official website. You paste them yourself; Tracer does not sign in to those services.
-- **Prompt library.** Past Prompts (can be turned off and cleared), Favorites, and Saved Prompts that you can edit, rename, and delete. Stored locally.
+- **Prompt library.** Past Prompts (can be turned off and cleared), Favorites, and Saved Prompts that you can edit, rename, and delete. Stored locally. **Hide prompts** at the top hides the whole panel, and Tracer remembers that choice.
 - **Custom shortcut.** **Set Hotkey** records a new key combination, and **Apply & Save** registers it. Combinations that would block normal typing, such as `Shift+A`, are refused.
 - **Account controls.** Disconnect revokes Tracer's access at OpenAI. **Use a different ChatGPT account** switches accounts. **Manage usage** opens ChatGPT's usage settings.
 
@@ -37,6 +38,7 @@ Implemented but only partly verified:
 | Plain JavaScript, HTML, CSS                       | The window is built without a UI framework                                                                                           |
 | OpenAI Sign in with ChatGPT and the Responses API | Lets people use the ChatGPT plan they already pay for, so Tracer needs no API key or billing of its own                              |
 | `jose`                                            | Verifies the signed ID token OpenAI returns at sign-in                                                                               |
+| `Intl.DisplayNames`                               | Built into Chromium. Names each language in English and in its own script, so the language list needs no hand-made name table        |
 | Node's built-in test runner (`node:test`)         | Runs the automated tests without extra dependencies                                                                                  |
 | oxlint and oxfmt                                  | Linting and formatting                                                                                                               |
 
@@ -67,7 +69,7 @@ flowchart LR
 ```
 
 1. **Capture.** The shortcut makes the main process hide the window and take a full-resolution snapshot of each monitor (`desktopCapturer`). Then it opens one overlay per monitor. The overlay only reports the rectangle you drew; the main process crops the snapshot and sends the result to the Tracer window. The overlay is drawn after the snapshot, so it never appears in the picture.
-2. **Ask.** The window sends the screenshot, the question, and earlier turns over IPC. The main process checks the payload, refreshes the access token if needed, and calls `POST https://api.openai.com/v1/responses` with `store: false` and `stream: true`.
+2. **Ask.** The window sends the screenshot, the question, and earlier turns over IPC. The main process checks the payload, refreshes the access token if needed, and calls `POST https://api.openai.com/v1/responses` with `store: false` and `stream: true`. The request asks for low reasoning effort to answer faster, and falls back to the model's default if a model refuses that setting. The chosen language is added to the instructions as "Write the answer in …". The main process forwards the answer text to the window in batches every 60 ms while it arrives.
 3. **Sign-in.** OAuth with PKCE in the system browser. The redirect comes back to a temporary listener on `127.0.0.1` that only accepts a request with the matching `state`. Tokens are encrypted and never sent to the window.
 
 More detail: [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -86,6 +88,10 @@ src/
   overlay-gestures.mjs  Drag, right-click, and Esc handling in the overlay
   markdown-blocks.mjs   Turns answers into safe text blocks
   prompt-library.mjs    Past, favorite, and saved prompts
+  languages.mjs         The language list, names, right-to-left check, Windows match
+  i18n.mjs              Looks up the window's text in the chosen language
+  i18n-messages.mjs     Every English message the window can show
+  locales/              One file of translations per language
 test/                   Automated tests (node:test)
 scripts/                Manual checks that run inside Electron
 backend/                Unused local test server, not part of the app
@@ -119,11 +125,12 @@ npm run package
 
 ## How to use
 
-1. Click the account button at the top right and choose **Continue with ChatGPT**. Sign in in the browser and allow Tracer to use your plan. The button then reads **ChatGPT connected**.
-2. Type a prompt at the top, or pick one from the prompt library, for example "Translate all the text in this screenshot into Vietnamese."
-3. Press `Ctrl+Shift+Space` and drag over what you want to ask about.
-4. Read the answer, then ask follow-up questions in the box at the bottom. Each follow-up sends the screenshot again.
-5. **Remove screenshot** clears the screenshot and the conversation.
+1. On first launch, pick your language and click **Continue**. To change it later, click the globe button at the top.
+2. Click the account button at the top right and choose **Continue with ChatGPT**. Sign in in the browser and allow Tracer to use your plan. The button then reads **ChatGPT connected**.
+3. Type a prompt at the top, or pick one from the prompt library, for example "Translate all the text in this screenshot into Vietnamese."
+4. Press `Ctrl+Shift+Space` and drag over what you want to ask about.
+5. Read the answer, then ask follow-up questions in the box at the bottom. Each follow-up sends the screenshot again.
+6. **Remove screenshot** clears the screenshot and the conversation.
 
 To use Gemini or Claude instead, pick it in the account menu. Submitting copies the screenshot and prompt and opens the website, where you paste them.
 
@@ -131,20 +138,21 @@ ChatGPT usage counts against your plan's limits. OpenAI's documentation describe
 
 ## Testing and validation
 
-| Command                                             | What it covers                                                                                                                                                                                                                                                                                 |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                          | 79 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, region math, the overlay gestures, answer formatting, the prompt library, and the ChatGPT sign-in and request flow against a fake OpenAI server (real signed tokens, a real loopback listener) |
-| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                            |
-| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                   |
+| Command                                             | What it covers                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                          | 94 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, region math, the overlay gestures, answer formatting, the prompt library, the language list and every translation file, and the ChatGPT sign-in, streaming, and request flow against a fake OpenAI server (real signed tokens, a real loopback listener) |
+| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                                                                                      |
+| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                                                                             |
 
 Results:
 
-- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 79 tests, 79 passed, 0 failed.
+- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 94 tests, 94 passed, 0 failed.
+- The built window was driven with a stand-in main process and no network on 26 October 2026. The first-launch language picker could not be skipped, choosing Vietnamese translated the window and the default prompt, the request carried the chosen language, streamed text appeared before the answer finished, Arabic switched the layout to right to left, a language without translations kept English buttons, and Hide prompts stayed hidden after a reload.
 - The same tests run on GitHub Actions (Windows, Node 24) for every push and pull request to `main`.
 - `verify-handoff-clipboard.mjs` passed on 25 October 2026.
-- A live ChatGPT run on 26 October 2026 passed. I signed in, allowed plan usage, and analyzed two captures with GPT-6.1-Sol. The answer quoted text that only appeared in the screenshot, and the second answer translated it into Vietnamese.
+- A live ChatGPT run on 26 October 2026 passed. I signed in, allowed plan usage, and analyzed two captures with GPT-6.1-Sol. The answer quoted text that only appeared in the screenshot, and the second answer translated it into Vietnamese. A follow-up question asking for French was answered in French.
 
-Not yet tested live: the new follow-up box, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
+Not yet tested live: streamed answers and the lower reasoning setting against the real service (including how much faster answers arrive), the language picker in the running app, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Security and privacy
 
@@ -152,6 +160,7 @@ Not yet tested live: the new follow-up box, Disconnect and account switching aga
 - **Tokens.** ChatGPT tokens stay in the main process. They are encrypted with Electron `safeStorage`, which on Windows uses DPAPI for your user account. The window only learns the connection status, email, and model name. Tokens are revoked before they are deleted.
 - **Permissions.** Screen capture happens in the main process. Pages cannot request a screen recording, the camera, or the microphone, and can only write text to the clipboard. The packaged app disables `RunAsNode` and Node inspect flags, and checks the integrity of its own code archive.
 - **Screenshots.** Kept in memory, never written to disk by Tracer. Sent only when you capture with "Send right after capture" on, choose Analyze screenshot, or ask a question, and only to the provider you picked. Answers are displayed as text, so model output cannot run code in the window.
+- **Language.** The choice is stored locally. Only the language's English name goes to OpenAI, inside the request instructions. The main process accepts only codes from its fixed list, so the window cannot slip other text into the instructions.
 
 Known limits:
 
@@ -174,7 +183,8 @@ Reviews: [SECURITY_AUDIT.md](SECURITY_AUDIT.md) and [PRIVACY_REVIEW.md](PRIVACY_
 ## Limitations and future improvements
 
 - No downloadable release yet, no code signing, and no auto-update.
-- Answers appear when complete; streaming them in as they arrive is planned.
+- The 20 translations of the buttons and messages were AI-generated and have not been checked by native speakers yet.
+- Tracer asks ChatGPT for low reasoning effort to answer faster, which can make answers to hard questions less thorough. There is no setting for it yet.
 - Tracer uses the first model your account lists, with no model picker.
 - One ChatGPT account is stored at a time.
 - Only tested on Windows with one monitor at 100% scaling.

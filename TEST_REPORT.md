@@ -43,24 +43,26 @@ The probe harnesses used for this report live outside the repository (in the rev
 
 ## 3. Automated suite (`npm test`)
 
-| | Before audit | After audit |
-| --- | --- | --- |
-| Tests | 57 | 79 |
-| Passed | 57 | 79 |
-| Failed | 0 | 0 |
-| Skipped / todo | 0 | 0 |
-| Duration | 6.2 s first run, under 1 s warm | under 1 s warm |
+| | Before audit | After audit | After languages and streaming (26 Oct) |
+| --- | --- | --- | --- |
+| Tests | 57 | 79 | 94 |
+| Passed | 57 | 79 | 94 |
+| Failed | 0 | 0 | 0 |
+| Skipped / todo | 0 | 0 | 0 |
+| Duration | 6.2 s first run, under 1 s warm | under 1 s warm | 1.1 s |
 
 ### What the suite tests
 
 | File | Tests | What it checks | Quality notes |
 | --- | --- | --- | --- |
 | `security-policy.test.mjs` | 21 | Payload validation, sender checks, permissions, navigation, CSP, accelerators, capture gate, package ignore rules | Pure functions with meaningful edge cases. Mock `webContents` objects are minimal but adequate for identity checks |
-| `chatgpt.test.mjs` | 20 | PKCE URL, callback parsing, scope gating, Responses body, error mapping, URL allowlist, Markdown blocks, full sign-in → analyze → disconnect with real signed JWTs and a real loopback HTTP server, expired refresh, broken stream, timeout, 401 refresh-and-retry, revoke-before-clear, switching accounts | The strongest file. Mocks `fetch` with hand-written OpenAI responses, so it proves Tracer follows the documented contract, not that OpenAI behaves as documented |
+| `chatgpt.test.mjs` | 23 | PKCE URL, callback parsing, scope gating, Responses body, answer language and lighter reasoning, error mapping, URL allowlist, Markdown blocks, full sign-in → analyze → disconnect with real signed JWTs and a real loopback HTTP server, streamed text pieces, reasoning fallback, expired refresh, broken stream, timeout, 401 refresh-and-retry, revoke-before-clear, switching accounts | The strongest file. Mocks `fetch` with hand-written OpenAI responses, so it proves Tracer follows the documented contract, not that OpenAI behaves as documented |
 | `architecture.test.mjs` | 6 | Regex checks over source: secure flags, no `innerHTML`, no `child_process`, CSP plugin, clipboard API form, single instance | Cheap tripwires, not behavior tests. They can't see runtime bugs; the old handoff bug passed every one of them |
 | `region-select.test.mjs` | 6 | DIP validation, scaled crop, negative origin, full monitor, pairing by id and size | Good math coverage. Uses assumed thumbnail sizes, not real `desktopCapturer` output |
 | `overlay-gestures.test.mjs` | 7 | Drag, missed moves, tiny drag, right-click, Escape, clamp | Good |
 | `markdown-blocks.test.mjs` | 9 | Answer formatting: numbered steps on separate lines, restarted numbering, line breaks, quotes, dividers, headings, italics, tables, snake_case and arithmetic left alone, links shown as text, code fences verbatim, only known block types | Added after a live answer rendered its steps as one paragraph |
+| `i18n.test.mjs` | 7 | Every translation file has exactly the English message list with placeholders kept; every visible string in `renderer.js` (parsed with Vite's parser) and every `data-i18n` value in `index.html` is in the list; no unused messages; English fallback; the default prompt is recognized in every language | Catches a new English string that was never translated. It can't judge whether a translation is good |
+| `languages.test.mjs` | 5 | At least 200 codes, each with an English and native name; only listed codes accepted; Windows locale mapping (zh-TW → Traditional Chinese, `no` → Norwegian Bokmål); right-to-left detection | Names come from Chromium's `Intl.DisplayNames`, so these also run under Node's ICU |
 | `prompt-library.test.mjs` | 3 | Save, rename, duplicate, favorite, history toggle, favorites sync | Thin: no tests for corrupted JSON, limits (100/50), or delete from Favorites |
 | `backend.test.mjs` | 7 | Unused loopback stub | Tests code that doesn't ship. Delete with `backend/` |
 
@@ -97,6 +99,17 @@ For the T-05 and T-06 tests, `src/chatgpt-runtime.mjs` was replaced with its `HE
 | `keeps the remembered account when signing in a different one fails` | T-06 |
 | `points a normal sign-in that returns another account to the switch` | T-06 |
 
+### Tests added for languages and streaming (26 Oct, after the audit)
+
+These cover new features, not fixes, so there was no earlier code for them to fail on.
+
+| Test | Guards |
+| --- | --- |
+| `asks for the chosen answer language and lighter reasoning` | The request instructions name the language; an unknown code or injected text adds nothing; `reasoning: { effort: 'low' }` is sent; only a 400 that mentions reasoning counts as a refusal |
+| `passes answer text on as it streams in, and asks in the chosen language` | Each `response.output_text.delta` reaches the callback in order, and the joined pieces equal the final answer |
+| `asks again without lighter reasoning when the model rejects it, and remembers` | One retry without the setting; the next request to that model skips it |
+| The 7 tests in `i18n.test.mjs` and 5 in `languages.test.mjs` | See the table above |
+
 ### Still untested (recommended next tests)
 
 1. An Electron-level test that boots the built app with a stub runtime and drives `tracer:ask`, `tracer:handoff`, and `choose-region` through real IPC.
@@ -109,7 +122,9 @@ For the T-05 and T-06 tests, `src/chatgpt-runtime.mjs` was replaced with its `HE
 | Test | Status | How to run |
 | --- | --- | --- |
 | Real ChatGPT sign-in, allow plan usage, analyze | **Passed, 26 Oct 2026 (run by you, `npm start`)** | Two captures analyzed with GPT-6.1-Sol. The first answer quoted text that appears only in the screenshot (proof the image was read). The second translated the capture into Vietnamese |
-| Follow-up box, auto-send, Apply & Save in the live app | **Not run** (new UI) | Capture with auto-send on, ask a follow-up from the bottom box, change the hotkey and confirm the new one captures |
+| Follow-up box, auto-send, Apply & Save in the live app | **Passed, 26 Oct 2026 (run by you)** | A capture sent right away and was answered in Vietnamese; a follow-up from the bottom box asking for French was answered in French; Apply & Save showed in Set Hotkey |
+| Streamed answers, lower reasoning, language picker in the live app | **Not run** (new) | Run `npm start` with no saved language: the picker should open first. Pick a language, capture, and watch the answer appear in pieces. The terminal prints "ChatGPT: first text after X ms, finished after Y ms" |
+| Translation quality | **Not run** | A native speaker of each of the 20 languages reads every screen. The translations are AI-generated |
 | Disconnect revokes remotely | **Not run** | After Disconnect, check ChatGPT Settings → Security and login → Login connections |
 | Expired session recovery | **Not run** | Covered by mocked tests only (expired refresh, 401 retry) |
 | Use a different ChatGPT account | **Not run** (needs two accounts) | Sign in as A, choose Use a different ChatGPT account, sign in as B. Check that A's Login connections no longer list Tracer and that B's do |
@@ -152,7 +167,7 @@ The probe mirrors `main.js` per cycle. It runs a full-resolution `getSources` an
 
 There was a one-time rise of about 50 MB in the browser process, then a plateau with no upward trend over 60 cycles. Native image buffers are released lazily, which explains the swings. This doesn't prove there's no slow leak over thousands of cycles, and it doesn't include the real hotkey, focus changes, or a visible overlay.
 
-**Streaming.** Tracer reads the SSE stream in main and sends the finished answer at the end. The UI shows "Sending the screenshot to ChatGPT." until then, up to 90 s. That isn't a leak, but it does feel unresponsive (see §8).
+**Streaming.** At audit time, Tracer read the SSE stream in main and sent the finished answer at the end, so the window showed a waiting message for up to 90 s. Since 26 Oct the main process forwards text to the window in batches every 60 ms while it arrives, and the window redraws at most once per frame. Requests also ask for low reasoning effort. Not yet timed against the real service; in development mode the terminal prints the time to the first text and to the finished answer.
 
 ## 6. Electron probes (reproducible, not in `npm test`)
 
@@ -203,6 +218,22 @@ There was a one-time rise of about 50 MB in the browser process, then a plateau 
 
 Screenshots of each state were reviewed. They caught two layout bugs, both fixed: screen-reader labels made the whole window scroll after a follow-up, and the library tab labels wrapped.
 
+### 6.4 Languages, streaming, and the prompts toggle (built renderer, fake main process, 26 Oct)
+
+The fake `tracer:ask` handler sent three `answer-delta` events 250 ms apart before returning the answer.
+
+| Scenario | Result |
+| --- | --- |
+| First launch, nothing stored | Language picker open, Cancel hidden, Escape did not close it. 217 languages in two groups: "Full app translation" and "Answers only" |
+| Search "tieng" | One match, Tiếng Việt (accents ignored) |
+| Click Tiếng Việt | Picker title, Continue, and the window behind it switched to Vietnamese before confirming |
+| Continue | `tracer:language` = `vi`, `<html lang="vi">`, button "Tiếng Việt", default prompt, capture hint, tabs, and account chip in Vietnamese |
+| Capture | Request carried `language: 'vi'`, the Vietnamese default prompt, and the request id. After 400 ms the first piece was on screen with `aria-busy`; the final answer replaced it and the busy flag cleared |
+| Hide prompts | Library hidden, button "Hiện lời nhắc" (Show prompts), `aria-expanded="false"`; still hidden after a reload; shown again with one click |
+| Arabic | `dir="rtl"`, Arabic labels and default prompt, library on the left, answer and buttons mirrored |
+| Swahili (no built-in translation) | Left to right, English buttons, language button "Kiswahili", note "Answers use this language. Buttons stay in English." Picking another language and pressing Cancel kept Swahili. The request carried `language: 'sw'` |
+| Console | No errors |
+
 ## 7. Functional review
 
 Status key: **Auto** = automated test, **Probe** = Electron probe, **Code** = code review only, **Manual** = needs a person or hardware.
@@ -224,6 +255,10 @@ Status key: **Auto** = automated test, **Probe** = Electron probe, **Code** = co
 | Analysis | Answer renders; follow-ups carry history and the image | Auto (body), Probe (render) |
 | Analysis | Understandable errors | Improved (T-02, T-03, T-13) |
 | Library | Three tabs, persistence, favorites sync, delete | Auto (logic), Probe (render, storage) |
+| Library | Hide and show, remembered | Probe |
+| Language | First-launch picker, change later, answers in the chosen language | Auto (request), Probe (window); Manual against the real service |
+| Language | Window text in 20 languages, right to left for Arabic and Persian | Auto (completeness), Probe (render); Manual for wording |
+| Analysis | Text appears while the answer is written | Auto (stream pieces), Probe (render); Manual for real timing |
 | Window | Minimize/restore after capture | Code (`restoreMain`) |
 | Window | Close quits on Windows | Probe (packaged app closed cleanly) |
 | Window | Second launch focuses the first | Probe |
@@ -235,7 +270,8 @@ Status key: **Auto** = automated test, **Probe** = Electron probe, **Code** = co
 Recommendations only. No visual changes were made.
 
 - **Submitting (done).** Capture now sends right away by default. With that off, "Analyze screenshot" is a solid button next to the screenshot, and follow-ups have their own box with a Send button.
-- **Progress while waiting.** The thread shows "Waiting for ChatGPT…" with Cancel, but the text still arrives all at once. Streaming it in as it arrives is the next improvement.
+- **Progress while waiting (done).** The thread shows "Waiting for ChatGPT…" with Cancel until the first words arrive, then the answer fills in as it is written.
+- **Language (done).** A first-launch picker and a globe button at the top, so someone who doesn't read English can set it once. Each language is listed in its own script.
 - **Connection and provider live inside the chip popover.** That works, but OpenAI's guidelines suggest a visible "Using ChatGPT plan" near the composer with a "Manage usage" link. Make "Manage usage" the primary action in the usage-limit message.
 - **Overlay preview is low resolution.** The 1600 px q60 frame is stretched across 3440 px, which makes precise selection on small text harder. Encoding costs about 31 ms, so higher quality is cheap.
 - **Keyboard.** The Set Hotkey dialog now lets Tab and Enter reach Cancel and Apply & Save. The library tabs still use `role="tab"` without `aria-controls`, `tabpanel`, or arrow-key movement.

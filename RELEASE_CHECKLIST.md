@@ -1,13 +1,15 @@
 # Tracer release checklist (v1.0.0)
 
-Status as of 25 October 2026: **ready after specific fixes**. Tick items as they are done. Details and evidence are in [SECURITY_AUDIT.md](SECURITY_AUDIT.md), [TEST_REPORT.md](TEST_REPORT.md), and [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md).
+Status as of 26 October 2026: **ready after specific fixes**. Tick items as they are done. Details and evidence are in [SECURITY_AUDIT.md](SECURITY_AUDIT.md), [TEST_REPORT.md](TEST_REPORT.md), and [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md).
 
 ## 1. Critical blockers
 
-- [ ] Review and commit the audit changes (`git diff`). `npm test` should report 79 passing.
+- [x] Review and commit the audit changes. Committed and pushed 26 Oct 2026; CI passes on Windows.
+- [ ] Review and commit the language, streaming, and prompts-toggle changes (`git diff`). `npm test` should report 94 passing.
 - [ ] Run `npx electron scripts/verify-handoff-clipboard.mjs` and confirm `"ok":true`.
 - [x] **Live ChatGPT test with your own eligible account.** Done 26 Oct 2026: sign-in, plan usage, and two analyses with GPT-6.1-Sol, which read the image (T-07 cleared for this account).
-- [ ] Repeat with the new window: auto-send on capture, one follow-up from the bottom box, Disconnect.
+- [x] Repeat with the new window: auto-send on capture and one follow-up from the bottom box (26 Oct, Vietnamese then French).
+- [ ] Live test of the newest build: the language picker opens on first launch, answers stream in, and the terminal's "first text after X ms" line shows the wait is shorter.
 - [ ] Confirm Tracer disappears from ChatGPT Settings → Security and login → Login connections after Disconnect.
 - [ ] With a second account, try "Use a different ChatGPT account". Tracer should leave the first account's Login connections and appear in the second's.
 - [ ] **Paste test** on gemini.google.com and claude.ai. If one Ctrl+V doesn't deliver both the image and the prompt, change the handoff to copy the image first, then offer a "Copy prompt" button.
@@ -25,7 +27,10 @@ Status as of 25 October 2026: **ready after specific fixes**. Tick items as they
 ## 3. Recommended before or soon after release
 
 - [x] Make sending obvious: capture sends right away by default, Analyze screenshot is a solid button, and follow-ups have their own box.
-- [ ] Stream answer text to the window as it arrives.
+- [x] Stream answer text to the window as it arrives (with low reasoning effort to start sooner).
+- [x] Language setting: first-launch picker, globe button, 217 answer languages, 20 translated interfaces, right to left for Arabic and Persian.
+- [ ] Have a native speaker check each of the 20 interface translations. They are AI-generated.
+- [x] Hide or show the prompt library from the top bar.
 - [ ] Serialize credential-record writes in `chatgpt-runtime.mjs` (T-16) and write the file atomically: temp file, then rename (T-17).
 - [ ] Don't persist `tracer:draft` while "Remember prompts" is off, or say that it is kept.
 - [ ] Higher-quality overlay preview (the 1600 px q60 frame is blurry on wide or 4K monitors).
@@ -45,6 +50,8 @@ Status as of 25 October 2026: **ready after specific fixes**. Tick items as they
 - [ ] Custom shortcut: set, restart, still active. A taken shortcut shows an error. `Shift+A` is refused
 - [ ] Second launch focuses the existing window
 - [ ] Prompt library: save, edit, rename, favorite and unfavorite from every tab, delete, restart
+- [ ] Hide prompts, restart: still hidden; Show prompts brings it back
+- [ ] Language: first launch shows the picker; pick one, restart, still set; Arabic mirrors the window; a language without a translation keeps English buttons and still answers in that language
 - [ ] Remember prompts off, then Clear history
 - [ ] Error paths: airplane mode, wait past 90 s, cancel mid-request
 - [ ] Narrator reads the answer; keyboard-only use
