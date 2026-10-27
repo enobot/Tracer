@@ -207,8 +207,8 @@ describe('IPC sender and screen-capture permission', () => {
 });
 
 describe('navigation and content security policy', () => {
-  it('allows the dev server and the packaged renderer directory only', () => {
-    const dev = { devServerUrl: 'http://localhost:5173', appRootFileUrl: '' };
+  it('allows the dev server and the packaged app origin only', () => {
+    const dev = { devServerUrl: 'http://localhost:5173', appOrigin: '' };
     assert.equal(
       isAllowedNavigation('http://localhost:5173/index.html', dev),
       true,
@@ -217,30 +217,24 @@ describe('navigation and content security policy', () => {
     assert.equal(isAllowedNavigation('http://evil.example/', dev), false);
     assert.equal(isAllowedNavigation('javascript:alert(1)', dev), false);
 
-    const packaged = {
-      devServerUrl: '',
-      appRootFileUrl: 'file:///G:/Tracer/out/renderer/main_window/',
-    };
+    const packaged = { devServerUrl: '', appOrigin: 'tracer://app' };
     assert.equal(
-      isAllowedNavigation(
-        'file:///G:/Tracer/out/renderer/main_window/index.html',
-        packaged,
-      ),
+      isAllowedNavigation('tracer://app/index.html?overlay=1', packaged),
       true,
     );
+    for (const url of [
+      'file:///G:/Tracer/out/renderer/main_window/index.html',
+      'file:///C:/Windows/win.ini',
+      'tracer://app.evil/index.html',
+      'tracer://evil@other/index.html',
+      'https://app/index.html',
+      'https://api.openai.com/v1/responses',
+      'javascript:alert(1)',
+    ]) {
+      assert.equal(isAllowedNavigation(url, packaged), false, url);
+    }
     assert.equal(
-      isAllowedNavigation('file:///G:/Tracer/out/secret.txt', packaged),
-      false,
-    );
-    assert.equal(
-      isAllowedNavigation(
-        'file:///G:/Tracer/out/renderer/main_window/../../secret.txt',
-        packaged,
-      ),
-      false,
-    );
-    assert.equal(
-      isAllowedNavigation('https://api.openai.com/v1/responses', packaged),
+      isAllowedNavigation('tracer://app/index.html', { devServerUrl: '' }),
       false,
     );
   });

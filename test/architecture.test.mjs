@@ -134,7 +134,10 @@ describe('Electron source boundaries', () => {
       renderer,
       /innerHTML|outerHTML|document\.write|eval\(|new Function|openai|fetch\(|XMLHttpRequest/,
     );
-    assert.doesNotMatch(main, /net\.fetch|https\.request|3001/);
+    assert.doesNotMatch(main, /https\.request|net\.request|3001/);
+    // The one net.fetch in main reads the app's own files for tracer://.
+    assert.equal((main.match(/net\.fetch\(/g) || []).length, 1);
+    assert.match(main, /return net\.fetch\(pathToFileURL\(file\)\.href\);/);
     assert.doesNotMatch(main, /chat\/completions|backend-api|document\.cookie/);
     const plan = read('src/chatgpt-plan.mjs');
     const runtime = read('src/chatgpt-runtime.mjs');
@@ -161,6 +164,12 @@ describe('Electron source boundaries', () => {
     assert.match(backend, /require\.main === module/);
     assert.match(forge, /shouldIgnorePackagePath/);
     assert.match(forge, /GrantFileProtocolExtraPrivileges\]:\s*false/);
+    // With that fuse off, file:// pages can't load their own scripts and
+    // styles, so packaged windows must come from the tracer:// protocol.
+    assert.doesNotMatch(main, /\.loadFile\(/);
+    assert.match(main, /protocol\.registerSchemesAsPrivileged\(/);
+    assert.match(main, /protocol\.handle\(APP_SCHEME,/);
+    assert.match(main, /mainWindow\.loadURL\(appPageUrl\(\)\)/);
     const plugin = rendererConfig.plugins.find(
       (entry) => entry.name === 'tracer-content-security-policy',
     );

@@ -38,6 +38,10 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run make
+      # Unit tests and dev runs can't see a blank packaged window; this can.
+      - name: Check that the packaged window renders
+        shell: pwsh
+        run: ./scripts/verify-packaged-window.ps1 -Exe out/Tracer-win32-x64/Tracer.exe
       - name: Write SHA-256 checksums
         shell: bash
         working-directory: out/make/squirrel.windows/x64

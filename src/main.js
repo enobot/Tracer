@@ -9,6 +9,8 @@ import {
   globalShortcut,
   ipcMain,
   nativeImage,
+  net,
+  protocol,
   safeStorage,
   screen,
   session,
@@ -20,6 +22,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
 import { ICON_PNGS } from './app-icon.mjs';
+import { APP_ORIGIN, APP_SCHEME, resolveAppFile } from './app-protocol.mjs';
 import { createChatGPTRuntime } from './chatgpt-runtime.mjs';
 import {
   USAGE_URL,
@@ -75,6 +78,12 @@ if (process.platform === 'win32' && app.isPackaged) {
   app.setAppUserModelId('com.squirrel.tracer.Tracer');
 }
 
+// Packaged windows load from tracer://app (see app-protocol.mjs). The scheme
+// has to be registered before the app is ready.
+protocol.registerSchemesAsPrivileged([
+  { scheme: APP_SCHEME, privileges: { standard: true, secure: true } },
+]);
+
 let mainWindow;
 let chatgpt;
 let activeShortcut = CAPTURE_SHORTCUT;
@@ -101,23 +110,31 @@ function devLog(message) {
   if (devServerUrl) console.log(message);
 }
 
-function rendererDirectoryUrl() {
-  return pathToFileURL(
-    path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/`),
-  ).href;
+function rendererDirectory() {
+  return path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}`);
 }
 
-function indexHtmlPath() {
-  return path.join(
-    __dirname,
-    `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
-  );
+// Serves tracer://app/<file> from the packaged renderer folder only.
+function serveAppProtocol() {
+  protocol.handle(APP_SCHEME, (request) => {
+    const file = resolveAppFile(request.url, rendererDirectory());
+    if (!file) return new Response('Not found', { status: 404 });
+    return net.fetch(pathToFileURL(file).href);
+  });
+}
+
+function appPageUrl(query = {}) {
+  const url = new URL(`${APP_ORIGIN}/index.html`);
+  for (const [key, value] of Object.entries(query)) {
+    url.searchParams.set(key, value);
+  }
+  return url.href;
 }
 
 function navigationPolicy() {
   return {
     devServerUrl,
-    appRootFileUrl: devServerUrl ? '' : rendererDirectoryUrl(),
+    appOrigin: devServerUrl ? '' : APP_ORIGIN,
   };
 }
 
@@ -288,9 +305,7 @@ function loadOverlay(win, display) {
     url.searchParams.set('overlay', '1');
     return win.loadURL(url.href);
   }
-  return win.loadFile(indexHtmlPath(), {
-    query: { overlay: '1', display: String(display.id) },
-  });
+  return win.loadURL(appPageUrl({ overlay: '1', display: String(display.id) }));
 }
 
 function openOverlays(displays) {
@@ -650,7 +665,7 @@ const createWindow = () => {
     // DevTools stay available while developing. Packaged builds do not open them.
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(indexHtmlPath());
+    mainWindow.loadURL(appPageUrl());
   }
 };
 
@@ -660,7 +675,7 @@ function installSessionGuards() {
     const url = details.url || '';
     const attach =
       (devServerUrl && url.startsWith(new URL(devServerUrl).origin)) ||
-      url.startsWith('file:');
+      url.startsWith(`${APP_ORIGIN}/`);
     if (!attach) {
       callback({ responseHeaders: details.responseHeaders });
       return;
@@ -762,6 +777,7 @@ function validatedCapture(payload) {
 app.whenReady().then(async () => {
   if (!primaryInstance) return;
   installSessionGuards();
+  if (!devServerUrl) serveAppProtocol();
   installMenu();
   const userData = app.getPath('userData');
   chatgpt = createChatGPTRuntime({

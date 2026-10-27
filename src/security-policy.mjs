@@ -250,7 +250,7 @@ export function buildInspectResult(validation) {
 
 export function isAllowedNavigation(
   targetUrl,
-  { devServerUrl = '', appRootFileUrl = '' } = {},
+  { devServerUrl = '', appOrigin = '' } = {},
 ) {
   let target;
   try {
@@ -272,20 +272,19 @@ export function isAllowedNavigation(
     );
   }
 
-  if (target.protocol !== 'file:') return false;
-  if (!appRootFileUrl) return false;
-
-  let root;
+  // Packaged builds: only pages of the app's own origin (tracer://app).
+  if (!appOrigin) return false;
+  let app;
   try {
-    root = new URL(appRootFileUrl);
+    app = new URL(appOrigin);
   } catch {
     return false;
   }
-  if (root.protocol !== 'file:') return false;
-
-  const rootPath = decodeURIComponent(root.pathname);
-  const prefix = rootPath.endsWith('/') ? rootPath : `${rootPath}/`;
-  return decodeURIComponent(target.pathname).startsWith(prefix);
+  return (
+    Boolean(app.host) &&
+    target.protocol === app.protocol &&
+    target.host === app.host
+  );
 }
 
 function devServerOrigins(devServerUrl) {
