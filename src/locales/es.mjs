@@ -183,4 +183,88 @@ export default {
   'Tracer is still running': 'Tracer sigue en ejecución',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'Pulsa {hotkey} para capturar. Para salir, haz clic derecho en el icono de Tracer junto al reloj (puede estar bajo la flecha ^) y elige Salir de Tracer.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'Ya hay una solicitud de ChatGPT en curso.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT todavía no puede renovar esta conexión. Vuelve a intentarlo en un momento.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT no pudo aceptar esta captura. Vuelve a capturar la pantalla.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT no aceptó esta conexión. Vuelve a iniciar sesión. Si Tracer sigue apareciendo en Conexiones de inicio de sesión (Login connections) en la configuración de ChatGPT, quítalo de ahí.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT no completó el registro de la aplicación. Vuelve a iniciar sesión.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT no confirmó los permisos concedidos. Vuelve a iniciar sesión.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT no ofreció ningún modelo que esta conexión pueda usar.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT no devolvió una identidad verificable. Vuelve a iniciar sesión.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT no devolvió la respuesta esperada. Vuelve a intentarlo.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'La verificación de identidad de ChatGPT no está disponible por ahora. Vuelve a intentarlo en un momento.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT rechazó esta solicitud. Puede que tu cuenta, tu espacio de trabajo o tu región no permitan usar el plan en otras aplicaciones.',
+  'ChatGPT returned an empty answer.': 'ChatGPT devolvió una respuesta vacía.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT devolvió un token no válido. Vuelve a iniciar sesión.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT devolvió credenciales incompletas. Vuelve a iniciar sesión.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'No se pudo verificar la configuración de inicio de sesión de ChatGPT.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'No se pudo guardar el inicio de sesión de ChatGPT en este equipo.',
+  'ChatGPT sign-in was not completed.':
+    'No se completó el inicio de sesión en ChatGPT.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT se detuvo antes de terminar la respuesta. Vuelve a intentarlo.',
+  'Choose Gemini or Claude to open a browser.':
+    'Elige Gemini o Claude para abrir el navegador.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'Termina el inicio de sesión de ChatGPT que ya está abierto en tu navegador.',
+  'Finish the current ChatGPT request before signing in.':
+    'Espera a que termine la solicitud actual de ChatGPT antes de iniciar sesión.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'Se eliminaron las credenciales de ChatGPT de este equipo, pero no se pudo confirmar la desconexión remota. Desconecta Tracer en la configuración de ChatGPT.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'Sesión iniciada. No se pudo desconectar a distancia la cuenta anterior de ChatGPT. Quita Tracer en Conexiones de inicio de sesión (Login connections), en la configuración de ChatGPT de esa cuenta.',
+  'That shortcut is already in use. Choose another combination.':
+    'Ese atajo ya está en uso. Elige otra combinación.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'No se pudo verificar la identidad de ChatGPT. Vuelve a iniciar sesión.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'El modelo de ChatGPT disponible para esta cuenta no aceptó la solicitud. Puede que no admita imágenes.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'No se pudo abrir el navegador. Revisa tu navegador predeterminado y vuelve a intentarlo.',
+  'The connection was interrupted. Try again.':
+    'La conexión se interrumpió. Vuelve a intentarlo.',
+  'The conversation could not be sent. Clear it and try again.':
+    'No se pudo enviar la conversación. Bórrala y vuelve a intentarlo.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'La identidad renovada de ChatGPT no coincide con esta cuenta. Vuelve a iniciar sesión.',
+  'The request could not be processed.': 'No se pudo procesar la solicitud.',
+  'The request to ChatGPT failed.': 'La solicitud a ChatGPT falló.',
+  'The response ended before completion. Try again.':
+    'La respuesta terminó antes de completarse. Vuelve a intentarlo.',
+  'The response stream contained an invalid event. Try again.':
+    'La respuesta contenía datos no válidos. Vuelve a intentarlo.',
+  'The response was too large. Try a smaller request.':
+    'La respuesta era demasiado grande. Prueba con una solicitud más pequeña.',
+  'The saved ChatGPT connection could not be read.':
+    'No se pudo leer la conexión de ChatGPT guardada.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'Se copiaron la captura y la indicación, pero no se pudo abrir el navegador.',
+  'The screenshot could not be copied.': 'No se pudo copiar la captura.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'El puerto de inicio de sesión no está disponible. Cierra la otra copia de Tracer y vuelve a intentarlo.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'Este inicio de sesión devolvió otra cuenta de ChatGPT. Inicia sesión en la cuenta original o elige Usar otra cuenta de ChatGPT.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer no pudo registrar el atajo de captura. Puede que otra aplicación ya lo esté usando.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'Usa una tecla modificadora y otra tecla, por ejemplo Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'Iniciaste sesión, pero el uso del plan de ChatGPT no está activado. Permite el uso del plan y vuelve a intentarlo.',
 };

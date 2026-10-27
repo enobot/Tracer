@@ -68,6 +68,13 @@ if (!started && !primaryInstance) {
 }
 app.on('second-instance', () => restoreMain());
 
+// Installed copies use the ID Squirrel gives the Start menu shortcut
+// (com.squirrel.<package name>.<exe name>), so the tray notice and taskbar
+// pins belong to Tracer.
+if (process.platform === 'win32' && app.isPackaged) {
+  app.setAppUserModelId('com.squirrel.tracer.Tracer');
+}
+
 let mainWindow;
 let chatgpt;
 let activeShortcut = CAPTURE_SHORTCUT;
@@ -487,7 +494,9 @@ async function registerHotkey() {
   if (!result.ok) {
     dialog.showErrorBox(
       'Tracer',
-      'Tracer could not register the screenshot shortcut. Another application may already be using it.',
+      translator(interfaceLanguage)(
+        'Tracer could not register the screenshot shortcut. Another application may already be using it.',
+      ),
     );
   }
 }

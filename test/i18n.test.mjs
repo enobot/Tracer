@@ -111,6 +111,52 @@ describe('interface translations', () => {
     );
   });
 
+  it('translates every message the main process can show', () => {
+    // Strings that never reach a person as written: internal checks, the
+    // model instructions, and cancellations the window replaces.
+    const internal = new Set([
+      'ChatGPT runtime is missing a required dependency.',
+      'Invalid sign-in state.',
+      'Refusing to open that address.',
+      'The sign-in redirect address is invalid.',
+      'The request was cancelled.',
+      'Sign-in was cancelled.',
+    ]);
+    const known = new Set(MESSAGES);
+    for (const file of [
+      'src/main.js',
+      'src/chatgpt-runtime.mjs',
+      'src/chatgpt-plan.mjs',
+    ]) {
+      const sentences = new Set();
+      (function walk(node, inInstructions) {
+        if (!node || typeof node !== 'object') return;
+        if (Array.isArray(node)) {
+          node.forEach((child) => walk(child, inInstructions));
+          return;
+        }
+        const instructions =
+          inInstructions ||
+          (node.type === 'VariableDeclarator' &&
+            node.id?.name === 'INSTRUCTIONS');
+        if (
+          !instructions &&
+          node.type === 'Literal' &&
+          typeof node.value === 'string' &&
+          /\s/.test(node.value) &&
+          /[.?!]$/.test(node.value)
+        ) {
+          sentences.add(node.value);
+        }
+        for (const key of Object.keys(node)) walk(node[key], instructions);
+      })(parseAst(read(file)), false);
+      const missing = [...sentences].filter(
+        (text) => !known.has(text) && !internal.has(text),
+      );
+      assert.deepEqual(missing, [], `${file} has untranslated messages`);
+    }
+  });
+
   it('has no message that the app never shows', () => {
     const sources = [
       'src/renderer.js',

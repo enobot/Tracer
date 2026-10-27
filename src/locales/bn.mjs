@@ -178,4 +178,87 @@ export default {
   'Tracer is still running': 'Tracer এখনও চলছে',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'ক্যাপচার করতে {hotkey} চাপুন। বের হতে ঘড়ির কাছে Tracer আইকনে ডান-ক্লিক করুন (এটি ^ তীরের নিচে থাকতে পারে) এবং Tracer বন্ধ করুন বেছে নিন।',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'ChatGPT-এর একটি অনুরোধ ইতিমধ্যে চলছে।',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT এখনও এই সংযোগ রিফ্রেশ করতে পারছে না। একটু পরে আবার চেষ্টা করুন।',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT এই স্ক্রিনশট গ্রহণ করতে পারেনি। আবার স্ক্রিন ক্যাপচার করুন।',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT এই সংযোগ গ্রহণ করেনি। আবার সাইন ইন করুন। ChatGPT সেটিংসের Login connections-এ Tracer এখনও থাকলে সেখান থেকে সরিয়ে দিন।',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT অ্যাপ নিবন্ধন সম্পূর্ণ করেনি। আবার সাইন ইন করে দেখুন।',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT দেওয়া অনুমতিগুলো নিশ্চিত করেনি। আবার সাইন ইন করুন।',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT এমন কোনো মডেল দেখায়নি যা এই সংযোগ ব্যবহার করতে পারে।',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT যাচাইযোগ্য পরিচয় ফেরত দেয়নি। আবার সাইন ইন করুন।',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT প্রত্যাশিত উত্তর ফেরত দেয়নি। আবার চেষ্টা করুন।',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'ChatGPT পরিচয় যাচাই সাময়িকভাবে বন্ধ আছে। একটু পরে আবার চেষ্টা করুন।',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT এই অনুরোধ প্রত্যাখ্যান করেছে। আপনার অ্যাকাউন্ট, ওয়ার্কস্পেস বা অঞ্চলে অন্য অ্যাপে প্ল্যান ব্যবহারের অনুমতি না-ও থাকতে পারে।',
+  'ChatGPT returned an empty answer.': 'ChatGPT একটি খালি উত্তর ফেরত দিয়েছে।',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT একটি অবৈধ টোকেন ফেরত দিয়েছে। আবার সাইন ইন করুন।',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT অসম্পূর্ণ ক্রেডেনশিয়াল ফেরত দিয়েছে। আবার সাইন ইন করুন।',
+  'ChatGPT sign-in configuration could not be verified.':
+    'ChatGPT সাইন ইন কনফিগারেশন যাচাই করা যায়নি।',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'এই কম্পিউটারে ChatGPT সাইন ইন সংরক্ষণ করা যায়নি।',
+  'ChatGPT sign-in was not completed.': 'ChatGPT সাইন ইন সম্পূর্ণ হয়নি।',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT উত্তর শেষ করার আগেই থেমে গেছে। আবার চেষ্টা করুন।',
+  'Choose Gemini or Claude to open a browser.':
+    'ব্রাউজার খুলতে Gemini বা Claude বেছে নিন।',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'ব্রাউজারে আগে থেকে খোলা ChatGPT সাইন ইন শেষ করুন।',
+  'Finish the current ChatGPT request before signing in.':
+    'সাইন ইন করার আগে চলমান ChatGPT অনুরোধ শেষ হওয়া পর্যন্ত অপেক্ষা করুন।',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'এই কম্পিউটার থেকে ChatGPT ক্রেডেনশিয়াল সরানো হয়েছে, কিন্তু ChatGPT-এর দিক থেকে সংযোগ বিচ্ছিন্ন হওয়া নিশ্চিত করা যায়নি। ChatGPT সেটিংসে Tracer-এর সংযোগ বিচ্ছিন্ন করুন।',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'সাইন ইন হয়েছে। আগের ChatGPT অ্যাকাউন্টটি দূর থেকে সংযোগ বিচ্ছিন্ন করা যায়নি। সেই অ্যাকাউন্টের ChatGPT সেটিংসে Login connections থেকে Tracer সরিয়ে দিন।',
+  'That shortcut is already in use. Choose another combination.':
+    'এই শর্টকাট ইতিমধ্যে ব্যবহৃত হচ্ছে। অন্য কোনো সমন্বয় বেছে নিন।',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'ChatGPT পরিচয় যাচাই করা যায়নি। আবার সাইন ইন করুন।',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'এই অ্যাকাউন্টের জন্য উপলব্ধ ChatGPT মডেল অনুরোধটি গ্রহণ করেনি। এটি হয়তো ছবি সমর্থন করে না।',
+  'The browser could not be opened. Check your default browser and try again.':
+    'ব্রাউজার খোলা যায়নি। আপনার ডিফল্ট ব্রাউজার পরীক্ষা করে আবার চেষ্টা করুন।',
+  'The connection was interrupted. Try again.':
+    'সংযোগ বিচ্ছিন্ন হয়েছে। আবার চেষ্টা করুন।',
+  'The conversation could not be sent. Clear it and try again.':
+    'কথোপকথন পাঠানো যায়নি। এটি মুছে আবার চেষ্টা করুন।',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'রিফ্রেশ করা ChatGPT পরিচয় এই অ্যাকাউন্টের সাথে মেলে না। আবার সাইন ইন করুন।',
+  'The request could not be processed.': 'অনুরোধটি প্রক্রিয়া করা যায়নি।',
+  'The request to ChatGPT failed.': 'ChatGPT-এ পাঠানো অনুরোধ ব্যর্থ হয়েছে।',
+  'The response ended before completion. Try again.':
+    'উত্তর সম্পূর্ণ হওয়ার আগেই শেষ হয়ে গেছে। আবার চেষ্টা করুন।',
+  'The response stream contained an invalid event. Try again.':
+    'উত্তরে অবৈধ ডেটা ছিল। আবার চেষ্টা করুন।',
+  'The response was too large. Try a smaller request.':
+    'উত্তরটি খুব বড়। ছোট অনুরোধ দিয়ে চেষ্টা করুন।',
+  'The saved ChatGPT connection could not be read.':
+    'সংরক্ষিত ChatGPT সংযোগ পড়া যায়নি।',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'স্ক্রিনশট ও প্রম্পট কপি হয়েছে, কিন্তু ব্রাউজার খোলা যায়নি।',
+  'The screenshot could not be copied.': 'স্ক্রিনশট কপি করা যায়নি।',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'সাইন ইন পোর্ট পাওয়া যাচ্ছে না। Tracer-এর অন্য কপিটি বন্ধ করে আবার চেষ্টা করুন।',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'এই সাইন ইনে অন্য একটি ChatGPT অ্যাকাউন্ট এসেছে। আগের অ্যাকাউন্টে সাইন ইন করুন, অথবা অন্য ChatGPT অ্যাকাউন্ট ব্যবহার করুন বেছে নিন।',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer স্ক্রিনশট শর্টকাট নিবন্ধন করতে পারেনি। অন্য কোনো অ্যাপ হয়তো এটি ইতিমধ্যে ব্যবহার করছে।',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'একটি মডিফায়ার কী এবং আরেকটি কী ব্যবহার করুন, যেমন Ctrl+Shift+Space।',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'আপনি সাইন ইন করেছেন, কিন্তু ChatGPT প্ল্যান ব্যবহার চালু নেই। অনুমতি দিয়ে আবার চেষ্টা করুন।',
 };

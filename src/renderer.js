@@ -3,6 +3,7 @@ import {
   DEFAULT_PROMPT,
   hasInterface,
   isDefaultPrompt,
+  isMessage,
   translator,
 } from './i18n.mjs';
 import {
@@ -310,10 +311,13 @@ function initWorkspace() {
       /^Error invoking remote method '[^']+': Error: /,
       '',
     );
-    if (!cleaned || cleaned === 'Unauthorized IPC sender') {
+    // Only Tracer's own messages are shown. File, network, or other technical
+    // errors get a plain message; the details stay in the developer console.
+    if (!isMessage(cleaned)) {
+      if (cleaned) console.warn(cleaned);
       return t('Tracer could not complete that request.');
     }
-    return t(cleaned.slice(0, 300));
+    return t(cleaned);
   }
 
   // Status messages are kept in English with their values, so they can be
@@ -479,6 +483,8 @@ function initWorkspace() {
       live = document.createElement('div');
       live.className = 'turn-answer';
       live.setAttribute('aria-busy', 'true');
+      // Screen readers wait for the finished answer instead of every piece.
+      conversation?.setAttribute('aria-busy', 'true');
       placeholder.replaceWith(live);
       pendingNodes = [question, live];
       question.scrollIntoView({ block: 'start' });
@@ -495,6 +501,7 @@ function initWorkspace() {
     const streamed = placeholder?.classList.contains('turn-answer');
     pendingNodes = [];
     streamText = '';
+    conversation?.removeAttribute('aria-busy');
     if (answerText === null) {
       question?.remove();
       placeholder?.remove();
@@ -509,6 +516,7 @@ function initWorkspace() {
   function clearConversation() {
     if (streamFrame) cancelAnimationFrame(streamFrame);
     streamFrame = 0;
+    conversation?.removeAttribute('aria-busy');
     turns = [];
     pendingNodes = [];
     streamText = '';
@@ -1036,8 +1044,12 @@ function initWorkspace() {
             ? 'tab-favorites'
             : 'tab-saved',
       );
-      if (button)
+      if (button) {
         button.setAttribute('aria-selected', String(tab === libraryTab));
+        // Only the selected tab is in the Tab order; arrow keys move between tabs.
+        button.tabIndex = tab === libraryTab ? 0 : -1;
+        if (tab === libraryTab) list.setAttribute('aria-labelledby', button.id);
+      }
     }
     if (libraryTab === 'past') {
       const label = document.createElement('label');
@@ -1510,16 +1522,33 @@ function initWorkspace() {
       }
     });
   }
-  for (const tab of [
+  const libraryTabs = [
     ['tab-past', 'past'],
     ['tab-favorites', 'favorites'],
     ['tab-saved', 'saved'],
-  ]) {
+  ];
+  for (const tab of libraryTabs) {
     document.getElementById(tab[0])?.addEventListener('click', () => {
       libraryTab = tab[1];
       renderLibrary();
     });
   }
+  document.querySelector('.tabs')?.addEventListener('keydown', (event) => {
+    const current = libraryTabs.findIndex((tab) => tab[1] === libraryTab);
+    const step = document.documentElement.dir === 'rtl' ? -1 : 1;
+    const moves = {
+      ArrowRight: current + step,
+      ArrowLeft: current - step,
+      Home: 0,
+      End: libraryTabs.length - 1,
+    };
+    if (!Object.hasOwn(moves, event.key)) return;
+    event.preventDefault();
+    const next = (moves[event.key] + libraryTabs.length) % libraryTabs.length;
+    libraryTab = libraryTabs[next][1];
+    renderLibrary();
+    document.getElementById(libraryTabs[next][0])?.focus();
+  });
   window.tracer?.onAnswerText?.((event) => {
     if (event?.requestId !== actionGeneration || pendingNodes.length !== 2) {
       return;

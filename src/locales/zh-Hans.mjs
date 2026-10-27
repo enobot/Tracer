@@ -172,4 +172,85 @@ export default {
   'Tracer is still running': 'Tracer 仍在运行',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     '按 {hotkey} 截图。要退出，请右键点击时钟旁边的 Tracer 图标（它可能在 ^ 箭头里），然后选择“退出 Tracer”。',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.': '已有一个 ChatGPT 请求正在进行。',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT 暂时无法刷新此连接。请稍后重试。',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT 无法接收此截图。请重新截取屏幕。',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT 未接受此连接。请重新登录。如果 ChatGPT 设置的登录连接（Login connections）中仍有 Tracer，请在那里将其移除。',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT 未完成应用注册。请尝试重新登录。',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT 未确认已授予的权限。请重新登录。',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT 未提供此连接可用的模型。',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT 未返回可验证的身份。请重新登录。',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT 未返回预期的响应。请重试。',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'ChatGPT 身份验证暂时不可用。请稍后重试。',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT 拒绝了此请求。你的账户、工作区或所在地区可能不允许在其他应用中使用套餐。',
+  'ChatGPT returned an empty answer.': 'ChatGPT 返回了空回答。',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT 返回了无效的令牌。请重新登录。',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT 返回的凭据不完整。请重新登录。',
+  'ChatGPT sign-in configuration could not be verified.':
+    '无法验证 ChatGPT 登录配置。',
+  'ChatGPT sign-in could not be saved on this computer.':
+    '无法在此电脑上保存 ChatGPT 登录信息。',
+  'ChatGPT sign-in was not completed.': 'ChatGPT 登录未完成。',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT 在回答完成前停止了。请重试。',
+  'Choose Gemini or Claude to open a browser.':
+    '请选择 Gemini 或 Claude 以打开浏览器。',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    '请完成浏览器中已打开的 ChatGPT 登录。',
+  'Finish the current ChatGPT request before signing in.':
+    '请等当前的 ChatGPT 请求完成后再登录。',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    '已从此电脑移除 ChatGPT 凭据，但无法确认已在 ChatGPT 端断开连接。请在 ChatGPT 设置中断开 Tracer。',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    '已登录。无法远程断开之前的 ChatGPT 账户。请在该账户 ChatGPT 设置的登录连接（Login connections）中移除 Tracer。',
+  'That shortcut is already in use. Choose another combination.':
+    '该快捷键已被占用。请选择其他组合。',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    '无法验证 ChatGPT 身份。请重新登录。',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    '此账户可用的 ChatGPT 模型未接受该请求。它可能不支持图片。',
+  'The browser could not be opened. Check your default browser and try again.':
+    '无法打开浏览器。请检查默认浏览器后重试。',
+  'The connection was interrupted. Try again.': '连接中断。请重试。',
+  'The conversation could not be sent. Clear it and try again.':
+    '无法发送对话。请清除后重试。',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    '刷新后的 ChatGPT 身份与此账户不符。请重新登录。',
+  'The request could not be processed.': '无法处理该请求。',
+  'The request to ChatGPT failed.': '发送到 ChatGPT 的请求失败。',
+  'The response ended before completion. Try again.':
+    '响应在完成前中断。请重试。',
+  'The response stream contained an invalid event. Try again.':
+    '响应包含无效数据。请重试。',
+  'The response was too large. Try a smaller request.':
+    '响应过大。请尝试更小的请求。',
+  'The saved ChatGPT connection could not be read.':
+    '无法读取已保存的 ChatGPT 连接。',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    '已复制截图和提示词，但无法打开浏览器。',
+  'The screenshot could not be copied.': '无法复制截图。',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    '登录端口不可用。请关闭另一个 Tracer 后重试。',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    '此次登录返回了另一个 ChatGPT 账户。请登录原来的账户，或选择“使用其他 ChatGPT 账户”。',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer 无法注册截图快捷键。可能已有其他应用在使用它。',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    '请使用一个修饰键加一个按键，例如 Ctrl+Shift+Space。',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    '你已登录，但尚未启用 ChatGPT 套餐使用权限。请允许后重试。',
 };

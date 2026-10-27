@@ -250,11 +250,12 @@
       </main>
 
       <aside id="library" class="library" data-i18n-label="Prompt library">
-        <div class="tabs" role="tablist">
+        <div class="tabs" role="tablist" data-i18n-label="Prompt library">
           <button
             id="tab-past"
             type="button"
             role="tab"
+            aria-controls="library-list"
             aria-selected="true"
             data-i18n="Past Prompts"
           >
@@ -264,6 +265,7 @@
             id="tab-favorites"
             type="button"
             role="tab"
+            aria-controls="library-list"
             aria-selected="false"
             data-i18n="Favorites"
           >
@@ -273,6 +275,7 @@
             id="tab-saved"
             type="button"
             role="tab"
+            aria-controls="library-list"
             aria-selected="false"
             data-i18n="Saved Prompts"
           >
@@ -280,7 +283,7 @@
           </button>
         </div>
         <div id="library-tools" class="library-tools"></div>
-        <div id="library-list"></div>
+        <div id="library-list" role="tabpanel" aria-labelledby="tab-past"></div>
       </aside>
     </div>
 

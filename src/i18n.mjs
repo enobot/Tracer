@@ -1,5 +1,6 @@
 // Interface text in other languages. Each catalog maps the English text of
 // a message to its translation; text without an entry stays in English.
+import { MESSAGES } from './i18n-messages.mjs';
 import ar from './locales/ar.mjs';
 import bn from './locales/bn.mjs';
 import de from './locales/de.mjs';
@@ -45,6 +46,14 @@ export const CATALOGS = {
 };
 
 export const DEFAULT_PROMPT = 'Explain what is visible in this screenshot.';
+
+const KNOWN = new Set(MESSAGES);
+
+// True for Tracer's own messages. Anything else is a technical error that the
+// window replaces with a general message.
+export function isMessage(text) {
+  return KNOWN.has(text);
+}
 
 export function hasInterface(code) {
   return code === 'en' || Object.hasOwn(CATALOGS, code);

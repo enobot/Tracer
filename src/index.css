@@ -518,7 +518,7 @@ textarea {
   gap: 0.6rem;
   margin: 0.4rem 0 0;
   color: var(--faint);
-  font-size: 0.87rem;
+  font-size: 0.9rem;
 }
 
 /* Prompt library */
@@ -732,7 +732,7 @@ textarea {
 
 .language-english {
   color: var(--faint);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .language-detail {

@@ -183,4 +183,89 @@ export default {
   'Tracer is still running': 'Tumatakbo pa rin ang Tracer',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'Pindutin ang {hotkey} para kumuha ng screenshot. Para lumabas, i-right-click ang icon ng Tracer malapit sa orasan (baka nasa ilalim ng arrow na ^) at piliin ang Lumabas sa Tracer.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'May tumatakbo nang request sa ChatGPT.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'Hindi pa ma-refresh ng ChatGPT ang koneksyong ito. Subukan ulit maya-maya.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'Hindi tinanggap ng ChatGPT ang screenshot na ito. Kumuha ulit ng screenshot.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'Hindi tinanggap ng ChatGPT ang koneksyong ito. Mag-sign in ulit. Kung nasa Login connections pa rin ng ChatGPT settings ang Tracer, alisin ito roon.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'Hindi natapos ng ChatGPT ang pag-register ng app. Subukang mag-sign in ulit.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'Hindi kinumpirma ng ChatGPT ang mga pahintulot na ibinigay. Mag-sign in ulit.',
+  'ChatGPT did not list a model this connection can use.':
+    'Walang model na inilista ang ChatGPT na magagamit ng koneksyong ito.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'Hindi nagbalik ang ChatGPT ng identity na mabe-verify. Mag-sign in ulit.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'Hindi naibalik ng ChatGPT ang inaasahang sagot. Subukan ulit.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'Pansamantalang hindi available ang pag-verify ng identity sa ChatGPT. Subukan ulit maya-maya.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'Tinanggihan ng ChatGPT ang request na ito. Maaaring hindi pinapayagan ng iyong account, workspace, o rehiyon ang paggamit ng plan sa ibang app.',
+  'ChatGPT returned an empty answer.':
+    'Walang laman ang sagot na ibinalik ng ChatGPT.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'Hindi valid ang token na ibinalik ng ChatGPT. Mag-sign in ulit.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'Kulang ang credentials na ibinalik ng ChatGPT. Mag-sign in ulit.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'Hindi ma-verify ang configuration ng pag-sign in sa ChatGPT.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'Hindi ma-save sa computer na ito ang pag-sign in sa ChatGPT.',
+  'ChatGPT sign-in was not completed.':
+    'Hindi natapos ang pag-sign in sa ChatGPT.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'Huminto ang ChatGPT bago matapos ang sagot. Subukan ulit.',
+  'Choose Gemini or Claude to open a browser.':
+    'Piliin ang Gemini o Claude para buksan ang browser.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'Tapusin ang pag-sign in sa ChatGPT na bukas na sa iyong browser.',
+  'Finish the current ChatGPT request before signing in.':
+    'Hintaying matapos ang kasalukuyang request sa ChatGPT bago mag-sign in.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'Inalis na ang ChatGPT credentials sa computer na ito, pero hindi makumpirma ang pag-disconnect sa ChatGPT. I-disconnect ang Tracer sa ChatGPT settings.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'Naka-sign in na. Hindi ma-disconnect nang remote ang dating ChatGPT account. Alisin ang Tracer sa Login connections ng ChatGPT settings ng account na iyon.',
+  'That shortcut is already in use. Choose another combination.':
+    'Ginagamit na ang shortcut na iyan. Pumili ng ibang kombinasyon.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'Hindi ma-verify ang ChatGPT identity. Mag-sign in ulit.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'Hindi tinanggap ng ChatGPT model na available sa account na ito ang request. Baka hindi nito sinusuportahan ang mga larawan.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'Hindi mabuksan ang browser. Suriin ang default browser mo at subukan ulit.',
+  'The connection was interrupted. Try again.':
+    'Naputol ang koneksyon. Subukan ulit.',
+  'The conversation could not be sent. Clear it and try again.':
+    'Hindi maipadala ang usapan. I-clear ito at subukan ulit.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'Hindi tugma sa account na ito ang na-refresh na ChatGPT identity. Mag-sign in ulit.',
+  'The request could not be processed.': 'Hindi maproseso ang request.',
+  'The request to ChatGPT failed.': 'Nabigo ang request sa ChatGPT.',
+  'The response ended before completion. Try again.':
+    'Natapos ang sagot bago ito makumpleto. Subukan ulit.',
+  'The response stream contained an invalid event. Try again.':
+    'May hindi valid na data sa sagot. Subukan ulit.',
+  'The response was too large. Try a smaller request.':
+    'Masyadong malaki ang sagot. Subukan ang mas maliit na request.',
+  'The saved ChatGPT connection could not be read.':
+    'Hindi mabasa ang naka-save na koneksyon sa ChatGPT.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'Nakopya ang screenshot at prompt, pero hindi mabuksan ang browser.',
+  'The screenshot could not be copied.': 'Hindi makopya ang screenshot.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'Hindi available ang port para sa pag-sign in. Isara ang isa pang Tracer at subukan ulit.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'Ibang ChatGPT account ang ibinalik ng pag-sign in na ito. Mag-sign in sa orihinal na account, o piliin ang Gumamit ng ibang ChatGPT account.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Hindi ma-register ng Tracer ang shortcut sa pag-screenshot. Baka ginagamit na ito ng ibang app.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'Gumamit ng modifier key at isa pang key, gaya ng Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'Naka-sign in ka, pero hindi pa naka-enable ang paggamit ng ChatGPT plan. Payagan ito, saka subukan ulit.',
 };

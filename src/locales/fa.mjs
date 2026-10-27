@@ -181,4 +181,87 @@ export default {
   'Tracer is still running': 'Tracer هنوز در حال اجراست',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'برای گرفتن تصویر {hotkey} را بزنید. برای خروج، روی نماد Tracer کنار ساعت راست‌کلیک کنید (ممکن است زیر فلش ^ باشد) و «خروج از Tracer» را انتخاب کنید.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'یک درخواست ChatGPT از قبل در حال اجراست.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT هنوز نمی‌تواند این اتصال را تازه کند. کمی بعد دوباره تلاش کنید.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT نتوانست این تصویر صفحه را بپذیرد. دوباره از صفحه تصویر بگیرید.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT این اتصال را نپذیرفت. دوباره وارد شوید. اگر Tracer هنوز در اتصال‌های ورود (Login connections) در تنظیمات ChatGPT دیده می‌شود، آن را از همان‌جا حذف کنید.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT ثبت برنامه را کامل نکرد. دوباره وارد شوید.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT مجوزهای داده‌شده را تأیید نکرد. دوباره وارد شوید.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT هیچ مدلی که این اتصال بتواند از آن استفاده کند ارائه نکرد.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT هویتی قابل‌تأیید برنگرداند. دوباره وارد شوید.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT پاسخ مورد انتظار را برنگرداند. دوباره تلاش کنید.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'تأیید هویت ChatGPT موقتاً در دسترس نیست. کمی بعد دوباره تلاش کنید.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT این درخواست را رد کرد. ممکن است حساب، فضای کاری یا منطقهٔ شما اجازهٔ استفاده از طرح را در برنامه‌های دیگر ندهد.',
+  'ChatGPT returned an empty answer.': 'ChatGPT پاسخی خالی برگرداند.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT توکنی نامعتبر برگرداند. دوباره وارد شوید.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT اطلاعات ورود ناقص برگرداند. دوباره وارد شوید.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'پیکربندی ورود به ChatGPT تأیید نشد.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'ورود به ChatGPT در این رایانه ذخیره نشد.',
+  'ChatGPT sign-in was not completed.': 'ورود به ChatGPT کامل نشد.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT پیش از کامل کردن پاسخ متوقف شد. دوباره تلاش کنید.',
+  'Choose Gemini or Claude to open a browser.':
+    'برای باز کردن مرورگر، Gemini یا Claude را انتخاب کنید.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'ورود به ChatGPT را که در مرورگرتان باز است کامل کنید.',
+  'Finish the current ChatGPT request before signing in.':
+    'پیش از ورود، صبر کنید درخواست فعلی ChatGPT تمام شود.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'اطلاعات ورود ChatGPT از این رایانه حذف شد، اما قطع اتصال در سمت ChatGPT تأیید نشد. اتصال Tracer را در تنظیمات ChatGPT قطع کنید.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'وارد شدید. اتصال حساب قبلی ChatGPT از راه دور قطع نشد. Tracer را از اتصال‌های ورود (Login connections) در تنظیمات ChatGPT آن حساب حذف کنید.',
+  'That shortcut is already in use. Choose another combination.':
+    'این میان‌بر از قبل در حال استفاده است. ترکیب دیگری انتخاب کنید.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'هویت ChatGPT تأیید نشد. دوباره وارد شوید.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'مدل ChatGPT در دسترس این حساب درخواست را نپذیرفت. شاید از تصویر پشتیبانی نکند.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'مرورگر باز نشد. مرورگر پیش‌فرض خود را بررسی کنید و دوباره تلاش کنید.',
+  'The connection was interrupted. Try again.':
+    'اتصال قطع شد. دوباره تلاش کنید.',
+  'The conversation could not be sent. Clear it and try again.':
+    'گفت‌وگو ارسال نشد. آن را پاک کنید و دوباره تلاش کنید.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'هویت تازه‌شدهٔ ChatGPT با این حساب مطابقت ندارد. دوباره وارد شوید.',
+  'The request could not be processed.': 'درخواست پردازش نشد.',
+  'The request to ChatGPT failed.': 'درخواست به ChatGPT ناموفق بود.',
+  'The response ended before completion. Try again.':
+    'پاسخ پیش از کامل شدن تمام شد. دوباره تلاش کنید.',
+  'The response stream contained an invalid event. Try again.':
+    'پاسخ دادهٔ نامعتبر داشت. دوباره تلاش کنید.',
+  'The response was too large. Try a smaller request.':
+    'پاسخ بیش از حد بزرگ بود. درخواست کوچک‌تری امتحان کنید.',
+  'The saved ChatGPT connection could not be read.':
+    'اتصال ذخیره‌شدهٔ ChatGPT خوانده نشد.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'تصویر صفحه و درخواست کپی شدند، اما مرورگر باز نشد.',
+  'The screenshot could not be copied.': 'تصویر صفحه کپی نشد.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'درگاه ورود در دسترس نیست. نسخهٔ دیگر Tracer را ببندید و دوباره تلاش کنید.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'این ورود حساب دیگری از ChatGPT را برگرداند. به حساب اصلی وارد شوید، یا «استفاده از حساب دیگری در ChatGPT» را انتخاب کنید.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer نتوانست میان‌بر تصویر صفحه را ثبت کند. شاید برنامهٔ دیگری از قبل از آن استفاده می‌کند.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'از یک کلید تغییردهنده و یک کلید دیگر استفاده کنید، مثلاً Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'وارد شده‌اید، اما استفاده از طرح ChatGPT فعال نیست. اجازه دهید و دوباره تلاش کنید.',
 };

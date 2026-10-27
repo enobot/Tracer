@@ -179,4 +179,86 @@ export default {
   'Tracer is still running': 'Tracer vẫn đang chạy',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'Nhấn {hotkey} để chụp. Để thoát, nhấp chuột phải vào biểu tượng Tracer gần đồng hồ (có thể nằm dưới mũi tên ^) rồi chọn Thoát Tracer.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.': 'Đang có một yêu cầu ChatGPT chạy.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT chưa thể làm mới kết nối này. Hãy thử lại sau ít phút.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT không nhận được ảnh chụp này. Hãy chụp màn hình lại.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT không chấp nhận kết nối này. Hãy đăng nhập lại. Nếu Tracer vẫn còn trong mục Kết nối đăng nhập (Login connections) ở cài đặt ChatGPT, hãy gỡ nó ở đó.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT chưa hoàn tất việc đăng ký ứng dụng. Hãy thử đăng nhập lại.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT không xác nhận các quyền đã cấp. Hãy đăng nhập lại.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT không đưa ra mô hình nào mà kết nối này dùng được.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT không trả về danh tính có thể xác minh. Hãy đăng nhập lại.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT không trả về phản hồi như mong đợi. Hãy thử lại.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'Việc xác minh danh tính ChatGPT tạm thời không khả dụng. Hãy thử lại sau ít phút.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT đã từ chối yêu cầu này. Tài khoản, không gian làm việc hoặc khu vực của bạn có thể không cho phép dùng gói trong ứng dụng khác.',
+  'ChatGPT returned an empty answer.': 'ChatGPT trả về câu trả lời trống.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT trả về mã thông báo không hợp lệ. Hãy đăng nhập lại.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT trả về thông tin đăng nhập không đầy đủ. Hãy đăng nhập lại.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'Không thể xác minh cấu hình đăng nhập ChatGPT.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'Không thể lưu thông tin đăng nhập ChatGPT trên máy tính này.',
+  'ChatGPT sign-in was not completed.': 'Việc đăng nhập ChatGPT chưa hoàn tất.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT đã dừng trước khi trả lời xong. Hãy thử lại.',
+  'Choose Gemini or Claude to open a browser.':
+    'Hãy chọn Gemini hoặc Claude để mở trình duyệt.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'Hãy hoàn tất bước đăng nhập ChatGPT đang mở trong trình duyệt.',
+  'Finish the current ChatGPT request before signing in.':
+    'Hãy đợi yêu cầu ChatGPT hiện tại xong rồi mới đăng nhập.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'Thông tin đăng nhập ChatGPT trên máy đã được xóa, nhưng chưa xác nhận được việc ngắt kết nối từ xa. Hãy ngắt kết nối Tracer trong cài đặt ChatGPT.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'Đã đăng nhập. Không thể ngắt kết nối từ xa tài khoản ChatGPT trước đó. Hãy gỡ Tracer trong mục Kết nối đăng nhập (Login connections) ở cài đặt ChatGPT của tài khoản đó.',
+  'That shortcut is already in use. Choose another combination.':
+    'Phím tắt đó đang được dùng. Hãy chọn tổ hợp phím khác.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'Không thể xác minh danh tính ChatGPT. Hãy đăng nhập lại.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'Mô hình ChatGPT dành cho tài khoản này không chấp nhận yêu cầu. Có thể mô hình không hỗ trợ hình ảnh.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'Không mở được trình duyệt. Hãy kiểm tra trình duyệt mặc định rồi thử lại.',
+  'The connection was interrupted. Try again.':
+    'Kết nối bị gián đoạn. Hãy thử lại.',
+  'The conversation could not be sent. Clear it and try again.':
+    'Không gửi được cuộc trò chuyện. Hãy xóa nó rồi thử lại.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'Danh tính ChatGPT sau khi làm mới không khớp với tài khoản này. Hãy đăng nhập lại.',
+  'The request could not be processed.': 'Không thể xử lý yêu cầu.',
+  'The request to ChatGPT failed.': 'Yêu cầu gửi đến ChatGPT không thành công.',
+  'The response ended before completion. Try again.':
+    'Phản hồi kết thúc trước khi hoàn tất. Hãy thử lại.',
+  'The response stream contained an invalid event. Try again.':
+    'Phản hồi chứa dữ liệu không hợp lệ. Hãy thử lại.',
+  'The response was too large. Try a smaller request.':
+    'Phản hồi quá lớn. Hãy thử một yêu cầu nhỏ hơn.',
+  'The saved ChatGPT connection could not be read.':
+    'Không đọc được kết nối ChatGPT đã lưu.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'Đã sao chép ảnh chụp và lời nhắc, nhưng không mở được trình duyệt.',
+  'The screenshot could not be copied.': 'Không sao chép được ảnh chụp.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'Cổng đăng nhập đang bận. Hãy đóng bản Tracer khác đang chạy rồi thử lại.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'Lần đăng nhập này trả về một tài khoản ChatGPT khác. Hãy đăng nhập vào tài khoản ban đầu, hoặc chọn Dùng tài khoản ChatGPT khác.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer không đăng ký được phím tắt chụp màn hình. Có thể một ứng dụng khác đang dùng phím tắt này.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'Hãy dùng một phím bổ trợ và một phím, ví dụ Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'Bạn đã đăng nhập nhưng chưa bật quyền dùng gói ChatGPT. Hãy cho phép dùng gói rồi thử lại.',
 };

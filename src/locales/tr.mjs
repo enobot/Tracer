@@ -181,4 +181,87 @@ export default {
   'Tracer is still running': 'Tracer çalışmaya devam ediyor',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'Yakalamak için {hotkey} tuşlarına basın. Çıkmak için saatin yanındaki Tracer simgesine sağ tıklayın (^ okunun altında olabilir) ve “Tracer’dan çık” seçeneğini seçin.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'Zaten devam eden bir ChatGPT isteği var.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT bu bağlantıyı henüz yenileyemiyor. Biraz sonra tekrar deneyin.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT bu ekran görüntüsünü kabul edemedi. Ekranı yeniden yakalayın.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT bu bağlantıyı kabul etmedi. Yeniden oturum açın. Tracer, ChatGPT ayarlarındaki Oturum açma bağlantıları (Login connections) bölümünde hâlâ görünüyorsa oradan kaldırın.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT uygulama kaydını tamamlamadı. Yeniden oturum açmayı deneyin.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT verilen izinleri onaylamadı. Yeniden oturum açın.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT bu bağlantının kullanabileceği bir model sunmadı.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT doğrulanabilir bir kimlik döndürmedi. Yeniden oturum açın.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT beklenen yanıtı döndürmedi. Tekrar deneyin.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'ChatGPT kimlik doğrulaması geçici olarak kullanılamıyor. Biraz sonra tekrar deneyin.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT bu isteği reddetti. Hesabınız, çalışma alanınız veya bölgeniz planın başka uygulamalarda kullanılmasına izin vermiyor olabilir.',
+  'ChatGPT returned an empty answer.': 'ChatGPT boş bir yanıt döndürdü.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT geçersiz bir belirteç döndürdü. Yeniden oturum açın.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT eksik kimlik bilgileri döndürdü. Yeniden oturum açın.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'ChatGPT oturum açma yapılandırması doğrulanamadı.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'ChatGPT oturumu bu bilgisayara kaydedilemedi.',
+  'ChatGPT sign-in was not completed.': 'ChatGPT’de oturum açma tamamlanmadı.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT yanıtı bitirmeden durdu. Tekrar deneyin.',
+  'Choose Gemini or Claude to open a browser.':
+    'Tarayıcıyı açmak için Gemini’yi veya Claude’u seçin.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'Tarayıcınızda zaten açık olan ChatGPT oturum açma işlemini tamamlayın.',
+  'Finish the current ChatGPT request before signing in.':
+    'Oturum açmadan önce devam eden ChatGPT isteğinin bitmesini bekleyin.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'ChatGPT kimlik bilgileri bu bilgisayardan kaldırıldı, ancak ChatGPT tarafında bağlantının kesildiği doğrulanamadı. Tracer’ın bağlantısını ChatGPT ayarlarından kesin.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'Oturum açıldı. Önceki ChatGPT hesabının bağlantısı uzaktan kesilemedi. O hesabın ChatGPT ayarlarında Oturum açma bağlantıları (Login connections) bölümünden Tracer’ı kaldırın.',
+  'That shortcut is already in use. Choose another combination.':
+    'Bu kısayol zaten kullanılıyor. Başka bir tuş birleşimi seçin.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'ChatGPT kimliği doğrulanamadı. Yeniden oturum açın.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'Bu hesabın kullanabildiği ChatGPT modeli isteği kabul etmedi. Model görüntüleri desteklemiyor olabilir.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'Tarayıcı açılamadı. Varsayılan tarayıcınızı kontrol edip tekrar deneyin.',
+  'The connection was interrupted. Try again.':
+    'Bağlantı kesildi. Tekrar deneyin.',
+  'The conversation could not be sent. Clear it and try again.':
+    'Sohbet gönderilemedi. Sohbeti temizleyip tekrar deneyin.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'Yenilenen ChatGPT kimliği bu hesapla eşleşmiyor. Yeniden oturum açın.',
+  'The request could not be processed.': 'İstek işlenemedi.',
+  'The request to ChatGPT failed.': 'ChatGPT isteği başarısız oldu.',
+  'The response ended before completion. Try again.':
+    'Yanıt tamamlanmadan sona erdi. Tekrar deneyin.',
+  'The response stream contained an invalid event. Try again.':
+    'Yanıt geçersiz veri içeriyordu. Tekrar deneyin.',
+  'The response was too large. Try a smaller request.':
+    'Yanıt çok büyük. Daha küçük bir istek deneyin.',
+  'The saved ChatGPT connection could not be read.':
+    'Kayıtlı ChatGPT bağlantısı okunamadı.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'Ekran görüntüsü ve istem kopyalandı, ancak tarayıcı açılamadı.',
+  'The screenshot could not be copied.': 'Ekran görüntüsü kopyalanamadı.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'Oturum açma bağlantı noktası kullanılamıyor. Diğer Tracer kopyasını kapatıp tekrar deneyin.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'Bu oturum açma işlemi farklı bir ChatGPT hesabı döndürdü. Önceki hesapla oturum açın veya “Başka bir ChatGPT hesabı kullan” seçeneğini seçin.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer ekran görüntüsü kısayolunu kaydedemedi. Başka bir uygulama bu kısayolu zaten kullanıyor olabilir.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'Bir değiştirici tuş ve bir tuş kullanın, örneğin Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'Oturum açtınız ancak ChatGPT planının kullanımı açık değil. Plan kullanımına izin verip tekrar deneyin.',
 };

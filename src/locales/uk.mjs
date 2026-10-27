@@ -182,4 +182,86 @@ export default {
   'Tracer is still running': 'Tracer продовжує працювати',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'Натисніть {hotkey}, щоб зробити знімок. Щоб вийти, клацніть правою кнопкою миші значок Tracer біля годинника (він може бути під стрілкою ^) і виберіть «Вийти з Tracer».',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.': 'Запит до ChatGPT уже виконується.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT поки не може оновити це підключення. Спробуйте ще раз трохи згодом.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT не прийняв цей знімок. Зробіть знімок екрана ще раз.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT не прийняв це підключення. Увійдіть знову. Якщо Tracer досі є в розділі підключень для входу (Login connections) у налаштуваннях ChatGPT, видаліть його там.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT не завершив реєстрацію застосунку. Спробуйте увійти знову.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT не підтвердив надані дозволи. Увійдіть знову.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT не запропонував жодної моделі, доступної для цього підключення.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT не повернув дані облікового запису, які можна перевірити. Увійдіть знову.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT не повернув очікувану відповідь. Спробуйте ще раз.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'Перевірка облікового запису ChatGPT тимчасово недоступна. Спробуйте ще раз трохи згодом.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT відхилив цей запит. Можливо, ваш обліковий запис, робочий простір або регіон не дозволяють використовувати тариф в інших застосунках.',
+  'ChatGPT returned an empty answer.': 'ChatGPT повернув порожню відповідь.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT повернув недійсний токен. Увійдіть знову.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT повернув неповні облікові дані. Увійдіть знову.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'Не вдалося перевірити налаштування входу в ChatGPT.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'Не вдалося зберегти вхід у ChatGPT на цьому комп’ютері.',
+  'ChatGPT sign-in was not completed.': 'Вхід у ChatGPT не завершено.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT зупинився, не завершивши відповідь. Спробуйте ще раз.',
+  'Choose Gemini or Claude to open a browser.':
+    'Виберіть Gemini або Claude, щоб відкрити браузер.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'Завершіть вхід у ChatGPT, уже відкритий у браузері.',
+  'Finish the current ChatGPT request before signing in.':
+    'Дочекайтеся завершення поточного запиту до ChatGPT, перш ніж входити.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'Облікові дані ChatGPT видалено з цього комп’ютера, але відключення на боці ChatGPT не підтверджено. Відключіть Tracer у налаштуваннях ChatGPT.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'Вхід виконано. Не вдалося віддалено відключити попередній обліковий запис ChatGPT. Видаліть Tracer у розділі підключень для входу (Login connections) у налаштуваннях ChatGPT цього облікового запису.',
+  'That shortcut is already in use. Choose another combination.':
+    'Це сполучення клавіш уже використовується. Виберіть інше.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'Не вдалося перевірити обліковий запис ChatGPT. Увійдіть знову.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'Модель ChatGPT, доступна цьому обліковому запису, не прийняла запит. Можливо, вона не підтримує зображення.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'Не вдалося відкрити браузер. Перевірте браузер за замовчуванням і спробуйте ще раз.',
+  'The connection was interrupted. Try again.':
+    'З’єднання перервалося. Спробуйте ще раз.',
+  'The conversation could not be sent. Clear it and try again.':
+    'Не вдалося надіслати розмову. Очистьте її та спробуйте ще раз.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'Оновлені дані ChatGPT не збігаються з цим обліковим записом. Увійдіть знову.',
+  'The request could not be processed.': 'Не вдалося обробити запит.',
+  'The request to ChatGPT failed.': 'Запит до ChatGPT не виконано.',
+  'The response ended before completion. Try again.':
+    'Відповідь обірвалася до завершення. Спробуйте ще раз.',
+  'The response stream contained an invalid event. Try again.':
+    'Відповідь містила недійсні дані. Спробуйте ще раз.',
+  'The response was too large. Try a smaller request.':
+    'Відповідь завелика. Спробуйте менший запит.',
+  'The saved ChatGPT connection could not be read.':
+    'Не вдалося прочитати збережене підключення до ChatGPT.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'Знімок і запит скопійовано, але браузер не вдалося відкрити.',
+  'The screenshot could not be copied.': 'Не вдалося скопіювати знімок.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'Порт для входу недоступний. Закрийте іншу копію Tracer і спробуйте ще раз.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'Під час входу отримано інший обліковий запис ChatGPT. Увійдіть у початковий обліковий запис або виберіть «Використати інший обліковий запис ChatGPT».',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer не вдалося зареєструвати сполучення клавіш для знімка. Можливо, його вже використовує інший застосунок.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'Використайте клавішу-модифікатор і ще одну клавішу, наприклад Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'Вхід виконано, але використання тарифу ChatGPT не дозволено. Дозвольте його й спробуйте ще раз.',
 };

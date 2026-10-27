@@ -174,4 +174,85 @@ export default {
   'Tracer is still running': 'Tracer ยังทำงานอยู่',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'กด {hotkey} เพื่อจับภาพ หากต้องการออก ให้คลิกขวาที่ไอคอน Tracer ใกล้นาฬิกา (อาจอยู่ใต้ลูกศร ^) แล้วเลือก ออกจาก Tracer',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.': 'มีคำขอ ChatGPT กำลังทำงานอยู่แล้ว',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT ยังรีเฟรชการเชื่อมต่อนี้ไม่ได้ โปรดลองใหม่ในอีกสักครู่',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT รับภาพหน้าจอนี้ไม่ได้ โปรดจับภาพหน้าจอใหม่',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT ไม่ยอมรับการเชื่อมต่อนี้ โปรดลงชื่อเข้าใช้อีกครั้ง หาก Tracer ยังอยู่ในการเชื่อมต่อการเข้าสู่ระบบ (Login connections) ในการตั้งค่า ChatGPT ให้ลบออกจากที่นั่น',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT ลงทะเบียนแอปไม่สำเร็จ โปรดลองลงชื่อเข้าใช้อีกครั้ง',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT ไม่ได้ยืนยันสิทธิ์ที่อนุญาต โปรดลงชื่อเข้าใช้อีกครั้ง',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT ไม่มีโมเดลที่การเชื่อมต่อนี้ใช้ได้',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT ไม่ได้ส่งข้อมูลตัวตนที่ตรวจสอบได้ โปรดลงชื่อเข้าใช้อีกครั้ง',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT ไม่ได้ส่งคำตอบตามที่คาดไว้ โปรดลองใหม่',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'การยืนยันตัวตนของ ChatGPT ใช้งานไม่ได้ชั่วคราว โปรดลองใหม่ในอีกสักครู่',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT ปฏิเสธคำขอนี้ บัญชี เวิร์กสเปซ หรือภูมิภาคของคุณอาจไม่อนุญาตให้ใช้แพ็กเกจในแอปอื่น',
+  'ChatGPT returned an empty answer.': 'ChatGPT ส่งคำตอบว่างเปล่ากลับมา',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT ส่งโทเค็นที่ไม่ถูกต้องกลับมา โปรดลงชื่อเข้าใช้อีกครั้ง',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT ส่งข้อมูลรับรองไม่ครบกลับมา โปรดลงชื่อเข้าใช้อีกครั้ง',
+  'ChatGPT sign-in configuration could not be verified.':
+    'ตรวจสอบการตั้งค่าการลงชื่อเข้าใช้ ChatGPT ไม่ได้',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'บันทึกการลงชื่อเข้าใช้ ChatGPT ในคอมพิวเตอร์เครื่องนี้ไม่ได้',
+  'ChatGPT sign-in was not completed.': 'การลงชื่อเข้าใช้ ChatGPT ไม่เสร็จสมบูรณ์',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT หยุดก่อนตอบเสร็จ โปรดลองใหม่',
+  'Choose Gemini or Claude to open a browser.':
+    'เลือก Gemini หรือ Claude เพื่อเปิดเบราว์เซอร์',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'ลงชื่อเข้าใช้ ChatGPT ที่เปิดอยู่ในเบราว์เซอร์ให้เสร็จก่อน',
+  'Finish the current ChatGPT request before signing in.':
+    'รอให้คำขอ ChatGPT ปัจจุบันเสร็จก่อนลงชื่อเข้าใช้',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'ลบข้อมูลรับรอง ChatGPT ออกจากคอมพิวเตอร์นี้แล้ว แต่ยืนยันการยกเลิกการเชื่อมต่อฝั่ง ChatGPT ไม่ได้ โปรดยกเลิกการเชื่อมต่อ Tracer ในการตั้งค่า ChatGPT',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'ลงชื่อเข้าใช้แล้ว แต่ยกเลิกการเชื่อมต่อบัญชี ChatGPT ก่อนหน้าจากระยะไกลไม่ได้ โปรดลบ Tracer ในการเชื่อมต่อการเข้าสู่ระบบ (Login connections) ในการตั้งค่า ChatGPT ของบัญชีนั้น',
+  'That shortcut is already in use. Choose another combination.':
+    'แป้นลัดนี้ถูกใช้อยู่แล้ว โปรดเลือกชุดแป้นอื่น',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'ตรวจสอบตัวตน ChatGPT ไม่ได้ โปรดลงชื่อเข้าใช้อีกครั้ง',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'โมเดล ChatGPT ที่บัญชีนี้ใช้ได้ไม่รับคำขอนี้ โมเดลอาจไม่รองรับรูปภาพ',
+  'The browser could not be opened. Check your default browser and try again.':
+    'เปิดเบราว์เซอร์ไม่ได้ โปรดตรวจสอบเบราว์เซอร์เริ่มต้นแล้วลองใหม่',
+  'The connection was interrupted. Try again.': 'การเชื่อมต่อขาดหาย โปรดลองใหม่',
+  'The conversation could not be sent. Clear it and try again.':
+    'ส่งบทสนทนาไม่ได้ โปรดล้างบทสนทนาแล้วลองใหม่',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'ข้อมูลตัวตน ChatGPT ที่รีเฟรชแล้วไม่ตรงกับบัญชีนี้ โปรดลงชื่อเข้าใช้อีกครั้ง',
+  'The request could not be processed.': 'ประมวลผลคำขอไม่ได้',
+  'The request to ChatGPT failed.': 'คำขอไปยัง ChatGPT ล้มเหลว',
+  'The response ended before completion. Try again.':
+    'คำตอบจบก่อนเสร็จสมบูรณ์ โปรดลองใหม่',
+  'The response stream contained an invalid event. Try again.':
+    'คำตอบมีข้อมูลที่ไม่ถูกต้อง โปรดลองใหม่',
+  'The response was too large. Try a smaller request.':
+    'คำตอบใหญ่เกินไป โปรดลองคำขอที่เล็กลง',
+  'The saved ChatGPT connection could not be read.':
+    'อ่านการเชื่อมต่อ ChatGPT ที่บันทึกไว้ไม่ได้',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'คัดลอกภาพหน้าจอและพรอมต์แล้ว แต่เปิดเบราว์เซอร์ไม่ได้',
+  'The screenshot could not be copied.': 'คัดลอกภาพหน้าจอไม่ได้',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'พอร์ตสำหรับลงชื่อเข้าใช้ไม่ว่าง โปรดปิด Tracer อีกตัวแล้วลองใหม่',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'การลงชื่อเข้าใช้ครั้งนี้ได้บัญชี ChatGPT อื่น โปรดลงชื่อเข้าใช้บัญชีเดิม หรือเลือก ใช้บัญชี ChatGPT อื่น',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer ลงทะเบียนแป้นลัดจับภาพหน้าจอไม่ได้ แอปอื่นอาจใช้แป้นลัดนี้อยู่แล้ว',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'ใช้แป้นปรับแต่งร่วมกับแป้นอื่น เช่น Ctrl+Shift+Space',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'คุณลงชื่อเข้าใช้แล้ว แต่ยังไม่ได้เปิดใช้แพ็กเกจ ChatGPT โปรดอนุญาตแล้วลองใหม่',
 };

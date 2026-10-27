@@ -183,4 +183,87 @@ export default {
   'Tracer is still running': 'Tracer masih berjalan',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     'Tekan {hotkey} untuk menangkap layar. Untuk keluar, klik kanan ikon Tracer di dekat jam (mungkin ada di bawah panah ^) lalu pilih Keluar dari Tracer.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'Permintaan ChatGPT sedang berjalan.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT belum bisa memperbarui koneksi ini. Coba lagi sebentar lagi.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT tidak bisa menerima tangkapan layar ini. Tangkap layar lagi.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT tidak menerima koneksi ini. Masuk lagi. Jika Tracer masih muncul di Koneksi login (Login connections) pada pengaturan ChatGPT, hapus di sana.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT tidak menyelesaikan pendaftaran aplikasi. Coba masuk lagi.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT tidak mengonfirmasi izin yang diberikan. Masuk lagi.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT tidak menyediakan model yang bisa dipakai koneksi ini.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT tidak mengirim identitas yang bisa diverifikasi. Masuk lagi.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT tidak mengirim respons yang diharapkan. Coba lagi.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'Verifikasi identitas ChatGPT sedang tidak tersedia. Coba lagi sebentar lagi.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT menolak permintaan ini. Akun, ruang kerja, atau wilayah Anda mungkin tidak mengizinkan penggunaan paket di aplikasi lain.',
+  'ChatGPT returned an empty answer.': 'ChatGPT mengirim jawaban kosong.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT mengirim token yang tidak valid. Masuk lagi.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT mengirim kredensial yang tidak lengkap. Masuk lagi.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'Konfigurasi masuk ChatGPT tidak bisa diverifikasi.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'Data masuk ChatGPT tidak bisa disimpan di komputer ini.',
+  'ChatGPT sign-in was not completed.':
+    'Proses masuk ke ChatGPT tidak selesai.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT berhenti sebelum jawabannya selesai. Coba lagi.',
+  'Choose Gemini or Claude to open a browser.':
+    'Pilih Gemini atau Claude untuk membuka browser.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'Selesaikan proses masuk ChatGPT yang sudah terbuka di browser Anda.',
+  'Finish the current ChatGPT request before signing in.':
+    'Tunggu permintaan ChatGPT yang sedang berjalan selesai sebelum masuk.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'Kredensial ChatGPT di komputer ini sudah dihapus, tetapi pemutusan dari sisi ChatGPT belum bisa dipastikan. Putuskan Tracer di pengaturan ChatGPT.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'Berhasil masuk. Akun ChatGPT sebelumnya tidak bisa diputuskan dari jauh. Hapus Tracer di Koneksi login (Login connections) pada pengaturan ChatGPT akun tersebut.',
+  'That shortcut is already in use. Choose another combination.':
+    'Pintasan itu sudah dipakai. Pilih kombinasi lain.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'Identitas ChatGPT tidak bisa diverifikasi. Masuk lagi.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'Model ChatGPT yang tersedia untuk akun ini tidak menerima permintaan. Model itu mungkin tidak mendukung gambar.',
+  'The browser could not be opened. Check your default browser and try again.':
+    'Browser tidak bisa dibuka. Periksa browser default Anda lalu coba lagi.',
+  'The connection was interrupted. Try again.': 'Koneksi terputus. Coba lagi.',
+  'The conversation could not be sent. Clear it and try again.':
+    'Percakapan tidak bisa dikirim. Hapus percakapan lalu coba lagi.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    'Identitas ChatGPT yang diperbarui tidak cocok dengan akun ini. Masuk lagi.',
+  'The request could not be processed.': 'Permintaan tidak bisa diproses.',
+  'The request to ChatGPT failed.': 'Permintaan ke ChatGPT gagal.',
+  'The response ended before completion. Try again.':
+    'Respons berhenti sebelum selesai. Coba lagi.',
+  'The response stream contained an invalid event. Try again.':
+    'Respons berisi data yang tidak valid. Coba lagi.',
+  'The response was too large. Try a smaller request.':
+    'Respons terlalu besar. Coba permintaan yang lebih kecil.',
+  'The saved ChatGPT connection could not be read.':
+    'Koneksi ChatGPT yang tersimpan tidak bisa dibaca.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'Tangkapan layar dan prompt sudah disalin, tetapi browser tidak bisa dibuka.',
+  'The screenshot could not be copied.': 'Tangkapan layar tidak bisa disalin.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'Port untuk masuk tidak tersedia. Tutup salinan Tracer lain lalu coba lagi.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'Proses masuk ini mengembalikan akun ChatGPT lain. Masuk ke akun semula, atau pilih Gunakan akun ChatGPT lain.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer tidak bisa mendaftarkan pintasan tangkapan layar. Mungkin aplikasi lain sudah memakainya.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    'Gunakan tombol pengubah dan satu tombol lain, misalnya Ctrl+Shift+Space.',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'Anda sudah masuk, tetapi penggunaan paket ChatGPT belum diizinkan. Izinkan, lalu coba lagi.',
 };

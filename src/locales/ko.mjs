@@ -179,4 +179,86 @@ export default {
   'Tracer is still running': 'Tracer가 계속 실행 중입니다',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     '{hotkey}를 누르면 캡처할 수 있습니다. 종료하려면 시계 근처의 Tracer 아이콘을 마우스 오른쪽 버튼으로 클릭하고(^ 화살표 안에 있을 수 있습니다) Tracer 종료를 선택하세요.',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.': 'ChatGPT 요청이 이미 진행 중입니다.',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT가 아직 이 연결을 갱신할 수 없습니다. 잠시 후 다시 시도하세요.',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT가 이 스크린샷을 받지 못했습니다. 화면을 다시 캡처하세요.',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT가 이 연결을 허용하지 않았습니다. 다시 로그인하세요. ChatGPT 설정의 로그인 연결(Login connections)에 Tracer가 아직 있으면 거기서 삭제하세요.',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT가 앱 등록을 완료하지 않았습니다. 다시 로그인해 보세요.',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT가 허용된 권한을 확인해 주지 않았습니다. 다시 로그인하세요.',
+  'ChatGPT did not list a model this connection can use.':
+    'ChatGPT가 이 연결에서 사용할 수 있는 모델을 제공하지 않았습니다.',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT가 확인 가능한 계정 정보를 보내지 않았습니다. 다시 로그인하세요.',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT가 예상한 응답을 보내지 않았습니다. 다시 시도하세요.',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'ChatGPT 계정 확인을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도하세요.',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT가 이 요청을 거부했습니다. 계정, 워크스페이스 또는 지역에서 다른 앱의 요금제 사용을 허용하지 않을 수 있습니다.',
+  'ChatGPT returned an empty answer.': 'ChatGPT가 빈 답변을 보냈습니다.',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT가 잘못된 토큰을 보냈습니다. 다시 로그인하세요.',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT가 불완전한 인증 정보를 보냈습니다. 다시 로그인하세요.',
+  'ChatGPT sign-in configuration could not be verified.':
+    'ChatGPT 로그인 구성을 확인하지 못했습니다.',
+  'ChatGPT sign-in could not be saved on this computer.':
+    '이 컴퓨터에 ChatGPT 로그인을 저장하지 못했습니다.',
+  'ChatGPT sign-in was not completed.': 'ChatGPT 로그인이 완료되지 않았습니다.',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT가 답변을 끝내기 전에 멈췄습니다. 다시 시도하세요.',
+  'Choose Gemini or Claude to open a browser.':
+    '브라우저를 열려면 Gemini 또는 Claude를 선택하세요.',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    '브라우저에 이미 열려 있는 ChatGPT 로그인을 마치세요.',
+  'Finish the current ChatGPT request before signing in.':
+    '진행 중인 ChatGPT 요청이 끝난 뒤에 로그인하세요.',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    '이 컴퓨터의 ChatGPT 인증 정보는 삭제했지만 원격 연결 해제를 확인하지 못했습니다. ChatGPT 설정에서 Tracer 연결을 해제하세요.',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    '로그인했습니다. 이전 ChatGPT 계정의 연결을 원격으로 해제하지 못했습니다. 그 계정의 ChatGPT 설정에서 로그인 연결(Login connections)의 Tracer를 삭제하세요.',
+  'That shortcut is already in use. Choose another combination.':
+    '이미 사용 중인 단축키입니다. 다른 조합을 선택하세요.',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'ChatGPT 계정을 확인하지 못했습니다. 다시 로그인하세요.',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    '이 계정에서 사용할 수 있는 ChatGPT 모델이 요청을 받지 않았습니다. 이미지를 지원하지 않는 모델일 수 있습니다.',
+  'The browser could not be opened. Check your default browser and try again.':
+    '브라우저를 열지 못했습니다. 기본 브라우저를 확인하고 다시 시도하세요.',
+  'The connection was interrupted. Try again.':
+    '연결이 끊겼습니다. 다시 시도하세요.',
+  'The conversation could not be sent. Clear it and try again.':
+    '대화를 보내지 못했습니다. 대화를 지우고 다시 시도하세요.',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    '갱신된 ChatGPT 계정 정보가 이 계정과 일치하지 않습니다. 다시 로그인하세요.',
+  'The request could not be processed.': '요청을 처리하지 못했습니다.',
+  'The request to ChatGPT failed.': 'ChatGPT 요청이 실패했습니다.',
+  'The response ended before completion. Try again.':
+    '응답이 끝나기 전에 중단되었습니다. 다시 시도하세요.',
+  'The response stream contained an invalid event. Try again.':
+    '응답에 잘못된 데이터가 있었습니다. 다시 시도하세요.',
+  'The response was too large. Try a smaller request.':
+    '응답이 너무 큽니다. 더 작은 요청으로 시도하세요.',
+  'The saved ChatGPT connection could not be read.':
+    '저장된 ChatGPT 연결을 읽지 못했습니다.',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    '스크린샷과 프롬프트를 복사했지만 브라우저를 열지 못했습니다.',
+  'The screenshot could not be copied.': '스크린샷을 복사하지 못했습니다.',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    '로그인 포트를 사용할 수 없습니다. 다른 Tracer를 닫고 다시 시도하세요.',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    '이번 로그인에서 다른 ChatGPT 계정이 반환되었습니다. 원래 계정으로 로그인하거나 ‘다른 ChatGPT 계정 사용’을 선택하세요.',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer가 스크린샷 단축키를 등록하지 못했습니다. 다른 앱이 이미 사용 중일 수 있습니다.',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    '보조 키와 다른 키를 함께 사용하세요. 예: Ctrl+Shift+Space',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    '로그인했지만 ChatGPT 요금제 사용이 허용되지 않았습니다. 허용한 뒤 다시 시도하세요.',
 };

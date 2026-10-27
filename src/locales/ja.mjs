@@ -183,4 +183,89 @@ export default {
   'Tracer is still running': 'Tracer は実行中です',
   'Press {hotkey} to capture. To exit, right-click the Tracer icon near the clock (it may be under the ^ arrow) and choose Quit Tracer.':
     '{hotkey} を押すとキャプチャできます。終了するには、時計の近くにある Tracer のアイコンを右クリックし（^ の矢印の中にある場合があります）、「Tracer を終了」を選びます。',
+
+  // Errors from the main process
+  'A ChatGPT request is already running.':
+    'ChatGPT へのリクエストがすでに実行中です。',
+  'ChatGPT cannot refresh this connection yet. Try again shortly.':
+    'ChatGPT はまだこの接続を更新できません。しばらくしてから再試行してください。',
+  'ChatGPT could not accept this screenshot. Capture the screen again.':
+    'ChatGPT はこのスクリーンショットを受け付けませんでした。もう一度画面をキャプチャしてください。',
+  'ChatGPT did not accept this connection. Sign in again. If Tracer still appears under Login connections in ChatGPT settings, remove it there.':
+    'ChatGPT がこの接続を受け付けませんでした。もう一度サインインしてください。ChatGPT の設定のログイン接続（Login connections）に Tracer が残っている場合は、そこで削除してください。',
+  'ChatGPT did not complete app registration. Try signing in again.':
+    'ChatGPT がアプリの登録を完了しませんでした。もう一度サインインしてください。',
+  'ChatGPT did not confirm the granted permissions. Sign in again.':
+    'ChatGPT が許可された権限を確認しませんでした。もう一度サインインしてください。',
+  'ChatGPT did not list a model this connection can use.':
+    'この接続で使えるモデルが ChatGPT から提示されませんでした。',
+  'ChatGPT did not return a verifiable identity. Sign in again.':
+    'ChatGPT から確認可能な ID が返されませんでした。もう一度サインインしてください。',
+  'ChatGPT did not return the expected response stream. Try again.':
+    'ChatGPT から想定した応答が返されませんでした。再試行してください。',
+  'ChatGPT identity verification is temporarily unavailable. Try again shortly.':
+    'ChatGPT の本人確認が一時的に利用できません。しばらくしてから再試行してください。',
+  'ChatGPT refused this request. Your account, workspace, or region may not allow plan usage in other apps.':
+    'ChatGPT がこのリクエストを拒否しました。アカウント、ワークスペース、または地域によっては、ほかのアプリでのプラン利用が許可されていない場合があります。',
+  'ChatGPT returned an empty answer.': 'ChatGPT から空の回答が返されました。',
+  'ChatGPT returned an invalid token response. Sign in again.':
+    'ChatGPT から無効なトークンが返されました。もう一度サインインしてください。',
+  'ChatGPT returned incomplete credentials. Sign in again.':
+    'ChatGPT から不完全な認証情報が返されました。もう一度サインインしてください。',
+  'ChatGPT sign-in configuration could not be verified.':
+    'ChatGPT のサインイン設定を確認できませんでした。',
+  'ChatGPT sign-in could not be saved on this computer.':
+    'このコンピューターに ChatGPT のサインイン情報を保存できませんでした。',
+  'ChatGPT sign-in was not completed.':
+    'ChatGPT へのサインインが完了しませんでした。',
+  'ChatGPT stopped before completing the response. Try again.':
+    'ChatGPT が回答の途中で停止しました。再試行してください。',
+  'Choose Gemini or Claude to open a browser.':
+    'ブラウザーを開くには Gemini か Claude を選んでください。',
+  'Finish the ChatGPT sign-in already open in your browser.':
+    'ブラウザーですでに開いている ChatGPT のサインインを完了してください。',
+  'Finish the current ChatGPT request before signing in.':
+    '現在の ChatGPT へのリクエストが終わってからサインインしてください。',
+  'Local ChatGPT credentials were removed, but remote disconnection could not be confirmed. Disconnect Tracer in ChatGPT settings.':
+    'このコンピューターから ChatGPT の認証情報を削除しましたが、ChatGPT 側での接続解除を確認できませんでした。ChatGPT の設定で Tracer の接続を解除してください。',
+  'Signed in. The previous ChatGPT account could not be disconnected remotely. Remove Tracer under Login connections in that account’s ChatGPT settings.':
+    'サインインしました。以前の ChatGPT アカウントをリモートで接続解除できませんでした。そのアカウントの ChatGPT 設定のログイン接続（Login connections）から Tracer を削除してください。',
+  'That shortcut is already in use. Choose another combination.':
+    'そのショートカットはすでに使われています。別の組み合わせを選んでください。',
+  'The ChatGPT identity could not be verified. Sign in again.':
+    'ChatGPT の ID を確認できませんでした。もう一度サインインしてください。',
+  'The ChatGPT model available to this account did not accept this request. It may not support image input.':
+    'このアカウントで使える ChatGPT モデルがリクエストを受け付けませんでした。画像に対応していない可能性があります。',
+  'The browser could not be opened. Check your default browser and try again.':
+    'ブラウザーを開けませんでした。既定のブラウザーを確認してから再試行してください。',
+  'The connection was interrupted. Try again.':
+    '接続が中断されました。再試行してください。',
+  'The conversation could not be sent. Clear it and try again.':
+    '会話を送信できませんでした。会話をクリアしてから再試行してください。',
+  'The refreshed ChatGPT identity does not match this account. Sign in again.':
+    '更新後の ChatGPT の ID がこのアカウントと一致しません。もう一度サインインしてください。',
+  'The request could not be processed.': 'リクエストを処理できませんでした。',
+  'The request to ChatGPT failed.': 'ChatGPT へのリクエストが失敗しました。',
+  'The response ended before completion. Try again.':
+    '応答が途中で終了しました。再試行してください。',
+  'The response stream contained an invalid event. Try again.':
+    '応答に無効なデータが含まれていました。再試行してください。',
+  'The response was too large. Try a smaller request.':
+    '応答が大きすぎます。もっと小さなリクエストで試してください。',
+  'The saved ChatGPT connection could not be read.':
+    '保存された ChatGPT の接続を読み込めませんでした。',
+  'The screenshot and prompt were copied, but the browser could not be opened.':
+    'スクリーンショットとプロンプトをコピーしましたが、ブラウザーを開けませんでした。',
+  'The screenshot could not be copied.':
+    'スクリーンショットをコピーできませんでした。',
+  'The sign-in port is unavailable. Close another copy of Tracer and try again.':
+    'サインイン用のポートを使用できません。ほかの Tracer を閉じてから再試行してください。',
+  'This sign-in returned a different ChatGPT account. Sign in to the original account, or choose Use a different ChatGPT account.':
+    'このサインインでは別の ChatGPT アカウントが返されました。元のアカウントにサインインするか、「別の ChatGPT アカウントを使う」を選んでください。',
+  'Tracer could not register the screenshot shortcut. Another application may already be using it.':
+    'Tracer がスクリーンショット用のショートカットを登録できませんでした。ほかのアプリがすでに使っている可能性があります。',
+  'Use a modifier and a key, such as Ctrl+Shift+Space.':
+    '修飾キーとほかのキーを組み合わせてください（例: Ctrl+Shift+Space）。',
+  'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage, then try again.':
+    'サインインしていますが、ChatGPT プランの利用が許可されていません。許可してから再試行してください。',
 };
