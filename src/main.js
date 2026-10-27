@@ -366,8 +366,11 @@ async function beginRegionSelect() {
   try {
     if (!activeWebContents()) throw new Error('missing');
     returnToTray = Boolean(tray) && !mainWindow.isVisible();
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide();
-    await delay(150);
+    // Give an on-screen window time to disappear so it isn't in the capture.
+    // From the tray or minimized there is nothing to wait for.
+    const onScreen = mainWindow.isVisible() && !mainWindow.isMinimized();
+    mainWindow.hide();
+    if (onScreen) await delay(150);
     if (activeSession !== id) {
       frozen.clear();
       return;

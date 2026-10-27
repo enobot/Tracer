@@ -83,6 +83,11 @@ describe('Electron source boundaries', () => {
       main,
       /if \(outcome !== 'cancel' \|\| !returnToTray\) restoreMain\(\);/,
     );
+    // The 150 ms wait before capturing applies only to a window on screen.
+    assert.match(
+      main,
+      /const onScreen = mainWindow\.isVisible\(\) && !mainWindow\.isMinimized\(\);\s*mainWindow\.hide\(\);\s*if \(onScreen\) await delay\(150\);/,
+    );
     assert.match(
       main,
       /'tracer:set-language', \(event, code\) => \{\s*requireSender\(event\);\s*if \(!isLanguageCode\(code\)\) return/,

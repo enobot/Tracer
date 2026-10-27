@@ -972,6 +972,74 @@ describe('ChatGPT sign-in runtime', () => {
     );
   });
 
+  it('reports a lost connection plainly and keeps the sign-in', async () => {
+    const message = (fail) => async (url) => {
+      const href = String(url);
+      if (href.endsWith('/v1/models')) return listedModels();
+      if (href.endsWith('/v1/responses')) return fail();
+      throw new Error(`unexpected ${href}`);
+    };
+    const turn = [{ role: 'user', text: 'Hi', image: SHOT }];
+
+    // Offline before the request starts.
+    const offline = runtimeFor(
+      message(() => {
+        throw new TypeError('fetch failed');
+      }),
+      async () => {},
+    );
+    seedConnection(offline.disk);
+    await assert.rejects(offline.runtime.respond(turn), {
+      message:
+        'Tracer could not reach ChatGPT. Check your connection and try again.',
+    });
+    assert.equal((await offline.runtime.getSession()).status, 'connected');
+
+    // The connection drops while the answer streams in.
+    const dropped = runtimeFor(
+      message(
+        () =>
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.error(new Error('socket hang up'));
+              },
+            }),
+            { headers: { 'content-type': 'text/event-stream' } },
+          ),
+      ),
+      async () => {},
+    );
+    seedConnection(dropped.disk);
+    await assert.rejects(dropped.runtime.respond(turn), {
+      message: 'The connection was interrupted. Try again.',
+    });
+    assert.equal((await dropped.runtime.getSession()).status, 'connected');
+  });
+
+  it('stops reading a response stream larger than 2 MB', async () => {
+    const huge = `data: ${JSON.stringify({
+      type: 'response.output_text.delta',
+      delta: 'a'.repeat(2_100_000),
+    })}\n\n`;
+    const fetchImpl = async (url) => {
+      const href = String(url);
+      if (href.endsWith('/v1/models')) return listedModels();
+      if (href.endsWith('/v1/responses')) {
+        return new Response(huge, {
+          headers: { 'content-type': 'text/event-stream' },
+        });
+      }
+      throw new Error(`unexpected ${href}`);
+    };
+    const { runtime, disk } = runtimeFor(fetchImpl, async () => {});
+    seedConnection(disk);
+    await assert.rejects(
+      runtime.respond([{ role: 'user', text: 'Hi', image: SHOT }]),
+      { message: 'The response was too large. Try a smaller request.' },
+    );
+  });
+
   it('closes the response stream when ChatGPT sends an invalid event', async () => {
     let released = false;
     const fetchImpl = async (url, options = {}) => {
