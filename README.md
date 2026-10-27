@@ -1,58 +1,193 @@
 # Tracer
 
-Tracer is a free Windows desktop app that captures a screen and asks ChatGPT about it. The request uses the person's own ChatGPT Plus or Pro plan. Tracer does not charge for the model and does not ask for an API key.
+Tracer is a Windows desktop app for asking questions about whatever is on your screen. You press a shortcut, drag over part of the screen, and Tracer sends that picture with your question to ChatGPT using your own ChatGPT plan. The answer appears in the Tracer window, and you can keep asking follow-up questions about the same screenshot.
 
-Gemini and Claude stay manual. Tracer can open the official site and copy the screenshot and prompt. It does not sign in to those accounts.
+**Status:** working prototype, not released yet. The first live, signed-in ChatGPT run succeeded on 26 October 2026: two captures were analyzed, one of them translated into Vietnamese. There is no installer for download yet, and the app is unsigned.
 
-## What happens
+## Why I built it
 
-1. Press `Ctrl+Shift+Space`, or the shortcut you set. Tracer hides its window and freezes each monitor.
-2. Drag with the left button to capture that area, or right-click to capture the monitor under the pointer. Escape cancels and keeps the previous preview.
-3. The window then shows a preview. Nothing is uploaded yet.
-4. Edit the prompt, or pick one from Past Prompts, Favorites, or Saved Prompts. Ctrl+Enter submits it. The File menu has the same command.
-5. For ChatGPT, open the account chip and choose **Continue with ChatGPT** if you are not already connected.
-6. The answer appears in Tracer. A follow-up sends the screenshot again with the conversation, so it uses more of the plan allowance.
-7. **Remove preview** drops the screenshot and the conversation. **Disconnect** revokes the ChatGPT refresh token and deletes the local credential.
+I kept switching between apps to translate text or ask about something on my screen: copy it, open a browser tab, paste, wait, switch back. I wanted that to be one shortcut. Part of the idea came from watching my parents deal with English-language content on their screens, where they needed a translation or an explanation of what they were looking at.
 
-## ChatGPT
+Tracer is for people who read on-screen content in a second language, students, and anyone who wants to ask about what they see without leaving the app they are in.
 
-Sign-in follows OpenAI's Sign in with ChatGPT flow for a local open-source app:
+## Features
 
-- The system browser opens `https://auth.openai.com`. Tracer never sees the password.
-- The callback is `http://127.0.0.1:<port>/auth/callback` with PKCE. The page does not echo the code.
-- Plan use requires the `chatgpt.tokens.use.direct` permission. Sign-in alone is not enough. A free ChatGPT account is not described as eligible.
-- Analysis calls `POST https://api.openai.com/v1/responses` with `store: false` and `stream: true`. The model is the first one the account lists, not a key baked into Tracer.
-- The screenshot is sent as an `input_image` data URL. OpenAI's plan-usage preview says text, images, and files are supported when the selected model accepts them. The DevKit's text helper does not accept images, so Tracer uses that documented Responses image input directly.
-- Tokens stay in the main process and are encrypted with the operating system's credential store. The window only receives status, the email label, and the answer.
-- **Manage usage** opens `https://chatgpt.com/settings/usage`.
+What the current code does:
 
-Plus plan limits are shared with other apps. If ChatGPT reports that the allowance is used up, wait for it to reset or manage usage there. A refresh can also fail and ask for sign-in again.
+- **Screen capture with a global shortcut.** `Ctrl+Shift+Space` by default. Tracer hides its window, freezes every monitor, and shows a selection overlay. Drag to capture an area, right-click to capture the whole monitor, Esc to cancel.
+- **Send right after capture.** On by default: when you let go of the selection, the screenshot and the prompt are sent immediately. Turn it off to look at the screenshot first and send it with **Analyze screenshot** or `Ctrl+Enter`.
+- **ChatGPT through your own plan.** Sign in with ChatGPT in the browser. Tracer asks for permission to use your plan and never sees your password or an API key.
+- **Conversation per screenshot.** Answers show up under the screenshot, and the box at the bottom sends follow-up questions with the earlier turns. Answers support lists, tables, quotes, and code, and have a Copy button.
+- **Gemini and Claude handoff.** For these, Tracer copies the screenshot and prompt to the clipboard and opens the official website. You paste them yourself; Tracer does not sign in to those services.
+- **Prompt library.** Past Prompts (can be turned off and cleared), Favorites, and Saved Prompts that you can edit, rename, and delete. Stored locally.
+- **Custom shortcut.** **Set Hotkey** records a new key combination, and **Apply & Save** registers it. Combinations that would block normal typing, such as `Shift+A`, are refused.
+- **Account controls.** Disconnect revokes Tracer's access at OpenAI. **Use a different ChatGPT account** switches accounts. **Manage usage** opens ChatGPT's usage settings.
 
-## Gemini and Claude
+Implemented but only partly verified:
 
-These are labeled **Open in browser**. There is no Connect button. Tracer copies the screenshot and the prompt, then opens `https://gemini.google.com/app` or `https://claude.ai/new`. Paste them yourself. That is not an automatic connection. No official third-party subscription API for those consumer plans was confirmed for this app.
+- **Multiple monitors and display scaling.** The capture code handles several monitors and different scale factors, and the math is unit-tested. I have only tested it on one 3440×1440 monitor at 100% scaling.
+- **Pasting into Gemini and Claude.** The clipboard contents are verified (text plus a PNG). Whether those websites accept both from one paste has not been tested.
 
-## Privacy and limits
+## Technologies
 
-- The screenshot is not written to disk.
-- The saved prompt is local. The conversation is kept only until Clear or a new capture.
-- There is no analytics.
-- Capture is the dragged area, or one whole monitor on right-click. The selection overlay is drawn after the snapshot, so it is not part of the picture.
-- The production window cannot reach the network. Only the main process talks to ChatGPT.
-- The packaged app is unsigned, so Windows SmartScreen can warn on first launch.
-- macOS and Linux builds exist in the Forge config and have not been run here.
+| Technology                                        | Why                                                                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Electron 44                                       | I wanted to build a desktop app and learn something new. Electron let me do that with JavaScript. I did not compare frameworks first |
+| Electron Forge with Vite                          | The Electron Forge template I started from. It builds the app and makes the Windows installer                                        |
+| Plain JavaScript, HTML, CSS                       | The window is built without a UI framework                                                                                           |
+| OpenAI Sign in with ChatGPT and the Responses API | Lets people use the ChatGPT plan they already pay for, so Tracer needs no API key or billing of its own                              |
+| `jose`                                            | Verifies the signed ID token OpenAI returns at sign-in                                                                               |
+| Node's built-in test runner (`node:test`)         | Runs the automated tests without extra dependencies                                                                                  |
+| oxlint and oxfmt                                  | Linting and formatting                                                                                                               |
 
-## Develop
+## Architecture
 
-Requirements: Windows, Node.js, and npm.
+Electron splits the app into a privileged main process and sandboxed renderer windows. Everything that touches the screen, the clipboard, the network, or credentials runs in the main process. The windows can only call a short list of functions exposed by the preload script.
+
+```mermaid
+flowchart LR
+  Hotkey[Global shortcut] --> Main
+  subgraph Main[Main process]
+    Capture[Screen capture and crop]
+    Auth[ChatGPT sign-in and tokens]
+    IPC{{IPC handlers with sender checks}}
+  end
+  subgraph Windows[Sandboxed windows]
+    Overlay[Selection overlay, one per monitor]
+    Workspace[Tracer window]
+  end
+  Preload[[Preload bridge]]
+  Overlay <--> Preload <--> IPC
+  Workspace <--> Preload
+  Capture -- cropped screenshot --> Workspace
+  Auth -- HTTPS --> OpenAI[(auth.openai.com, api.openai.com)]
+  Auth -- sign-in page --> Browser[System browser]
+  Browser -- "code to 127.0.0.1" --> Auth
+  IPC -- "text + image" --> Clipboard[(Clipboard, for Gemini and Claude)]
+```
+
+1. **Capture.** The shortcut makes the main process hide the window and take a full-resolution snapshot of each monitor (`desktopCapturer`). Then it opens one overlay per monitor. The overlay only reports the rectangle you drew; the main process crops the snapshot and sends the result to the Tracer window. The overlay is drawn after the snapshot, so it never appears in the picture.
+2. **Ask.** The window sends the screenshot, the question, and earlier turns over IPC. The main process checks the payload, refreshes the access token if needed, and calls `POST https://api.openai.com/v1/responses` with `store: false` and `stream: true`.
+3. **Sign-in.** OAuth with PKCE in the system browser. The redirect comes back to a temporary listener on `127.0.0.1` that only accepts a request with the matching `state`. Tokens are encrypted and never sent to the window.
+
+More detail: [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Project structure
+
+```text
+src/
+  main.js               Main process: windows, shortcut, capture, IPC, menu
+  preload.js            The functions the windows are allowed to call
+  renderer.js           Tracer window and the selection overlay
+  chatgpt-runtime.mjs   Sign-in, token storage, refresh, requests
+  chatgpt-plan.mjs      OAuth and request helpers, error messages, URL allowlist
+  security-policy.mjs   Window settings, CSP, input and shortcut checks
+  region-select.mjs     Mapping a selection to screenshot pixels
+  overlay-gestures.mjs  Drag, right-click, and Esc handling in the overlay
+  markdown-blocks.mjs   Turns answers into safe text blocks
+  prompt-library.mjs    Past, favorite, and saved prompts
+test/                   Automated tests (node:test)
+scripts/                Manual checks that run inside Electron
+backend/                Unused local test server, not part of the app
+```
+
+## Setup
+
+Requirements: Windows 10 or 11, Node.js, npm. The app has only been run on Windows; macOS and Linux build settings exist but have not been tried.
 
 ```bash
 npm install
+```
+
+```bash
+npm install --prefix backend
+```
+
+The second command is only needed for the tests, because one test file covers the unused `backend/` server.
+
+```bash
 npm start
-npm test
+```
+
+`npm start` runs the app in development mode with DevTools open. To build it:
+
+```bash
 npm run package
 ```
 
-`npm start` opens the app and registers `Ctrl+Shift+Space`. `npm test` uses mocked ChatGPT responses and does not contact OpenAI. A live region capture was run on this Windows PC. An authenticated ChatGPT reply, a second monitor, and pasting into Gemini or Claude still need a person.
+`npm run package` puts the app in `out/tracer-win32-x64/`. `npm run make` also builds a Squirrel installer in `out/make/`. Both are unsigned, so Windows SmartScreen will warn on first launch.
 
-The local `backend/` folder is an unused loopback stub. The desktop app does not start it.
+## How to use
+
+1. Click the account button at the top right and choose **Continue with ChatGPT**. Sign in in the browser and allow Tracer to use your plan. The button then reads **ChatGPT connected**.
+2. Type a prompt at the top, or pick one from the prompt library, for example "Translate all the text in this screenshot into Vietnamese."
+3. Press `Ctrl+Shift+Space` and drag over what you want to ask about.
+4. Read the answer, then ask follow-up questions in the box at the bottom. Each follow-up sends the screenshot again.
+5. **Remove screenshot** clears the screenshot and the conversation.
+
+To use Gemini or Claude instead, pick it in the account menu. Submitting copies the screenshot and prompt and opens the website, where you paste them.
+
+ChatGPT usage counts against your plan's limits. OpenAI's documentation describes this for Plus and Pro plans, with a per-app cap you can set under Settings, then Usage. If you allow credits for Tracer there, extra use can spend credits.
+
+## Testing and validation
+
+| Command                                             | What it covers                                                                                                                                                                                                                                                                                 |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                          | 79 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, region math, the overlay gestures, answer formatting, the prompt library, and the ChatGPT sign-in and request flow against a fake OpenAI server (real signed tokens, a real loopback listener) |
+| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                            |
+| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                   |
+
+Results:
+
+- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 79 tests, 79 passed, 0 failed.
+- The same tests run on GitHub Actions (Windows, Node 24) for every push and pull request to `main`.
+- `verify-handoff-clipboard.mjs` passed on 25 October 2026.
+- A live ChatGPT run on 26 October 2026 passed. I signed in, allowed plan usage, and analyzed two captures with GPT-6.1-Sol. The answer quoted text that only appeared in the screenshot, and the second answer translated it into Vietnamese.
+
+Not yet tested live: the new follow-up box, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
+
+## Security and privacy
+
+- **Process isolation.** Windows run with `contextIsolation`, `sandbox`, and Node integration off, under a Content Security Policy that only allows the app's own scripts and no network access. Navigation, new windows, and `<webview>` are blocked. Every IPC handler checks which window and frame sent the message.
+- **Tokens.** ChatGPT tokens stay in the main process. They are encrypted with Electron `safeStorage`, which on Windows uses DPAPI for your user account. The window only learns the connection status, email, and model name. Tokens are revoked before they are deleted.
+- **Permissions.** Screen capture happens in the main process. Pages cannot request a screen recording, the camera, or the microphone, and can only write text to the clipboard. The packaged app disables `RunAsNode` and Node inspect flags, and checks the integrity of its own code archive.
+- **Screenshots.** Kept in memory, never written to disk by Tracer. Sent only when you capture with "Send right after capture" on, choose Analyze screenshot, or ask a question, and only to the provider you picked. Answers are displayed as text, so model output cannot run code in the window.
+
+Known limits:
+
+- Other programs running under your Windows account can still decrypt the tokens, as with browser cookies.
+- Prompts are stored in plain text.
+- After a Gemini or Claude handoff, the screenshot stays on the clipboard.
+- Uninstalling leaves `%APPDATA%\tracer`.
+- `store: false` asks OpenAI not to keep responses for later retrieval; OpenAI's own retention policies still apply.
+
+Reviews: [SECURITY_AUDIT.md](SECURITY_AUDIT.md) and [PRIVACY_REVIEW.md](PRIVACY_REVIEW.md).
+
+## Technical challenges and lessons learned
+
+- **A platform API changed under me.** The Gemini and Claude handoff used the clipboard API from older Electron examples. In Electron 44 that call fails without throwing, so nothing was copied while Tracer said it was. Only running the real Electron API showed it; my mocked tests passed. Now there is a script that checks the real API.
+- **Reading the provider's error contract.** OpenAI documents which refresh errors are final. Before I mapped them, a user returning after the 30-day refresh-token lifetime saw a misleading "screenshot" error on every try. Error handling now follows OpenAI's errors-and-recovery page, with tests.
+- **Async races in the UI.** Capturing a new screenshot while an answer was still loading could show the old answer under the new picture. Each request now carries a generation number, and stale replies are dropped.
+- **Coordinates are not pixels.** The overlay reports positions in device-independent pixels, while the snapshot is in physical pixels and can be scaled per monitor. The crop is converted using each monitor's snapshot size.
+- **Prompt wording matters.** In my first live run I wrote "Let me select the area I want screenshotted and then translate it." The model explained how to do that instead of translating. A direct instruction worked.
+
+## Limitations and future improvements
+
+- No downloadable release yet, no code signing, and no auto-update.
+- Answers appear when complete; streaming them in as they arrive is planned.
+- Tracer uses the first model your account lists, with no model picker.
+- One ChatGPT account is stored at a time.
+- Only tested on Windows with one monitor at 100% scaling.
+- Ideas I have not built: reading answers aloud, and other ways to trigger a capture (for example camera or eye-blink input).
+
+## Development transparency
+
+I designed and architected this project, including its concept, features, user experience, and technical direction. I used AI-assisted development tools (Claude, ChatGPT, and Cursor) to support parts of the implementation, debugging, testing, security review, and documentation. I reviewed and evaluated the generated suggestions, and I remain responsible for the project's design decisions, functionality, and known limitations.
+
+## Author
+
+Tracy Tran, computer science student at California State University, Fullerton, graduating May 2027. [tracythutran.com](https://www.tracythutran.com)
+
+## License
+
+MIT, as declared in `package.json`. A `LICENSE` file has not been added yet.
