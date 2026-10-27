@@ -49,7 +49,7 @@ flowchart LR
   Workspace <--> Disk
 ```
 
-The boundary that matters is between **Main** and **Renderers**. Everything that touches the operating system, the network, or credentials is on the main side. A renderer can only call the 20 functions in [preload.js](src/preload.js), and each IPC handler in [main.js](src/main.js) checks who is calling: main-window channels require the main window's main frame (`requireSender`), and overlay channels require a live overlay's main frame (`overlayFrom`).
+The boundary that matters is between **Main** and **Renderers**. Everything that touches the operating system, the network, or credentials is on the main side. A renderer can only call the 21 functions in [preload.js](src/preload.js), and each IPC handler in [main.js](src/main.js) checks who is calling: main-window channels require the main window's main frame (`requireSender`), and overlay channels require a live overlay's main frame (`overlayFrom`).
 
 | Data or capability | Main process | Main-window renderer | Overlay renderer | Leaves the machine |
 | --- | --- | --- | --- | --- |
@@ -64,20 +64,28 @@ The boundary that matters is between **Main** and **Renderers**. Everything that
 
 ## Main process — [src/main.js](src/main.js)
 
-- **Startup.** Squirrel install events quit early. A single-instance lock keeps one copy; a second launch focuses the first ([main.js:61](src/main.js:61)).
+- **Startup.** Squirrel install events quit early. A single-instance lock keeps one copy; a second launch focuses the first ([main.js:65](src/main.js:65)).
 - **Windows.** Every window uses `secureWebPreferences` from [security-policy.mjs](src/security-policy.mjs): `contextIsolation`, `sandbox`, `nodeIntegration: false`, `webSecurity`, no `webview`. `hardenWindow` denies `window.open`, blocks `<webview>`, and blocks navigation or redirects outside the packaged renderer folder (or the dev server in development).
-- **Session guards** ([main.js:549](src/main.js:549)). Permission checks allow only `clipboard-sanitized-write` from the main window. Device permissions are refused. `getDisplayMedia` is always refused (`callback(null)`), because capture happens in the main process.
+- **Session guards** ([main.js:645](src/main.js:645)). Permission checks allow only `clipboard-sanitized-write` from the main window. Device permissions are refused. `getDisplayMedia` is always refused (`callback(null)`), because capture happens in the main process.
 - **Menu.** File → Analyze screenshot (Ctrl+Enter), Clear screenshot, Quit. View → zoom and full screen. DevTools only when a dev server is running.
 - **Shortcut.** Stored in `shortcut.json`, validated by `isValidAccelerator`, registered with `globalShortcut`. The Set Hotkey dialog suspends it while the user types a new one. `will-quit` calls `unregisterAll`.
 
 ## Screenshot capture
 
-1. `onHotkey` ([main.js:407](src/main.js:407)) enters a capture gate so repeated presses are ignored.
+1. `onHotkey` ([main.js:421](src/main.js:421)) enters a capture gate so repeated presses are ignored.
 2. `beginRegionSelect` hides the main window, waits 150 ms, then calls `desktopCapturer.getSources` with a thumbnail size equal to the largest monitor in physical pixels (capped at 8192). On the test PC this took about 0.6–1.0 s.
 3. Each source is paired to a display by `display_id`, then by physical size ([region-select.mjs:80](src/region-select.mjs:80)). The NativeImages stay in the `frozen` map in main.
 4. One frameless, always-on-top overlay window per monitor loads `index.html?overlay=1`. It asks for its own frame (`tracer:frozen-frame`, 1600px JPEG q60) and shows it full-screen.
 5. The overlay reports a left-drag rectangle (clamped to its own edges), a right-click, or Escape. Main converts DIP coordinates to thumbnail pixels with `selectionToCrop`, crops, downsizes to at most 1600px, and encodes JPEG q85.
-6. Main clears the frozen frames, destroys the overlays, restores its window, and sends `{ type: 'capture', image }` to the main-window renderer. Nothing is written to disk.
+6. Main clears the frozen frames, destroys the overlays, restores its window, and sends `{ type: 'capture', image }` to the main-window renderer. Nothing is written to disk. If the capture started while the window was hidden in the tray and was cancelled, the window stays hidden (`returnToTray`).
+
+## Tray and quitting
+
+- `installTray` creates the tray icon before the window. Clicking it calls `restoreMain`; its menu has Open Tracer and Quit Tracer. If the tray icon cannot be created, closing the window quits as before.
+- The window's `close` event hides the window instead, unless `quitting` is set. `before-quit` sets it (Quit Tracer, File → Quit), and so do the window's `query-session-end` and `session-end` events, so Tracer never holds up a Windows sign-out or shutdown. `will-quit` removes the tray icon.
+- The first time the window is hidden, `noteRunningInTray` shows a Windows notification with the shortcut and how to quit, and writes `tray-notice.json` so it is not shown again.
+- The tray text uses the window's language. The window reports it with `tracer:set-language`, which accepts only listed codes. Before that report, main uses the Windows locale.
+- The icon comes from [app-icon.mjs](src/app-icon.mjs), PNGs at 16–64 px that [scripts/build-icons.mjs](scripts/build-icons.mjs) renders from `assets/icon.svg` and `assets/icon-small.svg`. `appIcon` combines them into one image with a representation per display scale, used for the tray and the window.
 
 ## ChatGPT sign-in and requests — [src/chatgpt-runtime.mjs](src/chatgpt-runtime.mjs), [src/chatgpt-plan.mjs](src/chatgpt-plan.mjs)
 
@@ -126,7 +134,7 @@ Other window settings in `localStorage`: `tracer:auto-send`, `tracer:language`, 
 
 ## Packaging — [forge.config.mjs](forge.config.mjs)
 
-Electron Forge with the Vite plugin. The asar contains only `.vite/build/{main,preload}.cjs`, the renderer HTML/JS/CSS, and `package.json`. Fuses: `RunAsNode` off, `NODE_OPTIONS` off, inspect flags off, asar integrity on, load only from asar, file-protocol extra privileges off, cookie encryption on. The Squirrel maker builds a per-user installer. No auto-update is configured.
+Electron Forge with the Vite plugin. The asar contains only `.vite/build/{main,preload}.cjs`, the renderer HTML/JS/CSS, and `package.json`. Fuses: `RunAsNode` off, `NODE_OPTIONS` off, inspect flags off, asar integrity on, load only from asar, file-protocol extra privileges off, cookie encryption on. The Squirrel maker builds a per-user installer. `tracer.exe` and `Setup.exe` get `assets/icon.ico` (16–256 px). No auto-update is configured.
 
 ## Unused code in the tree
 

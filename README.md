@@ -22,6 +22,8 @@ What the current code does:
 - **Gemini and Claude handoff.** For these, Tracer copies the screenshot and prompt to the clipboard and opens the official website. You paste them yourself; Tracer does not sign in to those services.
 - **Prompt library.** Past Prompts (can be turned off and cleared), Favorites, and Saved Prompts that you can edit, rename, and delete. Stored locally. **Hide prompts** at the top hides the whole panel, and Tracer remembers that choice.
 - **Custom shortcut.** **Set Hotkey** records a new key combination, and **Apply & Save** registers it. Combinations that would block normal typing, such as `Shift+A`, are refused.
+- **Keeps running in the tray.** Closing the window hides Tracer to the system tray by the clock, so the shortcut keeps working. Click the tray icon to open the window, or right-click it and choose **Quit Tracer** to exit. The first time the window is closed, a notice explains this. The tray menu and notice follow the language setting.
+- **Icon.** A hand on a mouse with the pointer finger on the left button and the middle finger on the right, for the two clicks Tracer uses: drag to select an area, right-click for the whole screen. A dotted selection frame and scissors cutting along it stand for the screenshot. Black and white with purple buttons. At 16 and 20 px, where the hand is too small to read, the icon shows just the mouse inside the dotted frame.
 - **Account controls.** Disconnect revokes Tracer's access at OpenAI. **Use a different ChatGPT account** switches accounts. **Manage usage** opens ChatGPT's usage settings.
 
 Implemented but only partly verified:
@@ -93,7 +95,9 @@ src/
   i18n-messages.mjs     Every English message the window can show
   locales/              One file of translations per language
 test/                   Automated tests (node:test)
-scripts/                Manual checks that run inside Electron
+  app-icon.mjs          Tray and window icon images (generated)
+assets/                 Icon drawings (SVG) and the packaged .ico and .png
+scripts/                Manual checks that run inside Electron, and the icon build
 backend/                Unused local test server, not part of the app
 ```
 
@@ -123,6 +127,12 @@ npm run package
 
 `npm run package` puts the app in `out/tracer-win32-x64/`. `npm run make` also builds a Squirrel installer in `out/make/`. Both are unsigned, so Windows SmartScreen will warn on first launch.
 
+To change the icon, edit `assets/icon.svg` (24 px and up) or `assets/icon-small.svg` (16 and 20 px), then rebuild the icon files:
+
+```bash
+npx electron scripts/build-icons.mjs
+```
+
 ## How to use
 
 1. On first launch, pick your language and click **Continue**. To change it later, click the globe button at the top.
@@ -131,6 +141,7 @@ npm run package
 4. Press `Ctrl+Shift+Space` and drag over what you want to ask about.
 5. Read the answer, then ask follow-up questions in the box at the bottom. Each follow-up sends the screenshot again.
 6. **Remove screenshot** clears the screenshot and the conversation.
+7. Closing the window keeps Tracer running in the tray, so the shortcut still works. To exit, right-click the Tracer icon by the clock (it may be under the ^ arrow) and choose **Quit Tracer**.
 
 To use Gemini or Claude instead, pick it in the account menu. Submitting copies the screenshot and prompt and opens the website, where you paste them.
 
@@ -138,21 +149,26 @@ ChatGPT usage counts against your plan's limits. OpenAI's documentation describe
 
 ## Testing and validation
 
-| Command                                             | What it covers                                                                                                                                                                                                                                                                                                                                           |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                          | 94 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, region math, the overlay gestures, answer formatting, the prompt library, the language list and every translation file, and the ChatGPT sign-in, streaming, and request flow against a fake OpenAI server (real signed tokens, a real loopback listener) |
-| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                                                                                      |
-| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                                                                             |
+| Command                                             | What it covers                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                          | 97 automated tests: input and shortcut validation, IPC sender checks, CSP and navigation rules, the tray and quit rules, the icon files, region math, the overlay gestures, answer formatting, the prompt library, the language list and every translation file, and the ChatGPT sign-in, streaming, and request flow against a fake OpenAI server (real signed tokens, a real loopback listener) |
+| `npx electron scripts/verify-handoff-clipboard.mjs` | Checks the Electron clipboard calls the Gemini and Claude handoff depends on. It uses a synthetic image and restores your clipboard                                                                                                                                                                                                                                                               |
+| `npx electron scripts/verify-region-capture.mjs`    | Captures colored test windows on each monitor and checks the cropped pixels. Writes `out/region-verify.json`                                                                                                                                                                                                                                                                                      |
 
 Results:
 
-- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 94 tests, 94 passed, 0 failed.
+- `npm test` on 26 October 2026 (Windows 10, Node 25.8.0): 97 tests, 97 passed, 0 failed.
+- The built main process was run in Electron with a fresh profile on 26 October 2026 to check the tray. Closing hid the window and kept the shortcut registered. The notice appeared on the first close only. A capture started from the tray and cancelled with Esc left the window hidden. Opening Tracer again showed the window. Switching to Vietnamese translated the tray menu. Quit Tracer and a simulated Windows sign-out both exited.
 - The built window was driven with a stand-in main process and no network on 26 October 2026. The first-launch language picker could not be skipped, choosing Vietnamese translated the window and the default prompt, the request carried the chosen language, streamed text appeared before the answer finished, Arabic switched the layout to right to left, a language without translations kept English buttons, and Hide prompts stayed hidden after a reload.
 - The same tests run on GitHub Actions (Windows, Node 24) for every push and pull request to `main`.
 - `verify-handoff-clipboard.mjs` passed on 25 October 2026.
 - A live ChatGPT run on 26 October 2026 passed. I signed in, allowed plan usage, and analyzed two captures with GPT-6.1-Sol. The answer quoted text that only appeared in the screenshot, and the second answer translated it into Vietnamese. A follow-up question asking for French was answered in French.
 
-Not yet tested live: streamed answers and the lower reasoning setting against the real service (including how much faster answers arrive), the language picker in the running app, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
+The language picker, streamed answers, and Hide prompts were tried in the running app on 26 October 2026; answer timing was not recorded.
+
+Running in the tray after the window is closed was confirmed in the running app on 26 October 2026.
+
+Not yet tested live: how much faster answers arrive, the first-close notice and how the tray icon looks, Disconnect and account switching against the real service, pasting into Gemini and Claude, two or more monitors, and display scaling other than 100%. The automated ChatGPT tests use a fake server, so they show that Tracer follows OpenAI's documented behavior, not that the service behaves as documented. Full details: [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Security and privacy
 
@@ -183,6 +199,7 @@ Reviews: [SECURITY_AUDIT.md](SECURITY_AUDIT.md) and [PRIVACY_REVIEW.md](PRIVACY_
 ## Limitations and future improvements
 
 - No downloadable release yet, no code signing, and no auto-update.
+- Tracer keeps running after the window is closed until you choose Quit Tracer. It does not start with Windows.
 - The 20 translations of the buttons and messages were AI-generated and have not been checked by native speakers yet.
 - Tracer asks ChatGPT for low reasoning effort to answer faster, which can make answers to hard questions less thorough. There is no setting for it yet.
 - Tracer uses the first model your account lists, with no model picker.

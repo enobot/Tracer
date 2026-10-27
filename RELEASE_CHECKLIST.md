@@ -5,11 +5,12 @@ Status as of 26 October 2026: **ready after specific fixes**. Tick items as they
 ## 1. Critical blockers
 
 - [x] Review and commit the audit changes. Committed and pushed 26 Oct 2026; CI passes on Windows.
-- [ ] Review and commit the language, streaming, and prompts-toggle changes (`git diff`). `npm test` should report 94 passing.
+- [x] Review and commit the language, streaming, and prompts-toggle changes. Committed and pushed 26 Oct 2026 (c066ff1, e4a14dc); CI passes.
 - [ ] Run `npx electron scripts/verify-handoff-clipboard.mjs` and confirm `"ok":true`.
 - [x] **Live ChatGPT test with your own eligible account.** Done 26 Oct 2026: sign-in, plan usage, and two analyses with GPT-6.1-Sol, which read the image (T-07 cleared for this account).
 - [x] Repeat with the new window: auto-send on capture and one follow-up from the bottom box (26 Oct, Vietnamese then French).
-- [ ] Live test of the newest build: the language picker opens on first launch, answers stream in, and the terminal's "first text after X ms" line shows the wait is shorter.
+- [x] Live test of the language picker and streamed answers (26 Oct, by you). Answer timing was not recorded.
+- [ ] Review and commit the tray mode and icon.
 - [ ] Confirm Tracer disappears from ChatGPT Settings → Security and login → Login connections after Disconnect.
 - [ ] With a second account, try "Use a different ChatGPT account". Tracer should leave the first account's Login connections and appear in the second's.
 - [ ] **Paste test** on gemini.google.com and claude.ai. If one Ctrl+V doesn't deliver both the image and the prompt, change the handoff to copy the image first, then offer a "Copy prompt" button.
@@ -51,6 +52,7 @@ Status as of 26 October 2026: **ready after specific fixes**. Tick items as they
 - [ ] Second launch focuses the existing window
 - [ ] Prompt library: save, edit, rename, favorite and unfavorite from every tab, delete, restart
 - [ ] Hide prompts, restart: still hidden; Show prompts brings it back
+- [ ] Close the window: the notice appears once, the shortcut still captures, the tray icon reopens the window, and Quit Tracer exits. Sign out of Windows with Tracer in the tray: nothing blocks the sign-out
 - [ ] Language: first launch shows the picker; pick one, restart, still set; Arabic mirrors the window; a language without a translation keeps English buttons and still answers in that language
 - [ ] Remember prompts off, then Clear history
 - [ ] Error paths: airplane mode, wait past 90 s, cancel mid-request
@@ -64,7 +66,7 @@ Status as of 26 October 2026: **ready after specific fixes**. Tick items as they
 - [x] No `.env`, keys, or `backend/` in the package
 - [x] Version 1.0.0, company Tracy Tran, copyright corrected, FileDescription "Tracer"
 - [ ] `productName` is `tracer` (lowercase). Changing it to `Tracer` renames the exe and shortcuts; decide before the first public release, since later changes affect upgrades
-- [ ] App icon (`packagerConfig.icon`, `MakerSquirrel({ setupIcon })`). Currently the default Electron icon
+- [x] App icon (`packagerConfig.icon`, `MakerSquirrel({ setupIcon })`): the hand on a mouse with scissors and a dotted frame, from `assets/icon.svg`
 - [ ] Portable build: `MakerZIP` is limited to `darwin`. Add `win32` if you want a no-install zip
 - [ ] Uninstall leaves `%APPDATA%\tracer` (encrypted tokens and prompts). Document it, or handle `--squirrel-uninstall`
 - [ ] No auto-update. Decide between manual downloads and `update-electron-app` / update.electronjs.org (needs signed builds to be useful)

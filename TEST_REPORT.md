@@ -43,13 +43,13 @@ The probe harnesses used for this report live outside the repository (in the rev
 
 ## 3. Automated suite (`npm test`)
 
-| | Before audit | After audit | After languages and streaming (26 Oct) |
-| --- | --- | --- | --- |
-| Tests | 57 | 79 | 94 |
-| Passed | 57 | 79 | 94 |
-| Failed | 0 | 0 | 0 |
-| Skipped / todo | 0 | 0 | 0 |
-| Duration | 6.2 s first run, under 1 s warm | under 1 s warm | 1.1 s |
+| | Before audit | After audit | After languages and streaming (26 Oct) | After tray and icon (26 Oct) |
+| --- | --- | --- | --- | --- |
+| Tests | 57 | 79 | 94 | 97 |
+| Passed | 57 | 79 | 94 | 97 |
+| Failed | 0 | 0 | 0 | 0 |
+| Skipped / todo | 0 | 0 | 0 | 0 |
+| Duration | 6.2 s first run, under 1 s warm | under 1 s warm | 1.1 s | 0.8 s |
 
 ### What the suite tests
 
@@ -57,10 +57,11 @@ The probe harnesses used for this report live outside the repository (in the rev
 | --- | --- | --- | --- |
 | `security-policy.test.mjs` | 21 | Payload validation, sender checks, permissions, navigation, CSP, accelerators, capture gate, package ignore rules | Pure functions with meaningful edge cases. Mock `webContents` objects are minimal but adequate for identity checks |
 | `chatgpt.test.mjs` | 23 | PKCE URL, callback parsing, scope gating, Responses body, answer language and lighter reasoning, error mapping, URL allowlist, Markdown blocks, full sign-in → analyze → disconnect with real signed JWTs and a real loopback HTTP server, streamed text pieces, reasoning fallback, expired refresh, broken stream, timeout, 401 refresh-and-retry, revoke-before-clear, switching accounts | The strongest file. Mocks `fetch` with hand-written OpenAI responses, so it proves Tracer follows the documented contract, not that OpenAI behaves as documented |
-| `architecture.test.mjs` | 6 | Regex checks over source: secure flags, no `innerHTML`, no `child_process`, CSP plugin, clipboard API form, single instance | Cheap tripwires, not behavior tests. They can't see runtime bugs; the old handoff bug passed every one of them |
+| `architecture.test.mjs` | 7 | Regex checks over source: secure flags, no `innerHTML`, no `child_process`, CSP plugin, clipboard API form, single instance, tray hide-and-quit rules | Cheap tripwires, not behavior tests. They can't see runtime bugs; the old handoff bug passed every one of them |
 | `region-select.test.mjs` | 6 | DIP validation, scaled crop, negative origin, full monitor, pairing by id and size | Good math coverage. Uses assumed thumbnail sizes, not real `desktopCapturer` output |
 | `overlay-gestures.test.mjs` | 7 | Drag, missed moves, tiny drag, right-click, Escape, clamp | Good |
 | `markdown-blocks.test.mjs` | 9 | Answer formatting: numbered steps on separate lines, restarted numbering, line breaks, quotes, dividers, headings, italics, tables, snake_case and arithmetic left alone, links shown as text, code fences verbatim, only known block types | Added after a live answer rendered its steps as one paragraph |
+| `app-icon.test.mjs` | 2 | The tray and window PNGs are 16–64 px with matching scale factors; `assets/icon.ico` holds PNGs at 16–256 px; `assets/icon.png` is 256 px | Checks the files, not how the icon looks |
 | `i18n.test.mjs` | 7 | Every translation file has exactly the English message list with placeholders kept; every visible string in `renderer.js` (parsed with Vite's parser) and every `data-i18n` value in `index.html` is in the list; no unused messages; English fallback; the default prompt is recognized in every language | Catches a new English string that was never translated. It can't judge whether a translation is good |
 | `languages.test.mjs` | 5 | At least 200 codes, each with an English and native name; only listed codes accepted; Windows locale mapping (zh-TW → Traditional Chinese, `no` → Norwegian Bokmål); right-to-left detection | Names come from Chromium's `Intl.DisplayNames`, so these also run under Node's ICU |
 | `prompt-library.test.mjs` | 3 | Save, rename, duplicate, favorite, history toggle, favorites sync | Thin: no tests for corrupted JSON, limits (100/50), or delete from Favorites |
@@ -110,6 +111,13 @@ These cover new features, not fixes, so there was no earlier code for them to fa
 | `asks again without lighter reasoning when the model rejects it, and remembers` | One retry without the setting; the next request to that model skips it |
 | The 7 tests in `i18n.test.mjs` and 5 in `languages.test.mjs` | See the table above |
 
+### Tests added for the tray and icon (26 Oct)
+
+| Test | Guards |
+| --- | --- |
+| `keeps running in the tray until the user quits, without blocking sign-out` | Close hides only while not quitting and only with a tray icon; `before-quit`, `query-session-end`, and `session-end` set `quitting`; Quit Tracer calls `app.quit()`; the tray icon is removed on quit; a cancelled capture from the tray stays hidden; `tracer:set-language` checks the sender and the code; the packaged icon is configured |
+| The 2 tests in `app-icon.test.mjs` | See the table above |
+
 ### Still untested (recommended next tests)
 
 1. An Electron-level test that boots the built app with a stub runtime and drives `tracer:ask`, `tracer:handoff`, and `choose-region` through real IPC.
@@ -123,7 +131,8 @@ These cover new features, not fixes, so there was no earlier code for them to fa
 | --- | --- | --- |
 | Real ChatGPT sign-in, allow plan usage, analyze | **Passed, 26 Oct 2026 (run by you, `npm start`)** | Two captures analyzed with GPT-6.1-Sol. The first answer quoted text that appears only in the screenshot (proof the image was read). The second translated the capture into Vietnamese |
 | Follow-up box, auto-send, Apply & Save in the live app | **Passed, 26 Oct 2026 (run by you)** | A capture sent right away and was answered in Vietnamese; a follow-up from the bottom box asking for French was answered in French; Apply & Save showed in Set Hotkey |
-| Streamed answers, lower reasoning, language picker in the live app | **Not run** (new) | Run `npm start` with no saved language: the picker should open first. Pick a language, capture, and watch the answer appear in pieces. The terminal prints "ChatGPT: first text after X ms, finished after Y ms" |
+| Streamed answers, lower reasoning, language picker in the live app | **Tried by you, 26 Oct 2026** ("looks good"); timing not recorded | Run `npm start` with no saved language: the picker should open first. Pick a language, capture, and watch the answer appear in pieces. The terminal prints "ChatGPT: first text after X ms, finished after Y ms" |
+| Tray icon and notice in the running app | **Partly passed, 26 Oct 2026 (run by you):** Tracer kept running in the background after the window was closed. The notice, quitting, and how the icon looks were not reported | Close the window: the Windows notification appears once, the icon is by the clock (or under ^), the shortcut still captures, and right-click → Quit Tracer exits. Check the icon at your display scaling |
 | Translation quality | **Not run** | A native speaker of each of the 20 languages reads every screen. The translations are AI-generated |
 | Disconnect revokes remotely | **Not run** | After Disconnect, check ChatGPT Settings → Security and login → Login connections |
 | Expired session recovery | **Not run** | Covered by mocked tests only (expired refresh, 401 retry) |
@@ -234,6 +243,22 @@ The fake `tracer:ask` handler sent three `answer-delta` events 250 ms apart befo
 | Swahili (no built-in translation) | Left to right, English buttons, language button "Kiswahili", note "Answers use this language. Buttons stay in English." Picking another language and pressing Cancel kept Swahili. The request carried `language: 'sw'` |
 | Console | No errors |
 
+### 6.5 Tray mode (built main process in Electron, fresh profile on G:, 26 Oct)
+
+The harness loaded `.vite/build/main.cjs` as it ships. It recorded the tray menu and notice instead of showing them, and kept the shortcut's callback so it could start a capture. The capture overlay opened on the real screen and was cancelled with Escape; nothing was saved.
+
+| Scenario | Result |
+| --- | --- |
+| Start | Window visible; `Ctrl+Shift+Space` registered; tray menu "Open Tracer, Quit Tracer" |
+| Close the window | Hidden, not destroyed; shortcut still registered; notice "Tracer is still running" with the shortcut and how to quit; `tray-notice.json` = `{"shown":true}` |
+| Shortcut while hidden, then Escape | One overlay opened; window still hidden afterwards |
+| Second launch (`second-instance`) | Window shown |
+| Shortcut while visible, then Escape | Window visible afterwards, as before |
+| Window language set to Vietnamese | Tray menu rebuilt as "Mở Tracer, Thoát Tracer" |
+| Close again | Hidden; no second notice |
+| Quit (`app.quit()`) | `will-quit` ran; process exited with code 0 |
+| Windows session ending (`query-session-end`, then close) | Window closed instead of hiding; the app quit on its own (exit code 0) |
+
 ## 7. Functional review
 
 Status key: **Auto** = automated test, **Probe** = Electron probe, **Code** = code review only, **Manual** = needs a person or hardware.
@@ -260,9 +285,10 @@ Status key: **Auto** = automated test, **Probe** = Electron probe, **Code** = co
 | Language | Window text in 20 languages, right to left for Arabic and Persian | Auto (completeness), Probe (render); Manual for wording |
 | Analysis | Text appears while the answer is written | Auto (stream pieces), Probe (render); Manual for real timing |
 | Window | Minimize/restore after capture | Code (`restoreMain`) |
-| Window | Close quits on Windows | Probe (packaged app closed cleanly) |
+| Window | Quit Tracer exits cleanly (closing the window quit Tracer until the tray was added on 26 Oct) | Probe |
 | Window | Second launch focuses the first | Probe |
 | Window | Resize: minimum 720×560, stacks below 860 px | Code |
+| Window | Close hides to the tray; shortcut keeps working; Quit Tracer exits | Auto (source rules), Probe (Electron); Manual for the real tray |
 | Window | High DPI, monitor switching | Manual |
 
 ## 8. UX and accessibility review

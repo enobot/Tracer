@@ -373,7 +373,7 @@ The only visual change is the approved "Use a different ChatGPT account" button,
 
 Dependency fixes recorded earlier remain in place: Electron moved from 44.5.1 to 44.9.3, Vite 8.3.5, `undici` advisories fixed without `--force`, `openDevTools` limited to development, package restricted to the Vite build, and the `GrantFileProtocolExtraPrivileges` fuse off. `npm audit` still reports only the `oxfmt`/`tinypool` pair.
 
-## 12. Changes after the audit: languages, streaming, prompts toggle (26 October, uncommitted)
+## 12. Changes after the audit: languages, streaming, prompts toggle (26 October, committed as c066ff1)
 
 These are new features, reviewed against the same checks. No finding.
 
@@ -387,6 +387,20 @@ These are new features, reviewed against the same checks. No finding.
 | Logging | Development-only timing line | Prints only the milliseconds to the first text and to the end, never the prompt or answer. Not printed in the packaged app |
 
 `npm test`: 94 passing. Lint and format clean.
+
+## 13. Tray mode and icon (26 October, uncommitted)
+
+No finding.
+
+| Area | What changed | Check |
+| --- | --- | --- |
+| IPC | `tracer:set-language` and the preload function `setLanguage` (21 in total) | Main-window main frame only (`requireSender`); only listed codes are accepted. It changes only which built-in translation the tray menu and notice use |
+| Lifetime | Closing hides the window; Tracer runs until Quit Tracer, File → Quit, or the end of the Windows session | `quitting` is set on `before-quit`, `query-session-end`, and `session-end`, so shutdown and sign-out are not blocked (checked in Electron: a simulated session end quit the app). Without a tray icon, closing quits as before, so Tracer can't be left running with no way to reach it |
+| Shortcut while hidden | The global shortcut stays registered while the window is hidden | Same capture path and checks as before. A cancelled capture started from the tray leaves the window hidden |
+| Disk | `tray-notice.json` in the profile | Holds `{"shown":true}` only |
+| Icon | PNGs embedded in `main.cjs`; `.ico` stamped into the executables at package time | Generated locally from SVG by `scripts/build-icons.mjs`; nothing is downloaded |
+
+`npm test`: 97 passing. Lint and format clean.
 
 ## Sources
 

@@ -26,6 +26,7 @@ Everything lives in `%APPDATA%\tracer` (the Electron profile for product name `t
 | `chatgpt-connection.bin` | Status, issued client id, OpenAI subject id, email, name, scopes, access token, refresh token, expiry | `safeStorage`: AES-256-GCM with a key that DPAPI protects for this Windows user | Tokens until Disconnect or sign-in failure; identifiers until the file is deleted |
 | `chatgpt-host-id` | Random `urn:uuid:` | None (not secret) | Forever; sent to OpenAI at sign-in as `ext_agent_host_id` |
 | `shortcut.json` | The chosen shortcut | None | Until changed |
+| `tray-notice.json` | `{"shown":true}` once the "still running" notice has appeared | None (not personal) | Until the profile is deleted |
 | Local Storage `tracer:library` | Saved prompts (≤100), past prompts (≤50) with timestamps, favorite flags, "Remember prompts" setting | **Plain text** | Until deleted in the app |
 | Local Storage `tracer:draft` | The current prompt box, saved on every keystroke | **Plain text** | Until overwritten |
 | Local Storage `tracer:provider` | ChatGPT, Gemini, or Claude | Plain text | Until changed |
