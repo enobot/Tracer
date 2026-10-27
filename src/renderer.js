@@ -13,11 +13,21 @@ import {
   setHistoryEnabled,
   updatePrompt,
 } from './prompt-library.mjs';
-import { LIMITS, validateInspectPayload } from './security-policy.mjs';
+import {
+  LIMITS,
+  isValidAccelerator,
+  validateInspectPayload,
+} from './security-policy.mjs';
 
 const MAX_HISTORY = 14;
 const LIBRARY_KEY = 'tracer:library';
 const DRAFT_KEY = 'tracer:draft';
+const AUTO_SEND_KEY = 'tracer:auto-send';
+const PROVIDER_NAMES = {
+  chatgpt: 'ChatGPT',
+  gemini: 'Gemini',
+  claude: 'Claude',
+};
 
 const params = new URLSearchParams(location.search);
 if (params.get('overlay') === '1') {
@@ -35,7 +45,10 @@ function initOverlay() {
   const band = document.getElementById('snip-rect');
   if (workspace) workspace.hidden = true;
   if (root) root.hidden = false;
-  const gesture = createSelectionGesture();
+  const gesture = createSelectionGesture(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
 
   const showRect = (rect) => {
     if (!band || !shade || !rect) return;
@@ -144,29 +157,54 @@ function initOverlay() {
 }
 
 function initWorkspace() {
-  let latestScreenshot = null;
-  let history = [];
-  let session = {
+  const signedOut = () => ({
     status: 'disconnected',
     sharing: false,
     email: null,
     name: null,
     modelName: null,
-  };
+    savedAccount: false,
+  });
+  let latestScreenshot = null;
+  // Questions and answers about the current screenshot, oldest first.
+  let turns = [];
+  // The question and "waiting" line shown while a reply is on its way.
+  let pendingNodes = [];
+  let modelName = null;
+  let session = signedOut();
   let busy = false;
   let actionGeneration = 0;
+  let pendingAction = 0;
   let library = loadLibrary();
   let libraryTab = 'past';
   let editingId = '';
   let hotkeyAccelerator = 'Ctrl+Shift+Space';
+  let pendingHotkey = '';
 
   const promptInput = document.getElementById('tracer-prompt');
-  const resultDisplay = document.getElementById('analysis-result');
+  const autoSend = document.getElementById('auto-send');
+  const statusDisplay = document.getElementById('tracer-status');
+  const conversation = document.getElementById('conversation');
+  const emptyState = document.getElementById('empty-state');
+  const hint = document.getElementById('capture-hint');
+  const sendNote = document.getElementById('send-note');
+  const shot = document.getElementById('shot');
+  const shotToggle = document.getElementById('shot-toggle');
   const preview = document.getElementById('shot-preview');
+  const shotLabel = document.getElementById('shot-label');
+  const analyzeCommand = document.getElementById('analyze-command');
   const dismissPreview = document.getElementById('dismiss-preview');
+  const followupRow = document.getElementById('followup-row');
+  const followupInput = document.getElementById('followup-input');
+  const followupSend = document.getElementById('followup-send');
+  const cancelButton = document.getElementById('cancel-button');
+  const planNote = document.getElementById('plan-note');
+  const planText = document.getElementById('plan-text');
+  const planUsage = document.getElementById('plan-usage');
   const statusLine = document.getElementById('provider-status');
   const noteLine = document.getElementById('provider-note');
   const signInButton = document.getElementById('chatgpt-sign-in');
+  const switchButton = document.getElementById('chatgpt-switch');
   const disconnectButton = document.getElementById('chatgpt-disconnect');
   const usageButton = document.getElementById('manage-usage');
   const chip = document.getElementById('provider-chip');
@@ -174,13 +212,12 @@ function initWorkspace() {
   const saveButton = document.getElementById('save-prompt');
   const hotkeyButton = document.getElementById('set-hotkey');
   const saveNote = document.getElementById('save-note');
-  const analyzeCommand = document.getElementById('analyze-command');
-  const cancelButton = document.getElementById('cancel-button');
-  const hint = document.getElementById('capture-hint');
   const hotkeyDialog = document.getElementById('hotkey-dialog');
   const hotkeyCurrent = document.getElementById('hotkey-current');
   const hotkeyCapture = document.getElementById('hotkey-capture');
   const hotkeyError = document.getElementById('hotkey-error');
+  const hotkeyApply = document.getElementById('hotkey-apply');
+  const hotkeyCancel = document.getElementById('hotkey-cancel');
 
   function bridgeReady() {
     return Boolean(window.tracer?.ask && window.tracer?.handoff);
@@ -199,69 +236,164 @@ function initWorkspace() {
   }
 
   function setStatus(message) {
-    if (!resultDisplay) return;
-    resultDisplay.textContent = message;
+    if (statusDisplay) statusDisplay.textContent = message;
   }
 
   function appendInline(parent, segments) {
     for (const segment of segments) {
-      if (segment.type === 'code') {
-        const code = document.createElement('code');
-        code.textContent = segment.text;
-        parent.append(code);
-      } else if (segment.type === 'strong') {
-        const strong = document.createElement('strong');
-        strong.textContent = segment.text;
-        parent.append(strong);
+      if (segment.type === 'code' || segment.type === 'strong') {
+        const element = document.createElement(segment.type);
+        element.textContent = segment.text;
+        parent.append(element);
+      } else if (segment.type === 'em') {
+        const em = document.createElement('em');
+        em.textContent = segment.text;
+        parent.append(em);
       } else {
         parent.append(document.createTextNode(segment.text));
       }
     }
   }
 
-  function renderAnswer(text, modelName) {
-    if (!resultDisplay) return;
-    resultDisplay.replaceChildren();
-    if (modelName) {
-      const heading = document.createElement('p');
-      heading.textContent = `Using ${modelName}. This used your ChatGPT plan. Follow-up questions send the screenshot again.`;
-      resultDisplay.append(heading);
+  function appendLines(parent, lines) {
+    lines.forEach((segments, index) => {
+      if (index > 0) parent.append(document.createElement('br'));
+      appendInline(parent, segments);
+    });
+  }
+
+  function copyButton(getText, label) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'link';
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      navigator.clipboard.writeText(getText()).then(
+        () => {
+          button.textContent = 'Copied';
+        },
+        () => {
+          button.textContent = 'Copy failed';
+        },
+      );
+    });
+    return button;
+  }
+
+  function renderBlock(block) {
+    if (block.type === 'code') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      const pre = document.createElement('pre');
+      const code = document.createElement('code');
+      code.textContent = block.text;
+      pre.append(code);
+      wrapper.append(
+        copyButton(() => block.text, 'Copy code'),
+        pre,
+      );
+      return wrapper;
     }
-    for (const block of parseMarkdown(text)) {
-      if (block.type === 'code') {
-        const copy = document.createElement('button');
-        copy.type = 'button';
-        copy.className = 'text-command';
-        copy.textContent = 'Copy';
-        copy.addEventListener('click', () => {
-          navigator.clipboard.writeText(block.text).then(
-            () => {
-              copy.textContent = 'Copied';
-            },
-            () => {
-              copy.textContent = 'Copy failed';
-            },
-          );
-        });
-        const pre = document.createElement('pre');
-        const code = document.createElement('code');
-        code.textContent = block.text;
-        pre.append(code);
-        resultDisplay.append(copy, pre);
-      } else if (block.type === 'list') {
-        const list = document.createElement('ul');
-        for (const item of block.items) {
-          const line = document.createElement('li');
-          appendInline(line, item);
-          list.append(line);
-        }
-        resultDisplay.append(list);
-      } else {
-        const paragraph = document.createElement('p');
-        appendInline(paragraph, block.segments);
-        resultDisplay.append(paragraph);
+    if (block.type === 'heading') {
+      const heading = document.createElement(
+        `h${Math.min(block.level + 2, 6)}`,
+      );
+      appendInline(heading, block.segments);
+      return heading;
+    }
+    if (block.type === 'rule') return document.createElement('hr');
+    if (block.type === 'quote') {
+      const quote = document.createElement('blockquote');
+      appendLines(quote, block.lines);
+      return quote;
+    }
+    if (block.type === 'list') {
+      const list = document.createElement(block.ordered ? 'ol' : 'ul');
+      if (block.ordered && block.start !== 1) list.start = block.start;
+      for (const item of block.items) {
+        const line = document.createElement('li');
+        appendInline(line, item);
+        list.append(line);
       }
+      return list;
     }
+    if (block.type === 'table') {
+      const scroll = document.createElement('div');
+      scroll.className = 'table-scroll';
+      const table = document.createElement('table');
+      const head = table.createTHead().insertRow();
+      for (const cell of block.header) {
+        const th = document.createElement('th');
+        appendInline(th, cell);
+        head.append(th);
+      }
+      const body = table.createTBody();
+      for (const row of block.rows) {
+        const line = body.insertRow();
+        for (const cell of row) appendInline(line.insertCell(), cell);
+      }
+      scroll.append(table);
+      return scroll;
+    }
+    const paragraph = document.createElement('p');
+    appendLines(paragraph, block.lines);
+    return paragraph;
+  }
+
+  function questionNode(text) {
+    const question = document.createElement('p');
+    question.className = 'turn-question';
+    const label = document.createElement('span');
+    label.className = 'sr-only';
+    label.textContent = 'You asked: ';
+    question.append(label, document.createTextNode(text));
+    return question;
+  }
+
+  function answerNode(text) {
+    const answer = document.createElement('div');
+    answer.className = 'turn-answer';
+    const label = document.createElement('span');
+    label.className = 'sr-only';
+    label.textContent = 'ChatGPT answered: ';
+    const body = document.createElement('div');
+    body.className = 'answer-body';
+    for (const block of parseMarkdown(text)) body.append(renderBlock(block));
+    const actions = document.createElement('div');
+    actions.className = 'answer-actions';
+    actions.append(copyButton(() => body.innerText, 'Copy answer'));
+    answer.append(label, body, actions);
+    return answer;
+  }
+
+  function showPending(prompt) {
+    const question = questionNode(prompt);
+    const waiting = document.createElement('p');
+    waiting.className = 'waiting';
+    waiting.textContent = 'Waiting for ChatGPT…';
+    conversation?.append(question, waiting);
+    pendingNodes = [question, waiting];
+    waiting.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Replaces the waiting line with the answer, or removes the unanswered
+  // question when the request failed.
+  function settlePending(answerText) {
+    const [question, waiting] = pendingNodes;
+    pendingNodes = [];
+    waiting?.remove();
+    if (answerText === null) {
+      question?.remove();
+      return;
+    }
+    conversation?.append(answerNode(answerText));
+    question?.scrollIntoView({ block: 'start' });
+  }
+
+  function clearConversation() {
+    turns = [];
+    pendingNodes = [];
+    conversation?.replaceChildren();
   }
 
   function selectedProvider() {
@@ -310,7 +442,7 @@ function initWorkspace() {
     saveNote.textContent = message;
     setTimeout(() => {
       if (saveNote.textContent === message) saveNote.textContent = '';
-    }, 2000);
+    }, 2500);
   }
 
   function validationMessage(error) {
@@ -325,56 +457,135 @@ function initWorkspace() {
 
   function setBusy(value) {
     busy = value;
-    if (signInButton) signInButton.disabled = value;
-    if (analyzeCommand) analyzeCommand.disabled = value;
+    for (const button of [
+      signInButton,
+      switchButton,
+      disconnectButton,
+      analyzeCommand,
+      followupSend,
+    ]) {
+      if (button) button.disabled = value;
+    }
     if (cancelButton) cancelButton.hidden = !value;
+  }
+
+  // The screenshot or conversation changed, so a reply still on its way
+  // belongs to the old picture. Stop it and ignore whatever arrives.
+  function abandonAction() {
+    actionGeneration += 1;
+    void window.tracer?.cancelAsk?.();
+    if (pendingAction) {
+      pendingAction = 0;
+      setBusy(false);
+    }
+  }
+
+  function setPanel(open) {
+    if (!panel || !chip) return;
+    panel.hidden = !open;
+    chip.setAttribute('aria-expanded', String(open));
+  }
+
+  function planReady() {
+    return session.status === 'connected' && session.sharing;
+  }
+
+  // Returns why ChatGPT cannot be asked yet, or '' when it can.
+  function signInNeeded() {
+    if (selectedProvider() !== 'chatgpt' || planReady()) return '';
+    return session.status === 'connected'
+      ? 'Allow ChatGPT plan usage to ask about this screenshot.'
+      : 'Sign in with ChatGPT to ask about this screenshot.';
+  }
+
+  function updateHint() {
+    if (hint) {
+      hint.textContent = `Press ${hotkeyAccelerator}, then drag over what you want to ask about. Right-click captures the whole monitor, and Esc cancels.`;
+    }
+    if (!sendNote) return;
+    const provider = selectedProvider();
+    if (!autoSend?.checked) {
+      sendNote.textContent =
+        'Nothing is sent until you choose Analyze screenshot.';
+    } else if (provider === 'chatgpt') {
+      sendNote.textContent =
+        'Tracer sends the capture to ChatGPT with your prompt as soon as you let go.';
+    } else {
+      sendNote.textContent = `Tracer copies the capture and your prompt, then opens ${PROVIDER_NAMES[provider]}, as soon as you let go.`;
+    }
+  }
+
+  function updateLayout() {
+    const provider = selectedProvider();
+    const handoff = provider !== 'chatgpt';
+    const hasShot = Boolean(latestScreenshot);
+    const asked = turns.length > 0 || pendingNodes.length > 0;
+    if (emptyState) emptyState.hidden = hasShot;
+    if (shot) shot.hidden = !hasShot;
+    if (analyzeCommand) {
+      analyzeCommand.textContent = handoff
+        ? `Open in ${PROVIDER_NAMES[provider]}`
+        : 'Analyze screenshot';
+      analyzeCommand.hidden = !handoff && asked;
+    }
+    if (followupRow) followupRow.hidden = handoff || !hasShot;
+    if (followupInput) {
+      followupInput.placeholder = turns.length
+        ? 'Ask a follow-up about this screenshot'
+        : 'Ask about this screenshot';
+    }
+    if (planNote) planNote.hidden = handoff || !planReady();
+    if (planText) {
+      planText.textContent = modelName
+        ? `Uses your ChatGPT plan with ${modelName}. Follow-ups send the screenshot again.`
+        : 'Uses your ChatGPT plan. Follow-ups send the screenshot again.';
+    }
+    updateHint();
   }
 
   function renderConnection() {
     const provider = selectedProvider();
     const handoff = provider !== 'chatgpt';
     let chipText = 'ChatGPT';
-    if (handoff) chipText = provider === 'gemini' ? 'Gemini' : 'Claude';
-    else if (session.status === 'connected' && session.sharing) {
-      chipText = 'ChatGPT connected';
-    } else if (session.status === 'connected') chipText = 'ChatGPT signed in';
+    if (handoff) chipText = PROVIDER_NAMES[provider];
+    else if (planReady()) chipText = 'ChatGPT connected';
+    else if (session.status === 'connected') chipText = 'ChatGPT signed in';
     if (chip) chip.textContent = chipText;
     if (statusLine) {
       if (handoff) statusLine.textContent = 'Open in browser';
       else if (session.status === 'connected')
         statusLine.textContent = 'Connected';
-      else statusLine.textContent = 'Connection available';
+      else statusLine.textContent = 'Not connected';
     }
     if (noteLine) {
-      if (provider === 'gemini') {
-        noteLine.textContent =
-          'Tracer does not connect to a Gemini subscription. Submitting copies the screenshot and prompt so you can paste them into the official site.';
-      } else if (provider === 'claude') {
-        noteLine.textContent =
-          'Tracer does not connect to a Claude subscription. Submitting copies the screenshot and prompt so you can paste them into the official site.';
+      if (handoff) {
+        noteLine.textContent = `Tracer does not connect to a ${PROVIDER_NAMES[provider]} subscription. It copies the screenshot and prompt so you can paste them into the official site.`;
       } else if (session.status === 'connecting') {
         noteLine.textContent = 'Opening the browser to sign in with ChatGPT.';
       } else if (session.status === 'reauth_required') {
         noteLine.textContent =
           'The saved ChatGPT connection expired. Continue with ChatGPT to sign in again.';
-      } else if (session.status === 'connected' && session.sharing) {
+      } else if (planReady()) {
         const who = session.email || session.name || 'your ChatGPT account';
-        noteLine.textContent = `Signed in as ${who}. Analysis uses that account's Plus or Pro plan allowance, not a separate API bill.`;
+        noteLine.textContent = `Signed in as ${who}. Analysis uses this account's ChatGPT plan limits. If you allow credits for Tracer in ChatGPT settings, extra use can spend credits.`;
       } else if (session.status === 'connected') {
         noteLine.textContent =
           'You are signed in, but ChatGPT plan usage is not enabled. Allow plan usage before analyzing.';
       } else {
         noteLine.textContent =
-          'Continue with ChatGPT uses your own ChatGPT account. Analysis inside Tracer needs a Plus or Pro plan and permission to use that plan.';
+          'Continue with ChatGPT uses your own ChatGPT account. Analysis needs a ChatGPT plan that works in other apps, and your permission to use it.';
       }
     }
     if (signInButton) {
-      signInButton.hidden =
-        handoff || (session.status === 'connected' && session.sharing);
+      signInButton.hidden = handoff || planReady();
       signInButton.textContent =
         session.status === 'connected'
           ? 'Allow ChatGPT plan usage'
           : 'Continue with ChatGPT';
+    }
+    if (switchButton) {
+      switchButton.hidden =
+        handoff || !session.savedAccount || session.status === 'connecting';
     }
     if (disconnectButton) {
       disconnectButton.hidden = handoff || session.status !== 'connected';
@@ -382,41 +593,34 @@ function initWorkspace() {
     if (usageButton) {
       usageButton.hidden = handoff || session.status !== 'connected';
     }
-    if (analyzeCommand) {
-      analyzeCommand.textContent = handoff
-        ? 'Open in browser'
-        : 'Analyze screenshot';
-    }
-  }
-
-  function updateHint() {
-    if (!hint) return;
-    hint.textContent = `Press ${hotkeyAccelerator}, drag to select an area, or right-click a monitor to capture it. Escape cancels. Nothing is sent until you submit it.`;
+    updateLayout();
   }
 
   function clearPreview() {
     latestScreenshot = null;
-    history = [];
-    if (preview) {
-      preview.removeAttribute('src');
-      preview.hidden = true;
-    }
-    if (dismissPreview) dismissPreview.hidden = true;
+    clearConversation();
+    preview?.removeAttribute('src');
+    shot?.classList.remove('expanded');
+    updateLayout();
   }
 
   function showPreview(image, mode) {
+    abandonAction();
+    clearConversation();
     latestScreenshot = image;
-    history = [];
-    if (preview) {
-      preview.src = image;
-      preview.hidden = false;
+    if (preview) preview.src = image;
+    shot?.classList.remove('expanded');
+    shotToggle?.setAttribute('aria-expanded', 'false');
+    if (shotLabel) {
+      shotLabel.textContent =
+        mode === 'full' ? 'Captured monitor' : 'Captured area';
     }
-    if (dismissPreview) dismissPreview.hidden = false;
-    setStatus(
-      mode === 'full'
-        ? 'Captured this monitor. Nothing has been sent.'
-        : 'Captured the selected area. Nothing has been sent.',
-    );
+    updateLayout();
+    if (autoSend?.checked) {
+      void sendCapture();
+    } else {
+      setStatus('Captured. Nothing has been sent yet.');
+    }
   }
 
   async function refreshSession() {
@@ -424,13 +628,7 @@ function initWorkspace() {
     try {
       session = await window.tracer.getSession();
     } catch {
-      session = {
-        status: 'disconnected',
-        sharing: false,
-        email: null,
-        name: null,
-        modelName: null,
-      };
+      session = signedOut();
     }
     renderConnection();
   }
@@ -446,19 +644,21 @@ function initWorkspace() {
     renderLibrary();
   }
 
-  async function runAction() {
-    if (busy || hotkeyDialog?.open) return;
+  // Sends one question about the current screenshot. Returns false when it
+  // was not sent or failed, so a typed follow-up can be put back.
+  async function ask(prompt) {
+    if (busy || hotkeyDialog?.open) return false;
     const generation = ++actionGeneration;
+    pendingAction = generation;
     setBusy(true);
     try {
       if (!latestScreenshot) {
-        setStatus('Please capture a screenshot first.');
-        return;
+        setStatus(`Capture a screenshot first: press ${hotkeyAccelerator}.`);
+        return false;
       }
-      const prompt = currentPrompt();
       if (!prompt) {
-        setStatus('Please enter a prompt.');
-        return;
+        setStatus('Type a question first.');
+        return false;
       }
       const validation = validateInspectPayload({
         screenshot: latestScreenshot,
@@ -466,45 +666,93 @@ function initWorkspace() {
       });
       if (!validation.ok) {
         setStatus(validationMessage(validation.error));
-        return;
+        return false;
       }
       if (!bridgeReady()) {
         setStatus('Tracer desktop bridge is unavailable.');
-        return;
+        return false;
       }
       const provider = selectedProvider();
-      if (provider === 'chatgpt') {
-        setStatus('Sending the screenshot to ChatGPT.');
-        const result = await window.tracer.ask({
-          screenshot: latestScreenshot,
-          prompt,
-          history,
-        });
-        history.push(
-          { role: 'user', text: prompt },
-          { role: 'assistant', text: result.text },
+      if (provider !== 'chatgpt') {
+        setStatus(
+          `Copying the screenshot and opening ${PROVIDER_NAMES[provider]}.`,
         );
-        while (history.length > MAX_HISTORY) history.splice(0, 2);
-        rememberPrompt(prompt);
-        renderAnswer(result.text, result.modelName);
-      } else {
-        setStatus('Copying the screenshot and opening the official site.');
         const result = await window.tracer.handoff({
           provider,
           screenshot: latestScreenshot,
           prompt,
         });
         rememberPrompt(prompt);
-        setStatus(result.message);
+        if (generation === actionGeneration) setStatus(result.message);
+        return true;
       }
+      setStatus('');
+      showPending(prompt);
+      updateLayout();
+      const result = await window.tracer.ask({
+        screenshot: latestScreenshot,
+        prompt,
+        history: turns.slice(-MAX_HISTORY),
+      });
+      rememberPrompt(prompt);
+      if (generation !== actionGeneration) return true;
+      turns.push(
+        { role: 'user', text: prompt },
+        { role: 'assistant', text: result.text },
+      );
+      modelName = result.modelName || modelName;
+      settlePending(result.text);
+      return true;
     } catch (error) {
-      if (generation !== actionGeneration) return;
+      if (generation !== actionGeneration) return true;
+      settlePending(null);
       const message = errorText(error);
       setStatus(
         message === 'The request was cancelled.' ? 'Canceled.' : message,
       );
+      return false;
     } finally {
-      if (generation === actionGeneration) setBusy(false);
+      if (pendingAction === generation) pendingAction = 0;
+      if (generation === actionGeneration) {
+        setBusy(false);
+        updateLayout();
+      }
+    }
+  }
+
+  // Sends the prompt box. Used by auto-send, Analyze screenshot, Ctrl+Enter,
+  // and File > Analyze screenshot.
+  function sendCapture() {
+    const blocked = latestScreenshot ? signInNeeded() : '';
+    if (blocked) {
+      setStatus(blocked);
+      setPanel(true);
+      return Promise.resolve(false);
+    }
+    return ask(currentPrompt());
+  }
+
+  function fitFollowup() {
+    if (!followupInput) return;
+    followupInput.style.height = 'auto';
+    followupInput.style.height = `${Math.min(followupInput.scrollHeight + 2, 128)}px`;
+  }
+
+  async function sendFollowup() {
+    const text = followupInput?.value.trim() ?? '';
+    if (!text || busy) return;
+    const blocked = signInNeeded();
+    if (blocked) {
+      setStatus(blocked);
+      setPanel(true);
+      return;
+    }
+    followupInput.value = '';
+    fitFollowup();
+    const sent = await ask(text);
+    if (!sent && !followupInput.value) {
+      followupInput.value = text;
+      fitFollowup();
     }
   }
 
@@ -534,9 +782,10 @@ function initWorkspace() {
         library = setHistoryEnabled(library, checkbox.checked);
         persistLibrary();
       });
-      label.append(checkbox, document.createTextNode(' Remember prompts'));
+      label.append(checkbox, document.createTextNode('Remember prompts'));
       const clear = document.createElement('button');
       clear.type = 'button';
+      clear.className = 'link';
       clear.textContent = 'Clear history';
       clear.addEventListener('click', () => {
         library = clearPast(library);
@@ -566,6 +815,22 @@ function initWorkspace() {
     for (const item of items) list.append(renderCard(item));
   }
 
+  // Puts a library prompt in the prompt box, and in the question box when a
+  // screenshot is open so Enter asks it right away.
+  function usePrompt(text) {
+    if (promptInput) {
+      promptInput.value = text;
+      writeStorage(DRAFT_KEY, text.slice(0, LIMITS.promptChars));
+    }
+    if (latestScreenshot && followupInput && !followupRow?.hidden) {
+      followupInput.value = text;
+      fitFollowup();
+      followupInput.focus();
+      return;
+    }
+    promptInput?.focus();
+  }
+
   function renderCard(item) {
     const card = document.createElement('article');
     card.className = 'prompt-card';
@@ -576,14 +841,18 @@ function initWorkspace() {
       const title = document.createElement('input');
       title.value = item.title;
       title.maxLength = 80;
+      title.setAttribute('aria-label', 'Prompt title');
       const text = document.createElement('textarea');
       text.value = item.text;
       text.maxLength = 2000;
+      text.setAttribute('aria-label', 'Prompt text');
       const save = document.createElement('button');
       save.type = 'button';
+      save.className = 'btn';
       save.textContent = 'Save';
       const cancel = document.createElement('button');
       cancel.type = 'button';
+      cancel.className = 'btn btn-quiet';
       cancel.textContent = 'Cancel';
       save.addEventListener('click', () => {
         const result = updatePrompt(
@@ -609,7 +878,10 @@ function initWorkspace() {
         editingId = '';
         renderLibrary();
       });
-      card.append(title, text, save, cancel);
+      const actions = document.createElement('div');
+      actions.className = 'card-edit-actions';
+      actions.append(save, cancel);
+      card.append(title, text, actions);
       return card;
     }
     const title = document.createElement('div');
@@ -617,13 +889,10 @@ function initWorkspace() {
     title.textContent = item.title || 'Prompt';
     const body = document.createElement('button');
     body.type = 'button';
-    body.textContent = item.text.slice(0, 90);
-    body.addEventListener('click', () => {
-      if (!promptInput) return;
-      promptInput.value = item.text;
-      writeStorage(DRAFT_KEY, promptInput.value.slice(0, LIMITS.promptChars));
-      promptInput.focus();
-    });
+    body.className = 'prompt-body';
+    body.textContent =
+      item.text.length > 90 ? `${item.text.slice(0, 89)}…` : item.text;
+    body.addEventListener('click', () => usePrompt(item.text));
     const meta = document.createElement('div');
     meta.className = 'prompt-meta';
     const stamp = item.updatedAt || item.usedAt;
@@ -632,6 +901,7 @@ function initWorkspace() {
     menu.className = 'card-menu';
     const star = document.createElement('button');
     star.type = 'button';
+    star.className = 'link';
     star.textContent = item.favorite ? 'Unfavorite' : 'Favorite';
     star.addEventListener('click', () => {
       library = setFavorite(library, item.id, !item.favorite);
@@ -642,6 +912,7 @@ function initWorkspace() {
     if (library.saved.some((entry) => entry.id === item.id)) {
       const edit = document.createElement('button');
       edit.type = 'button';
+      edit.className = 'link';
       edit.textContent = 'Edit';
       edit.addEventListener('click', () => {
         editingId = item.id;
@@ -652,6 +923,7 @@ function initWorkspace() {
     }
     const remove = document.createElement('button');
     remove.type = 'button';
+    remove.className = 'link';
     remove.textContent = 'Delete';
     remove.addEventListener('click', () => {
       library = deletePrompt(library, item.id);
@@ -666,9 +938,10 @@ function initWorkspace() {
   function acceleratorFromEvent(event) {
     if (['Control', 'Shift', 'Alt', 'Meta'].includes(event.key)) return '';
     const modifiers = [];
-    if (event.ctrlKey || event.metaKey) modifiers.push('Ctrl');
+    if (event.ctrlKey) modifiers.push('Ctrl');
     if (event.altKey) modifiers.push('Alt');
     if (event.shiftKey) modifiers.push('Shift');
+    if (event.metaKey) modifiers.push('Super');
     if (!modifiers.length || !event.code) return null;
     let key = '';
     if (event.code === 'Space') key = 'Space';
@@ -681,15 +954,41 @@ function initWorkspace() {
 
   async function openHotkeyDialog() {
     if (!hotkeyDialog) return;
-    if (hotkeyCurrent)
+    pendingHotkey = '';
+    if (hotkeyCurrent) {
       hotkeyCurrent.textContent = `Current shortcut: ${hotkeyAccelerator}`;
+    }
     if (hotkeyCapture) {
       hotkeyCapture.textContent =
-        'Press a shortcut with at least one modifier.';
+        'Press the new shortcut, for example Ctrl+Alt+S.';
     }
     if (hotkeyError) hotkeyError.textContent = '';
+    if (hotkeyApply) hotkeyApply.disabled = true;
     await window.tracer?.suspendHotkey?.();
     hotkeyDialog.showModal();
+  }
+
+  async function applyHotkey() {
+    if (!pendingHotkey || !hotkeyApply) return;
+    hotkeyApply.disabled = true;
+    let result;
+    try {
+      result = await window.tracer?.setHotkey?.(pendingHotkey);
+    } catch {
+      result = null;
+    }
+    if (!result?.ok) {
+      if (hotkeyError) {
+        hotkeyError.textContent =
+          result?.error || 'That shortcut could not be registered.';
+      }
+      hotkeyApply.disabled = false;
+      return;
+    }
+    hotkeyAccelerator = result.accelerator;
+    updateHint();
+    hotkeyDialog?.close();
+    showSaveNote(`Hotkey set to ${hotkeyAccelerator}.`);
   }
 
   const savedDraft = readStorage(DRAFT_KEY) ?? readStorage('tracer:prompt');
@@ -707,6 +1006,7 @@ function initWorkspace() {
     );
     if (input) input.checked = true;
   }
+  if (autoSend) autoSend.checked = readStorage(AUTO_SEND_KEY) !== 'off';
 
   promptInput?.addEventListener('input', () => {
     writeStorage(DRAFT_KEY, promptInput.value.slice(0, LIMITS.promptChars));
@@ -714,8 +1014,21 @@ function initWorkspace() {
   promptInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
-      void runAction();
+      void sendCapture();
     }
+  });
+  autoSend?.addEventListener('change', () => {
+    writeStorage(AUTO_SEND_KEY, autoSend.checked ? 'on' : 'off');
+    updateHint();
+  });
+  followupInput?.addEventListener('input', fitFollowup);
+  followupInput?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    void sendFollowup();
+  });
+  followupSend?.addEventListener('click', () => {
+    void sendFollowup();
   });
   saveButton?.addEventListener('click', () => {
     const result = savePrompt(
@@ -743,24 +1056,40 @@ function initWorkspace() {
   });
   hotkeyDialog?.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') return;
+    const accelerator = acceleratorFromEvent(event);
+    if (accelerator === '') {
+      // A modifier on its own: wait for the rest of the shortcut.
+      event.preventDefault();
+      return;
+    }
+    const modified =
+      event.ctrlKey || event.altKey || event.shiftKey || event.metaKey;
+    // Tab, Enter, and Space without modifiers still reach the buttons.
+    if (!modified || event.key === 'Tab') return;
     event.preventDefault();
     event.stopPropagation();
-    const accelerator = acceleratorFromEvent(event);
-    if (!accelerator) return;
-    if (hotkeyCapture) hotkeyCapture.textContent = accelerator;
-    void window.tracer?.setHotkey?.(accelerator).then((result) => {
-      if (!result?.ok) {
-        if (hotkeyError) {
-          hotkeyError.textContent =
-            result?.error || 'That shortcut could not be registered.';
-        }
-        return;
+    if (!accelerator) {
+      if (hotkeyError) {
+        hotkeyError.textContent =
+          'Use a letter, number, Space, or F1 to F24 with Ctrl or Alt.';
       }
-      hotkeyAccelerator = result.accelerator;
-      updateHint();
-      hotkeyDialog.close();
-      showSaveNote(`Hotkey set to ${hotkeyAccelerator}.`);
-    });
+      return;
+    }
+    pendingHotkey = accelerator;
+    if (hotkeyCapture) hotkeyCapture.textContent = accelerator;
+    const valid = isValidAccelerator(accelerator);
+    if (hotkeyError) {
+      hotkeyError.textContent = valid
+        ? ''
+        : 'Add Ctrl or Alt so the shortcut does not block normal typing.';
+    }
+    if (hotkeyApply) hotkeyApply.disabled = !valid;
+  });
+  hotkeyApply?.addEventListener('click', () => {
+    void applyHotkey();
+  });
+  hotkeyCancel?.addEventListener('click', () => {
+    hotkeyDialog?.close();
   });
   hotkeyDialog?.addEventListener('close', () => {
     void window.tracer?.resumeHotkey?.().then((result) => {
@@ -771,9 +1100,18 @@ function initWorkspace() {
     });
   });
   chip?.addEventListener('click', () => {
-    if (!panel || !chip) return;
-    panel.hidden = !panel.hidden;
-    chip.setAttribute('aria-expanded', String(!panel.hidden));
+    setPanel(panel?.hidden ?? false);
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (!panel || panel.hidden) return;
+    if (panel.contains(event.target) || chip?.contains(event.target)) return;
+    setPanel(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !panel || panel.hidden) return;
+    if (hotkeyDialog?.open) return;
+    setPanel(false);
+    chip?.focus();
   });
   for (const input of document.querySelectorAll('input[name="provider"]')) {
     input.addEventListener('change', () => {
@@ -781,38 +1119,49 @@ function initWorkspace() {
       renderConnection();
     });
   }
+  shotToggle?.addEventListener('click', () => {
+    if (!shot) return;
+    const expanded = !shot.classList.contains('expanded');
+    shot.classList.toggle('expanded', expanded);
+    shotToggle.setAttribute('aria-expanded', String(expanded));
+    shotToggle.title = expanded ? 'Show smaller' : 'Show full size';
+  });
   analyzeCommand?.addEventListener('click', () => {
-    void runAction();
+    void sendCapture();
   });
   cancelButton?.addEventListener('click', () => {
     void window.tracer?.cancelAsk?.();
     void window.tracer?.cancelSignIn?.();
   });
   dismissPreview?.addEventListener('click', () => {
-    actionGeneration += 1;
-    void window.tracer?.cancelAsk?.();
+    abandonAction();
     clearPreview();
-    setStatus('Screenshot and conversation cleared. Nothing was kept.');
-    setBusy(false);
+    setStatus('Screenshot and conversation removed.');
   });
-  signInButton?.addEventListener('click', async () => {
+  // `fresh` registers a different ChatGPT account instead of reusing the
+  // remembered one.
+  async function startSignIn(fresh) {
     if (!window.tracer?.signIn) {
       setStatus('Tracer desktop bridge is unavailable.');
       return;
     }
-    const reconsent = session.status === 'connected' && !session.sharing;
+    const reconsent =
+      !fresh && session.status === 'connected' && !session.sharing;
     setBusy(true);
     session = { ...session, status: 'connecting' };
     renderConnection();
     setStatus('Opening the browser to sign in with ChatGPT.');
     try {
-      session = await window.tracer.signIn(reconsent);
+      session = await window.tracer.signIn({ reconsent, fresh });
       renderConnection();
-      setStatus(
-        session.sharing
-          ? 'ChatGPT is connected. Capture a screenshot, then submit it.'
-          : 'Signed in. Allow ChatGPT plan usage before analyzing.',
-      );
+      if (session.notice) setStatus(session.notice);
+      else {
+        setStatus(
+          session.sharing
+            ? `ChatGPT is connected. Press ${hotkeyAccelerator} to capture.`
+            : 'Signed in. Allow ChatGPT plan usage before analyzing.',
+        );
+      }
     } catch (error) {
       await refreshSession();
       const message = errorText(error);
@@ -822,6 +1171,12 @@ function initWorkspace() {
     } finally {
       setBusy(false);
     }
+  }
+  signInButton?.addEventListener('click', () => {
+    void startSignIn(false);
+  });
+  switchButton?.addEventListener('click', () => {
+    void startSignIn(true);
   });
   disconnectButton?.addEventListener('click', async () => {
     if (!window.tracer?.disconnect) return;
@@ -837,13 +1192,15 @@ function initWorkspace() {
       setBusy(false);
     }
   });
-  usageButton?.addEventListener('click', async () => {
-    try {
-      await window.tracer?.openUsage?.();
-    } catch (error) {
-      setStatus(errorText(error));
-    }
-  });
+  for (const button of [usageButton, planUsage]) {
+    button?.addEventListener('click', async () => {
+      try {
+        await window.tracer?.openUsage?.();
+      } catch (error) {
+        setStatus(errorText(error));
+      }
+    });
+  }
   for (const tab of [
     ['tab-past', 'past'],
     ['tab-favorites', 'favorites'],
@@ -874,19 +1231,21 @@ function initWorkspace() {
     }
   });
   window.tracer?.onCommand?.((command) => {
-    if (command === 'analyze') void runAction();
+    if (command === 'analyze') {
+      // Ctrl+Enter reaches both the focused box and the File menu, so both
+      // paths send whatever box has focus.
+      if (document.activeElement === followupInput) void sendFollowup();
+      else void sendCapture();
+    }
     if (command === 'clear') {
-      actionGeneration += 1;
-      void window.tracer?.cancelAsk?.();
+      abandonAction();
       clearPreview();
-      setStatus('Screenshot and conversation cleared. Nothing was kept.');
-      setBusy(false);
+      setStatus('Screenshot and conversation removed.');
     }
   });
 
   renderConnection();
   renderLibrary();
-  updateHint();
   void refreshSession();
   void window.tracer?.getHotkey?.().then((result) => {
     if (result?.accelerator) {

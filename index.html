@@ -7,105 +7,186 @@
   <body>
     <div id="workspace" class="app">
       <main class="workspace">
-        <header>
+        <header class="topbar">
           <h1>Tracer</h1>
-          <p id="capture-hint">
-            Press the hotkey, drag to select an area, or right-click a monitor
-            to capture it. Escape cancels. Nothing is sent until you submit it.
-          </p>
+          <div class="provider">
+            <button
+              id="provider-chip"
+              class="chip"
+              type="button"
+              aria-expanded="false"
+              aria-controls="provider-panel"
+            >
+              ChatGPT
+            </button>
+            <div id="provider-panel" class="provider-panel" hidden>
+              <fieldset>
+                <legend>Send screenshots to</legend>
+                <label>
+                  <input
+                    id="provider-chatgpt"
+                    type="radio"
+                    name="provider"
+                    value="chatgpt"
+                    checked
+                  />
+                  ChatGPT
+                </label>
+                <label>
+                  <input
+                    id="provider-gemini"
+                    type="radio"
+                    name="provider"
+                    value="gemini"
+                  />
+                  Gemini
+                </label>
+                <label>
+                  <input
+                    id="provider-claude"
+                    type="radio"
+                    name="provider"
+                    value="claude"
+                  />
+                  Claude
+                </label>
+              </fieldset>
+              <p id="provider-status" class="panel-status">
+                Connection available
+              </p>
+              <p id="provider-note" class="panel-note"></p>
+              <p class="panel-actions">
+                <button id="chatgpt-sign-in" class="btn" type="button">
+                  Continue with ChatGPT
+                </button>
+                <button
+                  id="chatgpt-switch"
+                  class="btn btn-quiet"
+                  type="button"
+                  hidden
+                >
+                  Use a different ChatGPT account
+                </button>
+                <button
+                  id="chatgpt-disconnect"
+                  class="btn btn-quiet"
+                  type="button"
+                  hidden
+                >
+                  Disconnect
+                </button>
+                <button
+                  id="manage-usage"
+                  class="btn btn-quiet"
+                  type="button"
+                  hidden
+                >
+                  Manage usage
+                </button>
+              </p>
+            </div>
+          </div>
         </header>
 
-        <label for="tracer-prompt">Prompt</label>
-        <textarea
-          id="tracer-prompt"
-          rows="6"
-          maxlength="2000"
-          autocomplete="off"
-        >
-Explain what is visible in this screenshot.</textarea
-        >
-
-        <div class="actions">
-          <button id="save-prompt" type="button">Save Prompt</button>
-          <button id="set-hotkey" type="button">Set Hotkey</button>
-        </div>
-        <p id="save-note" aria-live="polite"></p>
-
-        <button
-          id="provider-chip"
-          type="button"
-          aria-expanded="false"
-          aria-controls="provider-panel"
-        >
-          ChatGPT
-        </button>
-        <div id="provider-panel" hidden>
-          <fieldset>
-            <legend>Provider</legend>
-            <label>
-              <input
-                id="provider-chatgpt"
-                type="radio"
-                name="provider"
-                value="chatgpt"
-                checked
-              />
-              ChatGPT
-            </label>
-            <label>
-              <input
-                id="provider-gemini"
-                type="radio"
-                name="provider"
-                value="gemini"
-              />
-              Gemini
-            </label>
-            <label>
-              <input
-                id="provider-claude"
-                type="radio"
-                name="provider"
-                value="claude"
-              />
-              Claude
-            </label>
-          </fieldset>
-          <p id="provider-status">Connection available</p>
-          <p id="provider-note"></p>
-          <p class="panel-actions">
-            <button id="chatgpt-sign-in" type="button">
-              Continue with ChatGPT
-            </button>
-            <button id="chatgpt-disconnect" type="button" hidden>
-              Disconnect
-            </button>
-            <button id="manage-usage" type="button" hidden>Manage usage</button>
-          </p>
-        </div>
-
-        <img id="shot-preview" alt="Captured screenshot preview" hidden />
-        <p>
-          <button
-            id="dismiss-preview"
-            type="button"
-            class="text-command"
-            hidden
+        <section class="compose" aria-label="Prompt">
+          <label for="tracer-prompt" class="field-label">Prompt</label>
+          <textarea
+            id="tracer-prompt"
+            rows="2"
+            maxlength="2000"
+            autocomplete="off"
           >
-            Remove preview
-          </button>
-        </p>
+Explain what is visible in this screenshot.</textarea
+          >
+          <div class="actions">
+            <button id="save-prompt" class="btn" type="button">
+              Save Prompt
+            </button>
+            <button id="set-hotkey" class="btn" type="button">
+              Set Hotkey
+            </button>
+            <label class="toggle">
+              <input id="auto-send" type="checkbox" checked />
+              Send right after capture
+            </label>
+          </div>
+          <p id="save-note" class="save-note" aria-live="polite"></p>
+        </section>
 
-        <p class="submit-row">
-          <button id="analyze-command" type="button" class="text-command">
-            Analyze screenshot
-          </button>
-          <button id="cancel-button" type="button" hidden>Cancel</button>
-        </p>
-        <p id="submit-hint">
-          Ctrl+Enter submits the screenshot. The File menu has the same command.
-        </p>
-        <div id="analysis-result"></div>
+        <section
+          id="session"
+          class="session"
+          aria-label="Screenshot and answers"
+        >
+          <div id="empty-state" class="empty-state">
+            <p id="capture-hint">
+              Press the hotkey, then drag over what you want to ask about.
+            </p>
+            <p id="send-note"></p>
+          </div>
+          <figure id="shot" class="shot" hidden>
+            <button
+              id="shot-toggle"
+              class="shot-toggle"
+              type="button"
+              aria-expanded="false"
+              title="Show full size"
+            >
+              <img id="shot-preview" alt="Captured screenshot" />
+            </button>
+            <figcaption>
+              <span id="shot-label">Captured area</span>
+              <button
+                id="analyze-command"
+                class="btn"
+                type="button"
+                title="Ctrl+Enter"
+              >
+                Analyze screenshot
+              </button>
+              <button id="dismiss-preview" class="link" type="button">
+                Remove screenshot
+              </button>
+            </figcaption>
+          </figure>
+          <div
+            id="conversation"
+            class="conversation"
+            role="log"
+            aria-label="Answers"
+          ></div>
+        </section>
+
+        <footer class="composer">
+          <div class="status-row">
+            <p id="tracer-status" class="status" role="status"></p>
+            <button
+              id="cancel-button"
+              class="btn btn-quiet"
+              type="button"
+              hidden
+            >
+              Cancel
+            </button>
+          </div>
+          <div id="followup-row" class="followup" hidden>
+            <textarea
+              id="followup-input"
+              rows="1"
+              maxlength="2000"
+              autocomplete="off"
+              aria-label="Question about this screenshot"
+              placeholder="Ask about this screenshot"
+            ></textarea>
+            <button id="followup-send" class="btn" type="button">Send</button>
+          </div>
+          <p id="plan-note" class="plan-note" hidden>
+            <span id="plan-text"></span>
+            <button id="plan-usage" class="link" type="button">
+              Manage usage
+            </button>
+          </p>
+        </footer>
       </main>
 
       <aside class="library" aria-label="Prompt library">
@@ -125,19 +206,26 @@ Explain what is visible in this screenshot.</textarea
             Saved Prompts
           </button>
         </div>
-        <div id="library-tools"></div>
+        <div id="library-tools" class="library-tools"></div>
         <div id="library-list"></div>
       </aside>
     </div>
 
-    <dialog id="hotkey-dialog">
-      <h2>Set Hotkey</h2>
-      <p id="hotkey-current"></p>
-      <p id="hotkey-capture">Press a shortcut with at least one modifier.</p>
-      <p id="hotkey-error"></p>
-      <form method="dialog">
-        <button id="hotkey-cancel" type="submit" value="cancel">Cancel</button>
-      </form>
+    <dialog id="hotkey-dialog" aria-labelledby="hotkey-title">
+      <h2 id="hotkey-title">Set Hotkey</h2>
+      <p id="hotkey-current" class="dialog-note"></p>
+      <p id="hotkey-capture" class="hotkey-capture" aria-live="polite">
+        Press the new shortcut.
+      </p>
+      <p id="hotkey-error" class="hotkey-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="hotkey-cancel" class="btn btn-quiet" type="button">
+          Cancel
+        </button>
+        <button id="hotkey-apply" class="btn" type="button" disabled>
+          Apply &amp; Save
+        </button>
+      </div>
     </dialog>
 
     <div id="snip" hidden>

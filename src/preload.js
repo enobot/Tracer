@@ -37,8 +37,11 @@ contextBridge.exposeInMainWorld('tracer', {
   onCapture: (callback) => captures.add(callback),
   onCommand: (callback) => commands.add(callback),
   getSession: () => ipcRenderer.invoke('tracer:get-session'),
-  signIn: (reconsent) =>
-    ipcRenderer.invoke('tracer:sign-in', { reconsent: reconsent === true }),
+  signIn: (options) =>
+    ipcRenderer.invoke('tracer:sign-in', {
+      reconsent: options?.reconsent === true,
+      fresh: options?.fresh === true,
+    }),
   cancelSignIn: () => ipcRenderer.invoke('tracer:cancel-sign-in'),
   disconnect: () => ipcRenderer.invoke('tracer:disconnect'),
   ask: (payload) => ipcRenderer.invoke('tracer:ask', payload),
